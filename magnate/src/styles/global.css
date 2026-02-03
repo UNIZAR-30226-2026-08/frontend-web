@@ -1,0 +1,145 @@
+/* File: src/styles/global.css */
+
+/* Thin */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-Thin.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-ThinItalic.woff2") format("woff2");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ExtraLight */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-ExtraLight.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-ExtraLightItalic.woff2") format("woff2");
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Light */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-LightItalic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Regular */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Medium */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-MediumItalic.woff2") format("woff2");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* SemiBold */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-SemiBoldItalic.woff2") format("woff2");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bold */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ExtraBold */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-ExtraBold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-ExtraBoldItalic.woff2") format("woff2");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Black */
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "LTSuperior";
+  src: url("../assets/fonts/LTSuperior/LTSuperior-BlackItalic.woff2") format("woff2");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
