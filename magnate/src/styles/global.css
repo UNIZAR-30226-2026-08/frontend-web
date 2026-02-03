@@ -1,5 +1,26 @@
 /* File: src/styles/global.css */
 
+:root {
+  --color-primary: #3fa34d;
+  --color-secondary: #2a9134;
+  --color-tertiary: #40916c;
+  --color-background: #242424;
+  --color-text: rgba(255, 255, 255, 0.87);
+
+  --font-primary: "LTSuperior", system-ui, Avenin, Helvetica, Arial, sans-serif;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--color-background);
+  color: var(--color-text);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* Thin */
 @font-face {
   font-family: "LTSuperior";
