@@ -1,4 +1,7 @@
 /* File: src/styles/global.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --color-primary: #3fa34d;
@@ -6,9 +9,11 @@
   --color-tertiary: #40916c;
   --color-background: #242424;
   --color-text: rgba(255, 255, 255, 0.87);
+  --color-text-secondary: rgba(10, 10, 10, 0.87);
 
   --font-primary: "LTSuperior", system-ui, Avenin, Helvetica, Arial, sans-serif;
 }
+
 
 body {
   font-family: var(--font-primary);
@@ -19,6 +24,7 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
 }
 
 /* Thin */

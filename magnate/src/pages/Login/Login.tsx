@@ -1,63 +1,68 @@
 import { useState } from 'react';
-import './Login.css';
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 export default function Login() {
-    // Estados para capturar los datos
+    // State to capture form data
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
 
-    // Maneja el envío
+    // Handle form submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Login:', { email, password });
     };
 
     return (
-        <div className="login-container">
-            <div className="login-card">
-                
-                <div className="login-header">
-                    <h1> <b> Magnate</b></h1>
-                </div>
-
-                <form onSubmit={handleSubmit} className="login-form">
-                    <div className="form-group">
-                        <div className="label-row">
-                            <label htmlFor="email">Email</label>
-                            {/* < a href="#" className="forgot-link">¿Olvidaste tu contraseña? </a> */}
+        <div className='flex justify-center items-center min-h-screen bg-[var(--color-background)]'>
+            <Card className=" bg-[var(--color-text)] w-full max-w-md shadow-2xl">
+                <CardHeader>
+                    <CardTitle className="text-4xl text-center text-[var(--color-primary)]">
+                        Magnate 
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit}>
+                        <div className="space-y-2 p-3 text-left">
+                            <Label htmlFor="email"> Email </Label>
+                            <Input 
+                                id="email"
+                                type="email"
+                                placeholder="example@unizar.es"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}>  
+                            </Input>
                         </div>
-                        <input
-                            id="email"
-                            type="email"
-                            placeholder="example@unizar.es"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
 
-                    <div className="form-group">
-                        <div className="label-row">
-                            <label htmlFor="password">Contraseña</label>
-                            {/* < a href="#" className="forgot-link">¿Olvidaste tu contraseña? </a> */}
+                        <div className="space-y-2 p-3 text-left">
+                            <Label htmlFor="password"> Contraseña </Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}>
+                            </Input>
                         </div>
-                        <input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
+                        <CardFooter className="flex-col gap-2 p-6">
+                            <Button type="submit" size="lg" 
+                                        className="bg-[var(--color-primary)] hover:bg-[hsl(var(--color-primary))]/80
+                                        rounded-xl text-[var(--color-text)] text-lg"> 
+                                Entrar 
+                            </Button>
+                        </CardFooter>   
 
-                    {/* <button type="submit" className="login-button">
-                        Entrar
-                    </button> */}
-                    <Button type="submit" variant="secondary" size="lg" className='min-w-80'> Entrar </Button>
-                </form>
-            </div>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     );
 }
