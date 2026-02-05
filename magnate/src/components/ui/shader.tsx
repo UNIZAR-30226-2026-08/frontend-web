@@ -8,8 +8,8 @@ const ShaderLoading = ({
    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px', background: 'var(--color-background)' }}>
       <style>{`
         @keyframes wave {
-          0%, 100% { transform: translateY(0); filter: hue-rotate(0deg); }
-          50% { transform: translateY(-${jump}px); filter: hue-rotate(45deg); }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-${jump}px);}
         }
       `}</style>
 

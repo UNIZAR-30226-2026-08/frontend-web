@@ -2,9 +2,9 @@ import { useState } from 'react'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 import './App.css'
-import Login from './pages/Login/Login'
-import SignUp from './pages/SignUp/SignUp'
-import Shader from './components/shader'
+import Login from '@/pages/Login/Login'
+import SignUp from '@/pages/SignUp/SignUp'
+import Shader from '@/components/ui/shader'
 
 // function App() {
 //   const [count, setCount] = useState(0)
@@ -41,7 +41,7 @@ import Shader from './components/shader'
 function App() {
   return (
     <>
-      <Shader />
+      <SignUp />
 
     </>
   )
