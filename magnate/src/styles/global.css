@@ -12,6 +12,8 @@
   --color-text-secondary: rgba(10, 10, 10, 0.87);
 
   --font-primary: "LTSuperior", system-ui, Avenin, Helvetica, Arial, sans-serif;
+  padding: 0;
+  margin: 0;
 }
 
 

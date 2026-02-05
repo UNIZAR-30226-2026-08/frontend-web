@@ -4,7 +4,7 @@ import { useState } from 'react'
 import './App.css'
 import Login from '@/pages/Login/Login'
 import SignUp from '@/pages/SignUp/SignUp'
-import Shader from '@/components/ui/shader'
+import Loading from '@/pages/Loading/Loading'
 
 // function App() {
 //   const [count, setCount] = useState(0)
@@ -41,7 +41,7 @@ import Shader from '@/components/ui/shader'
 function App() {
   return (
     <>
-      <SignUp />
+      <Loading />
 
     </>
   )
