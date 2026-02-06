@@ -2,7 +2,7 @@ import React from 'react';
 
 const ShaderLoading = ({
   text = "Cargando...", speed = 1.7, 
-  jump = 15, size = 80, color = "var(--color-text-secondary)" }) => {
+  jump = 15, size = 80, color = "var(--color-tertiary)" }) => {
   
     return (
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', 
@@ -27,6 +27,7 @@ const ShaderLoading = ({
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           margin:'20px',
+          marginRight: '50px'
         }}>
           {text.split('').map((char, i) => (
             <span key={i} style={{
