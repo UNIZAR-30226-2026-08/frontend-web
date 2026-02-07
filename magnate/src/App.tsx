@@ -5,7 +5,6 @@ import './App.css'
 import Login from '@/pages/Login/Login'
 import SignUp from '@/pages/SignUp/SignUp'
 import Loading from '@/pages/Loading/Loading'
-import Login from './pages/Login/Login'
 import { PageHeader } from '@/components/layout/PageHeader'
 
 function App() {
