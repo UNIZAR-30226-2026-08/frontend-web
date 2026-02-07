@@ -5,6 +5,7 @@ import './App.css'
 import Login from '@/pages/Login/Login'
 import SignUp from '@/pages/SignUp/SignUp'
 import Loading from '@/pages/Loading/Loading'
+import BasicRules from '@/pages/BasicRules/BasicRules'
 import { PageHeader } from '@/components/layout/PageHeader'
 
 function App() {
@@ -12,8 +13,8 @@ function App() {
 
   return (
     <>
-      <PageHeader title="Modo de juego" />
-      <Login />
+      <PageHeader title="Reglas básicas" />
+      <BasicRules />
       {/* <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
