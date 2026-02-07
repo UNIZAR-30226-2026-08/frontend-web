@@ -10,6 +10,11 @@
   --color-text: rgba(255, 255, 255, 0.87);
   --color-text-secondary: rgba(10, 10, 10, 0.87);
 
+  --color-aux: #9b72cf;
+
+  --color-aux: rgba(155, 114, 207, 1); /* 100% opacity */
+  --color-aux-hover: #c8b1e4;
+
   --header-height: 128px;
 
   --font-primary: "LTSuperior", system-ui, Avenin, Helvetica, Arial, sans-serif;
