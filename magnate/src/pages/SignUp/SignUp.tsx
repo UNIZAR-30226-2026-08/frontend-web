@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export default function SignUp() {
+export function SignUp() {
     // State to capture form data
     const [username, setUsername] = useState<string>('');
     const [email, setEmail] = useState<string>('');
