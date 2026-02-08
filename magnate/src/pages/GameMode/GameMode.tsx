@@ -1,26 +1,33 @@
-import { Button } from "@/components/ui/button"
-import { PageHeader } from "@/components/layout/PageHeader"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { GameModeCard } from "./GameModeCard";
 
 export function GameMode() {
-  const imageUrl = "src/assets/bg_city_white.jpg";
+  const [selectedMode, setSelectedMode] = useState(null);
+  
+  const gridImageUrl = "src/assets/bg_city_white.jpg";
+  const newGameUrl = "src/assets/bg_city_white.jpg";
+  const loadGameUrl = "src/assets/bg_city_white.jpg";
+  
+  const lastSave = { date: "08/02/2026", time: "14:30" };
 
-  const buttonBaseClass = `
-    group relative w-full h-full p-0 overflow-hidden
-    rounded-2xl border-4 border-white
-    shadow-[0px_4px_0px_0px_rgba(0,0,0,0.25)]
-    hover:scale-105 transition-all duration-300 
-    bg-no-repeat flex flex-col items-stretch
+  const gridButtonEffect = `
+    transition-all duration-300 ease-out
+    hover:-translate-y-2 hover:shadow-[0px_12px_20px_rgba(0,0,0,0.15),0px_8px_0px_0px_rgba(0,0,0,0.1)]
+    hover:border-white hover:ring-4 hover:ring-white/20
+    active:translate-y-[4px] active:shadow-none active:ring-0
   `;
 
   const modes = [
-    { title: "Un jugador", pos: "0% 0%", iconUrl: "/icons/single_player.svg" },
-    { title: "Multijugador online", pos: "100% 0%", iconUrl: "/icons/online.svg" },
-    { title: "Multijugador con amigos", pos: "0% 100%", iconUrl: "/icons/multi_player.svg" },
-    { title: "Partida local con IA", pos: "100% 100%", iconUrl: "/icons/ia.svg" },
+    { title: "Un jugador", sub: "Individual", pos: "0% 0%", iconUrl: "/icons/single_player.svg" },
+    { title: "Multijugador", sub: "Online", pos: "100% 0%", iconUrl: "/icons/online.svg" },
+    { title: "Multijugador", sub: "Con amigos", pos: "0% 100%", iconUrl: "/icons/multi_player.svg" },
+    { title: "Partida Local", sub: "Con IA", pos: "100% 100%", iconUrl: "/icons/ia.svg" },
   ];
 
   return (
-    <div className="min-h-screen bg-cover bg-center bg-no-repeat">
+    <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none">
       <PageHeader title="Modo de juego" />
 
       <div
@@ -34,34 +41,57 @@ export function GameMode() {
         }}
       >
         {modes.map((mode, index) => (
-          <Button 
+          <Button
             key={index}
-            className={buttonBaseClass}
-            style={{ 
-                backgroundImage: `url(${imageUrl})`,
-                backgroundSize: '200% 200%',
-                backgroundPosition: mode.pos 
-            }}
+            onClick={() => setSelectedMode(mode)}
+            className={`
+              ${gridButtonEffect}
+              group relative w-full h-full p-0 overflow-hidden
+              rounded-[2rem] border-4 border-white
+              shadow-[0px_6px_0px_0px_rgba(0,0,0,0.15)]
+              bg-zinc-200
+            `}
           >
-            <div className="flex-grow" />
-
-            <img 
-              src={mode.iconUrl} 
-              alt="" 
-              className="absolute right-6 bottom-20 w-28 h-28 object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110 z-10"
+            <div 
+              className="absolute inset-0 bg-no-repeat transition-transform duration-700 group-hover:scale-110 pointer-events-none"
               style={{
-                filter: "brightness(0) invert(0.5) opacity(0.6)"
+                backgroundImage: `url(${gridImageUrl})`,
+                backgroundSize: "200% 200%",
+                backgroundPosition: mode.pos,
               }}
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+            
+            <img
+              src={mode.iconUrl}
+              alt=""
+              className="absolute right-10 top-10 w-20 h-20 object-contain transition-all duration-500 z-10 opacity-50 group-hover:opacity-100 group-hover:scale-110 pointer-events-none"
+              style={{ filter: "brightness(0) invert(1)" }}
+            />
 
-            <div className="w-full bg-black/80 py-5 text-center text-white backdrop-blur-md border-t border-white/10 z-20">
-              <span className="text-2xl font-bold uppercase tracking-wider">
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-end pb-12 text-white pointer-events-none">
+              <span className="text-6xl font-black uppercase italic tracking-tighter leading-none">
                 {mode.title}
+              </span>
+              <span className="text-xl font-bold uppercase opacity-60 tracking-[0.3em] mt-2">
+                {mode.sub}
               </span>
             </div>
           </Button>
         ))}
       </div>
+
+      {selectedMode && (
+        <GameModeCard 
+          title={selectedMode.title}
+          lastSave={lastSave}
+          newGameImage={newGameUrl}
+          loadGameImage={loadGameUrl}
+          onBack={() => setSelectedMode(null)}
+          onNewGame={() => console.log("New Game Started")}
+          onLoadGame={() => console.log("Game Loaded")}
+        />
+      )}
     </div>
-  )
+  );
 }

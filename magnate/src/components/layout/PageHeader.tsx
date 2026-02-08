@@ -57,7 +57,7 @@ export function PageHeader({ title, showBackButton=true }: PageHeaderProps) {
       </div>
 
       <div className="flex justify-center z-10">
-        <h1 className="text-6xl font-extrabold tracking-tight whitespace-nowrap select-none">
+        <h1 className="text-6xl text-white font-extrabold tracking-tight whitespace-nowrap select-none">
           {title}
         </h1>
       </div>
