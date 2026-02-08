@@ -39,7 +39,7 @@ export function GameModeCard({
             </defs>
             <rect width="100%" height="100%" fill="url(#modal-header-pattern)" />
           </svg>
-          <h2 className="relative z-10 text-6xl font-extrabold tracking-tight uppercase italic pointer-events-none">
+          <h2 className="relative z-10 text-6xl text-white font-extrabold tracking-tight uppercase italic pointer-events-none">
             {title}
           </h2>
         </div>
