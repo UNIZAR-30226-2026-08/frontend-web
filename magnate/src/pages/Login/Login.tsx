@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export default function Login() {
+export function Login() {
     // State to capture form data
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
