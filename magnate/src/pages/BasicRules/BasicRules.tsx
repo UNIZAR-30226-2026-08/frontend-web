@@ -9,7 +9,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 
-export default function BasicRules() {
+export function BasicRules() {
     const RULES = [
         { title: "Reserva de Emergencia" , desc : "Nunca gastes todo tu dinero. Mantén siempre reserva para rentas inesperadas y oportunidades." },
         { title: "Naranjas y Rojas" , desc : "Las propiedades naranjas y rojas son las más rentables. Tienen alta probabilidad de caída y excelente retorno." },
@@ -19,7 +19,15 @@ export default function BasicRules() {
     ];
 
     return (
-        <div className='flex justify-center items-center min-h-screen bg-[var(--text-background)] px-4'>
+        <div className='flex justify-center items-start pt-40 min-h-screen bg-[var(--text-background)] px-4'
+            style={{
+            height: "calc(100vh - var(--header-height))",
+            marginTop: "var(--header-height)",
+            backgroundImage: `url('/pattern.svg'), linear-gradient(rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.98))`,
+            backgroundRepeat: "repeat",
+            backgroundBlendMode: "overlay",
+            }}
+        >
             <PageHeader title="Reglas básicas" />
                 <Carousel className="w-full max-w-md">
                     <CarouselContent>
@@ -47,8 +55,8 @@ export default function BasicRules() {
                         )) }
                     </CarouselContent>
                     
-                    <CarouselPrevious/>
-                    <CarouselNext />
+                    <CarouselPrevious className="border-black text-black hover:bg-black hover:text-white transition-colors"/>
+                    <CarouselNext className="border-black text-black hover:bg-black hover:text-white transition-colors" />
                 </Carousel>     
         </div>
     );
