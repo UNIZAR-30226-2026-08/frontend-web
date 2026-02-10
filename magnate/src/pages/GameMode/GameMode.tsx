@@ -47,7 +47,7 @@ export function GameMode() {
             className={`
               ${gridButtonEffect}
               group relative w-full h-full p-0 overflow-hidden
-              rounded-[2rem] border-4 border-white
+              rounded-[7rem] border-4 border-white
               shadow-[0px_6px_0px_0px_rgba(0,0,0,0.15)]
               bg-zinc-200
             `}

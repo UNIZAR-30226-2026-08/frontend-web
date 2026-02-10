@@ -29,71 +29,98 @@ export function SignUp() {
     };
 
     return (
-        <div className='flex justify-center items-center min-h-screen bg-[var(--color-background)]'>
-            <Card className=" bg-[var(--color-text)] w-full max-w-md shadow-2xl">
-                <CardHeader>
-                    <CardTitle className="text-4xl text-center text-[var(--color-primary)]">
-                        Magnate 
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit}>
-                        {/* Username field */}
-                        <div className="space-y-2 p-3 text-left">
-                            <Label htmlFor="username"> Nombre de usuario </Label>
-                            <Input 
+                <div className='flex justify-center items-center min-h-screen bg-[url(src/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat '>
+            <div className='absolute inset-0 bg-black/60 backdrop-blur-[8px]'></div>
+                <div className='relative w-full max-w-xl px-4 justify-center '>
+                    <img 
+                        src="/src/assets/logo.png" 
+                        alt="Logo Magnate" 
+                        className="w-full h-full mb-32 object-contain" 
+                    />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        
+                        <div className="space-y-2 relative flex items-center ">
+                            
+                            <Input className='border-[5px] h-14 px-8 border-[var(--color-bordes)]
+                                w-full font-bold text-[22px] text-black'
                                 id="username"
                                 type="text"
-                                placeholder="usuario123"
+                                placeholder="Nombre de usuario"
                                 value={username}
-                                onChange={(e) => setUsername(e.target.value)}>  
+                                onChange={(e) => setUsername(e.target.value)}> 
                             </Input>
+                            <img 
+                                src="/icons/single_player.svg" 
+                                alt="icon" 
+                                className="absolute right-4 w-10 h-10 pointer-events-none  top-1/2 -translate-y-7" 
+                            />
+                            
                         </div>
-                        {/* Email field */}
-                        <div className="space-y-2 p-3 text-left">
-                            <Label htmlFor="email"> Email </Label>
-                            <Input 
+
+                        <div className="space-y-2 relative flex items-center ">
+                            
+                            <Input className='border-[5px] h-14 px-8 border-[var(--color-bordes)]
+                            w-full text-[22px] font-bold text-black'
                                 id="email"
                                 type="email"
-                                placeholder="example@unizar.es"
+                                placeholder="Email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}>  
                             </Input>
+                            <img 
+                                src="/icons/email.svg" 
+                                alt="icon" 
+                                className="absolute right-4 w-10 h-10 pointer-events-none  top-1/2 -translate-y-7" 
+                            />
+                            
                         </div>
-                        {/* Password field */}
-                        <div className="space-y-2 p-3 text-left">
-                            <Label htmlFor="password"> Contraseña </Label>
-                            <Input
+
+                        <div className="space-y-2 p-1 text-left relative flex items-center">
+                            
+                            <Input className='border-[5px] h-14 px-8 border-[var(--color-bordes)]
+                            w-full text-[22px] font-bold text-black'
                                 id="password"
                                 type="password"
-                                placeholder="••••••••"
+                                placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}>
                             </Input>
+                            <img 
+                                src="/icons/lock.svg" 
+                                alt="icon" 
+                                className="absolute right-4 w-10 h-10 pointer-events-none top-1/2 -translate-y-7 " 
+                            />
+                           
                         </div>
-                        {/* Confirm password field */}
-                        <div className="space-y-2 p-3 text-left">
-                            <Label htmlFor="confirmPassword"> Confirmar contraseña </Label>
-                            <Input
+
+                        <div className="space-y-2 p-1 text-left relative flex items-center">
+                            
+                            <Input className='border-[5px] h-14 px-8 border-[var(--color-bordes)]
+                            w-full text-[22px] font-bold text-black'
                                 id="confirmPassword"
                                 type="password"
-                                placeholder="••••••••"
+                                placeholder="Confirmar contraseña"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}>
                             </Input>
+                            <img 
+                                src="/icons/key.svg" 
+                                alt="icon" 
+                                className="absolute right-4 w-10 h-10 pointer-events-none top-1/2 -translate-y-7 " 
+                            />
+                           
                         </div>
-                        {/* Submit button */}
-                        <CardFooter className="flex-col gap-2 p-4">
-                            <Button type="submit" size="lg" 
-                                        className="bg-[var(--color-primary)] hover:bg-[hsl(var(--color-primary))]/80
-                                        rounded-xl text-[var(--color-text)] text-lg shadow-lg"> 
-                                Crear cuenta 
+                        
+                        <div className='flex justify-center p-3 w-full'>
+                            <Button type="submit" variant='magnate'
+                                    className="bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold h-[0px] w-[250px] 
+                                    transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
+                                    hover:scale-110 active:scale-90 active:rotate-0 "> 
+                                Registrarse
                             </Button>
-                        </CardFooter>   
-
+                        </div>
                     </form>
-                </CardContent>
-            </Card>
+                </div>
         </div>
-    );
+   );
 }

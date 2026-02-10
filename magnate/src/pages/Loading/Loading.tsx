@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function Loading() {
+export function Loading() {
     return (
         <div className='flex justify-center items-center min-h-screen bg-[url(@/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat relative'>
             <div className='absolute inset-0 bg-white/50 backdrop-blur-[3px]'></div>

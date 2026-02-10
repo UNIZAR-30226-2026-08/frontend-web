@@ -12,6 +12,15 @@ module.exports = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+		keyframes: {
+			'bounce-soft': {
+			'0%, 100%': { transform: 'scale(1)' },
+			'50%': { transform: 'scale(1.15)' },
+			}
+      	},
+		animation: {
+			'bounce-click': 'bounce-soft 0.3s ease-in-out',
+		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
