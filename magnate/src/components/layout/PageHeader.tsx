@@ -43,7 +43,7 @@ export function PageHeader({ title, showBackButton=true }: PageHeaderProps) {
             variant="ghost"
             onClick={() => navigate(-1)}
             aria-label="Go back"
-            className="z-60 bg-black hover:bg-black rounded-full flex items-center
+            className="z-60 bg-[var(--color-black)] hover:bg-[var(--color-black)] rounded-full flex items-center
                        justify-center ml-2 w-20 h-20 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.25)] 
                        transform-gpu transition-transform duration-200 ease-in-out hover:scale-110"
           >
