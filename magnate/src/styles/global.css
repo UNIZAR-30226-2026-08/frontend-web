@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #3fa34d;
-  --color-secondary: #2a9134;
+  --color-primary: #008a5c;
+  --color-secondary: #ffc971;
+
   --color-tertiary: #558b6e;
   --color-background: #242424;
   --color-text: rgba(255, 255, 255, 0.87);
@@ -13,8 +14,9 @@
   --color-aux: #9b72cf;
   --color-bordes: #ffc971;
   --color-placeholder : #78828b;
+  --color-black: #222222;
 
-  --color-aux: rgba(155, 114, 207, 1); /* 100% opacity */
+  --color-aux: #ffc971;
   --color-aux-hover: #c8b1e4;
 
   --header-height: 128px;
