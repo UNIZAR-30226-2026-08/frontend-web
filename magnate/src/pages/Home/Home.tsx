@@ -56,12 +56,12 @@ export function Home() {
                 backgroundBlendMode: "overlay",
             }}>
 
-            <div className="flex items-center justify-between gap-4 z-10">
-                <h1 className="text-8xl font-black text-zinc-900 uppercase italic tracking-tighter px-20
-                text-yellow-500 py-9
-                [text-shadow:_3px_3px_0_rgb(202_138_4),_6px_6px_0_rgb(161_98_7)]"> 
-                    MAGNATE 
-                </h1>
+            <div className="flex items-center justify-between px-12 py-6 z-10">
+                <img 
+                    src="/src/assets/logo.png" 
+                    alt="Logo Magnate" 
+                    className="w-[700px] h-auto object-contain" 
+                />
                 <div className="p-8 flex justify-end items-center gap-4 " >
                     <Button 
                         size="lg" 
@@ -89,7 +89,7 @@ export function Home() {
                     </Button>
                 </div>
             </div>
-            <div className="flex-1 grid grid-cols-2 gap-10 pb-20 px-20"> 
+            <div className="flex-1 grid grid-cols-2 gap-10 px-20 pb-16 h-full"> 
                 {/* Jugar */}
                 <div className="flex items-center justify-center w-full h-full">
                     <Button

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-
 export function Login() {
     // State to capture form data
     const [email, setEmail] = useState<string>('');
@@ -25,9 +24,9 @@ export function Login() {
                     />
                     <form onSubmit={handleSubmit} className="space-y-6">
                         
-                        <div className="space-y-2 p-1 text-left relative flex item-center">
+                        <div className="space-y-2 relative flex items-center ">
                             
-                            <Input className='border-[5px] h-12 pr-14 placeholder:text-[var(--color-placeholder)] placeholder:font-bold  placeholder:text-[22px] border-[var(--color-bordes)] w-full'
+                            <Input className='border-[5px] h-14 px-8 border-[var(--color-bordes)] w-full font-bold text-[22px] text-black'
                                 id="email"
                                 type="email"
                                 placeholder="Email"
@@ -35,38 +34,38 @@ export function Login() {
                                 onChange={(e) => setEmail(e.target.value)}>  
                             </Input>
                             <img 
-                                src="/icons/single_player.svg" 
+                                src="/icons/email.svg" 
                                 alt="icon" 
-                                className="absolute right-4 w-8 h-8 pointer-events-none mt-2 mr-2" 
+                                className="absolute right-4 w-10 h-10 pointer-events-none  top-1/2 -translate-y-7" 
                             />
                             
                         </div>
 
-                        <div className="space-y-2 p-1 text-left relative flex item-center">
+                        <div className="space-y-2 p-1 text-left relative flex items-center">
                             
-                            <Input className='border-[5px] h-12 pr-14 placeholder:text-[var(--color-placeholder)] placeholder:font-bold  placeholder:text-[22px] border-[var(--color-bordes)] w-full'
+                            <Input className='border-[5px] h-14 px-8 border-[var(--color-bordes)] w-full font-bold text-[22px] text-black'
                                 id="password"
                                 type="password"
                                 placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}>
                             </Input>
-
                             <img 
                                 src="/icons/lock.svg" 
                                 alt="icon" 
-                                className="absolute right-4 w-8 h-8 pointer-events-none mt-2 mr-2" 
+                                className="absolute right-4 w-10 h-10 pointer-events-none top-1/2 -translate-y-7 " 
                             />
                            
                         </div>
                         
-                        <div className='flex justify-center p-6'>
-                            <Button type="submit" 
-                                    className="bg-[var(--color-primary)] rounded-full text-[var(--color-text)] text-[22px] font-bold h-14 w-40"> 
-                            ENTRAR
-                        </Button>
+                        <div className='flex justify-center p-3 w-full'>
+                            <Button type="submit" variant='magnate'
+                                    className="bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold
+                                    transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
+                                    hover:scale-110 active:scale-90 active:rotate-0 "> 
+                                Entrar
+                            </Button>
                         </div>
-
                     </form>
                 </div>
         </div>
