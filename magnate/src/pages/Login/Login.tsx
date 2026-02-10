@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+
 
 export function Login() {
     // State to capture form data
@@ -22,48 +15,60 @@ export function Login() {
     };
 
     return (
-        <div className='flex justify-center items-center min-h-screen bg-[var(--color-background)]'>
-            <Card className=" bg-[var(--color-text)] w-full max-w-md shadow-2xl">
-                <CardHeader>
-                    <CardTitle className="text-4xl text-center text-[var(--color-primary)]">
-                        Magnate 
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit}>
-
-                        <div className="space-y-2 p-3 text-left">
-                            <Label htmlFor="email"> Email </Label>
-                            <Input 
+        <div className='flex justify-center items-center min-h-screen bg-[url(src/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat '>
+            <div className='absolute inset-0 bg-black/60 backdrop-blur-[8px]'></div>
+                <div className='relative w-full max-w-xl px-4 justify-center '>
+                    <img 
+                        src="/src/assets/logo.png" 
+                        alt="Logo Magnate" 
+                        className="w-full h-full mb-32 object-contain" 
+                    />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        
+                        <div className="space-y-2 p-1 text-left relative flex item-center">
+                            
+                            <Input className='border-[5px] h-12 pr-14 placeholder:text-[var(--color-placeholder)] placeholder:font-bold  placeholder:text-[22px] border-[var(--color-bordes)] w-full'
                                 id="email"
                                 type="email"
-                                placeholder="example@unizar.es"
+                                placeholder="Email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}>  
                             </Input>
+                            <img 
+                                src="/icons/single_player.svg" 
+                                alt="icon" 
+                                className="absolute right-4 w-8 h-8 pointer-events-none mt-2 mr-2" 
+                            />
+                            
                         </div>
 
-                        <div className="space-y-2 p-3 text-left">
-                            <Label htmlFor="password"> Contraseña </Label>
-                            <Input
+                        <div className="space-y-2 p-1 text-left relative flex item-center">
+                            
+                            <Input className='border-[5px] h-12 pr-14 placeholder:text-[var(--color-placeholder)] placeholder:font-bold  placeholder:text-[22px] border-[var(--color-bordes)] w-full'
                                 id="password"
                                 type="password"
-                                placeholder="••••••••"
+                                placeholder="Contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}>
                             </Input>
+
+                            <img 
+                                src="/icons/lock.svg" 
+                                alt="icon" 
+                                className="absolute right-4 w-8 h-8 pointer-events-none mt-2 mr-2" 
+                            />
+                           
                         </div>
-                        <CardFooter className="flex-col gap-2 p-6">
-                            <Button type="submit" size="lg" 
-                                        className="bg-[var(--color-primary)] hover:bg-[hsl(var(--color-primary))]/80
-                                        rounded-xl text-[var(--color-text)] text-lg"> 
-                                Entrar 
-                            </Button>
-                        </CardFooter>   
+                        
+                        <div className='flex justify-center p-6'>
+                            <Button type="submit" 
+                                    className="bg-[var(--color-primary)] rounded-full text-[var(--color-text)] text-[22px] font-bold h-14 w-40"> 
+                            ENTRAR
+                        </Button>
+                        </div>
 
                     </form>
-                </CardContent>
-            </Card>
+                </div>
         </div>
     );
 }

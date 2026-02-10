@@ -16,7 +16,7 @@ const ModeContent = ({ mode, gridImageUrl }) => (
     <img
         src={mode.iconUrl}
         alt=""
-        className="absolute right-8 top-8 w-16 h-16 object-contain transition-all duration-500 z-10 opacity-50 group-hover:opacity-100 group-hover:scale-110 pointer-events-none"
+        className="absolute right-10 top-10 w-16 h-16 object-contain transition-all duration-500 z-10 opacity-50 group-hover:opacity-100 group-hover:scale-110 pointer-events-none"
         style={{ filter: "brightness(0) invert(1)" }}
     />
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-end pb-12 text-white pointer-events-none">
@@ -55,14 +55,14 @@ export function Home() {
                 backgroundRepeat: "repeat",
                 backgroundBlendMode: "overlay",
             }}>
-            
-            <div className="flex items-center justify-between gap-4">
+
+            <div className="flex items-center justify-between gap-4 z-10">
                 <h1 className="text-8xl font-black text-zinc-900 uppercase italic tracking-tighter px-20
                 text-yellow-500 py-9
                 [text-shadow:_3px_3px_0_rgb(202_138_4),_6px_6px_0_rgb(161_98_7)]"> 
                     MAGNATE 
                 </h1>
-                <div className="p-8 flex justify-end items-center gap-4" >
+                <div className="p-8 flex justify-end items-center gap-4 " >
                     <Button 
                         size="lg" 
                         className=" bg-[var(--color-background)]
@@ -97,7 +97,7 @@ export function Home() {
                         className={`
                             ${gridButtonEffect}
                             group relative w-full h-[70%] p-0 overflow-hidden
-                            rounded-[2rem] border-4 border-white
+                            rounded-[7rem] border-4 border-white
                             shadow-[0px_6px_0px_0px_rgba(0,0,0,0.15)]
                             bg-zinc-200
                         `}
@@ -114,7 +114,7 @@ export function Home() {
                         className={`
                             ${gridButtonEffect}
                             group relative w-full h-full p-0 overflow-hidden
-                            rounded-[2rem] border-4 border-white
+                            rounded-[7rem] border-4 border-white
                             shadow-[0px_6px_0px_0px_rgba(0,0,0,0.15)]
                             bg-zinc-200
                         `}

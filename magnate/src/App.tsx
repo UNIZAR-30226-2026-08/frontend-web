@@ -5,6 +5,7 @@ import { SignUp } from "@/pages/SignUp/SignUp";
 import { GameMode } from "@/pages/GameMode/GameMode";
 import { BasicRules } from "@/pages/BasicRules/BasicRules";
 import { Home } from "@/pages/Home/Home";
+import { Loading } from "@/pages/Loading/Loading";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/game-mode" element={<GameMode />} />
       <Route path="/basic-rules" element={<BasicRules />} />
       <Route path="/home" element={<Home />} />
+      <Route path="/loading" element={<Loading />} />
     </Routes>
   );
 }

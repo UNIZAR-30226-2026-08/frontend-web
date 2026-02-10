@@ -29,15 +29,15 @@ export function BasicRules() {
             }}
         >
             <PageHeader title="Reglas básicas" />
-                <Carousel className="w-full max-w-md">
+                <Carousel className="w-full max-w-7xl">
                     <CarouselContent>
                         {RULES.map((rule, index) => (
-                            <CarouselItem key={index}>
-                                <div>
+                            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3" >
+                                <div className="p-1">
                                     <Card className="relative bg-[var(--color-primary)] w-full border-4 border-[var(--color-text)] rounded-[35px]">
                                         <CardContent className="flex flex-col aspect-square items-center justify-center p-8 gap-4">
                                             
-                                            <div className="absolute top-8 text-6xl font-extrabold text-white/50 select-none">
+                                            <div className="absolute top-10 text-6xl font-extrabold text-white/50 select-none">
                                                 TIP {index + 1}
                                             </div>
                                             
@@ -55,8 +55,8 @@ export function BasicRules() {
                         )) }
                     </CarouselContent>
                     
-                    <CarouselPrevious className="border-black text-black hover:bg-black hover:text-white transition-colors"/>
-                    <CarouselNext className="border-black text-black hover:bg-black hover:text-white transition-colors" />
+                    <CarouselPrevious className="border-black text-black hover:bg-black hover:text-white transition-colors h-12 w-12"/>
+                    <CarouselNext className="border-black text-black hover:bg-black hover:text-white transition-colors h-12 w-12" />
                 </Carousel>     
         </div>
     );
