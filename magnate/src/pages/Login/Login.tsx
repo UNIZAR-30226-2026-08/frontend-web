@@ -7,6 +7,8 @@ export function Login() {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
 
+    const bouncyAnimation = "transition-all duration-150 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:scale-105 active:scale-95";
+
     // Handle form submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -60,9 +62,9 @@ export function Login() {
                         
                         <div className='flex justify-center p-3 w-full'>
                             <Button type="submit" variant='magnate'
-                                    className="bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold
-                                    transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
-                                    hover:scale-110 active:scale-90 active:rotate-0 "> 
+                                    className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold
+                                    ${bouncyAnimation}
+                                    `}> 
                                 Entrar
                             </Button>
                         </div>

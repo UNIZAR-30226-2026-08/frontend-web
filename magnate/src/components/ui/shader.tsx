@@ -1,11 +1,11 @@
 import React from 'react';
 
 const ShaderLoading = ({
-  text = "Cargando...", speed = 1.7, 
-  jump = 15, size = 80, color = "var(--color-tertiary)" }) => {
+  text = "Cargando...", speed = 2, 
+  jump = 15, size = 75, color = "var(--color-text)" }) => {
   
     return (
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', 
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
                     height: '100vh',
                     width: '100%',
                     boxSizing: 'border-box',
@@ -26,8 +26,8 @@ const ShaderLoading = ({
           background: `linear-gradient(90deg, ${color})`,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          margin:'20px',
-          marginRight: '50px'
+          
+          
         }}>
           {text.split('').map((char, i) => (
             <span key={i} style={{
