@@ -17,17 +17,13 @@ const ModeContent = ({ mode, gridImageUrl }) => (
         <span className="text-5xl font-black uppercase italic tracking-tighter leading-none">
             {mode.title}
         </span>
-        {mode.sub && (
-            <span className="text-xl font-bold uppercase opacity-60 tracking-[0.3em] mt-2">
-                {mode.sub}
-             </span>
-        )}
     </div>
   </>
 );
 
 export function Lobby() {
     const gridImageUrl = "src/assets/bg_city_white.jpg";
+    const bouncyAnimation = "transition-all duration-150 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:scale-105 active:scale-95";
 
     const players = [
         { title: "usuario1", pos: "0% 0%" },
@@ -87,9 +83,9 @@ export function Lobby() {
                 </div>
             <div className='flex justify-center p-3 w-full'>
                 <Button type="submit" variant='magnate'
-                        className="bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold w-[350px]
-                        transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
-                        hover:scale-110 active:scale-90 active:rotate-0 "> 
+                        className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold w-[350px]
+                        ${bouncyAnimation}
+                        `}> 
                     Comenzar juego
                 </Button>
             </div>

@@ -7,6 +7,7 @@ import { BasicRules } from "@/pages/BasicRules/BasicRules";
 import { Home } from "@/pages/Home/Home";
 import { Loading } from "@/pages/Loading/Loading";
 import { Lobby } from "@/pages/Lobby/Lobby";
+import { PrivateRoom } from "./pages/PrivateRoom/PrivateRoom";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
       <Route path="/home" element={<Home />} />
       <Route path="/loading" element={<Loading />} />
       <Route path="/lobby" element={<Lobby />} />
+      <Route path="/private-room" element={<PrivateRoom />} />
     </Routes>
   );
 }
