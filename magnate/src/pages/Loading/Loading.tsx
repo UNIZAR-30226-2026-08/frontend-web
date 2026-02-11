@@ -3,7 +3,6 @@ import ShaderLoading from '@/components/ui/shader';
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
