@@ -18,7 +18,7 @@ export function Login() {
             <div className='absolute inset-0 bg-black/60 backdrop-blur-[8px]'></div>
                 <div className='relative w-full max-w-xl px-4 justify-center '>
                     <img 
-                        src="/src/assets/logo.png" 
+                        src="/src/assets/images/logo.png" 
                         alt="Logo Magnate" 
                         className="w-full h-full mb-32 object-contain" 
                     />

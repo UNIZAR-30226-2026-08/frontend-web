@@ -58,7 +58,7 @@ export function Home() {
 
             <div className="flex items-center justify-between px-12 py-6 z-10">
                 <img 
-                    src="/src/assets/logo.png" 
+                    src="/src/assets/images/logo.png" 
                     alt="Logo Magnate" 
                     className="w-[700px] h-auto object-contain" 
                 />
