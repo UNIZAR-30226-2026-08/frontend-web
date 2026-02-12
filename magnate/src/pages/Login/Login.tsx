@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export function Login() {
+    const navigate = useNavigate();
+
     // State to capture form data
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -13,6 +16,7 @@ export function Login() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Login:', {email, password });
+        navigate('/home');
     };
 
     return (
