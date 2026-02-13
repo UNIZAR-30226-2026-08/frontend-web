@@ -10,8 +10,8 @@ export function Login() {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
 
-    const bouncyAnimation = "transition-all duration-150 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:scale-105 active:scale-95";
-
+    const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+    
     // Handle form submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,7 +26,7 @@ export function Login() {
                     <img 
                         src="/src/assets/images/logo.png" 
                         alt="Logo Magnate" 
-                        className="w-full h-full mb-32 object-contain" 
+                        className="w-full h-full mb-32 " 
                     />
                     <form onSubmit={handleSubmit} className="space-y-6">
                         
@@ -66,7 +66,7 @@ export function Login() {
                         
                         <div className='flex justify-center p-3 w-full'>
                             <Button type="submit" variant='magnate'
-                                    className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold
+                                    className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[28px] uppercase font-bold
                                     ${bouncyAnimation}
                                     `}> 
                                 Entrar

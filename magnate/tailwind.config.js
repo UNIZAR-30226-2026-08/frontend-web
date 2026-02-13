@@ -18,9 +18,9 @@ module.exports = {
 			'50%': { transform: 'scale(1.15)' },
 			}
       	},
-		animation: {
-			'bounce-click': 'bounce-soft 0.3s ease-in-out',
-		},
+		transitionTimingFunction: {
+        	'bouncy': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+      	},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

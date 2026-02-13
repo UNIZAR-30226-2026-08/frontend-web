@@ -21,7 +21,7 @@ export function LandingPage() {
   const navigate = useNavigate();
   const backgroundImage = "src/assets/bg_city_white.jpg";
   const logoImage = "src/assets/images/logo.png";
-  const bouncy = "transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:scale-105 active:scale-95";
+ const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-[var(--color-background)] select-none">
@@ -53,7 +53,7 @@ export function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl mt-32 md:mt-48">
           
-          <div className={`relative h-28 md:h-32 overflow-hidden rounded-full border-4 border-white shadow-2xl group ${bouncy}`}>
+          <div className={`relative h-28 md:h-32 overflow-hidden rounded-full border-4 border-white shadow-2xl group ${bouncyAnimation}`}>
             <Button
               onClick={() => navigate("/login")}
               className="w-full h-full p-0 bg-[var(--color-primary)] hover:bg-[var(--color-primary)] relative"
@@ -62,7 +62,7 @@ export function LandingPage() {
             </Button>
           </div>
 
-          <div className={`relative h-28 md:h-32 overflow-hidden rounded-full border-4 border-white shadow-2xl group ${bouncy}`}>
+          <div className={`relative h-28 md:h-32 overflow-hidden rounded-full border-4 border-white shadow-2xl group ${bouncyAnimation}`}>
             <Button
               onClick={() => navigate("/signup")}
               className="w-full h-full p-0 bg-[var(--color-primary)] hover:bg-[var(--color-primary)] relative"
