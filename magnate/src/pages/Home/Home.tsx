@@ -43,9 +43,10 @@ export function Home() {
         active:translate-y-[4px] active:shadow-none active:ring-0
   `;
     const modes = [
-        { title: "Jugar", sub: "Construye tu imperio", pos: "0% 0%", iconUrl: "/icons/gamepad.svg" },
-        { title: "Amigos", sub: "Gestiona tu red", pos: "100% 0%", iconUrl: "/icons/multi_player.svg" },
-        { title: "Tienda", sub: "Compra de cosméticos", pos: "0% 100%", iconUrl: "/icons/shop.svg" },
+        { title: "Partida pública", sub: "Construye tu imperio", pos: "0% 0%", iconUrl: "/icons/online.svg", path:'/loading' },
+        { title: "Partida privada", sub: "Compite con tus amigos", pos: "0% 0%", iconUrl: "/icons/gamepad.svg", path:'/private-room' },
+        { title: "Amigos", sub: "Gestiona tu red", pos: "100% 0%", iconUrl: "/icons/multi_player.svg", path:'/friends' },
+        { title: "Tienda", sub: "Compra de cosméticos", pos: "0% 100%", iconUrl: "/icons/shop.svg", path:'/shop' },
     ];
     return (
         <div className="relative h-screen w-full overflow-hidden select-none flex flex-col"
@@ -60,7 +61,7 @@ export function Home() {
                 <img 
                     src="/src/assets/images/logo.png" 
                     alt="Logo Magnate" 
-                    className="w-[700px] h-auto object-contain" 
+                    className="w-[600px] h-auto object-contain" 
                 />
                 <div className="p-8 flex justify-end items-center gap-4 " >
                     <Button 
@@ -89,36 +90,39 @@ export function Home() {
                     </Button>
                 </div>
             </div>
-            <div className="flex-1 grid grid-cols-2 gap-10 px-20 pb-16 h-full"> 
+            <div className="flex-1 grid grid-cols-2 gap-5 px-20 pb-14 pt-8 h-full"> 
                 {/* Jugar */}
-                <div className="flex items-center justify-center w-full h-full">
-                    <Button
-                        onClick={() => navigate("/game-mode")}
+                <div className="flex flex-col gap-10 justify-center h-full">
+                    {modes.slice(0,2).map((mode, index) => (
+                        <Button
+                        key={index}
+                        onClick={() => navigate(mode.path)}
                         className={`
                             ${gridButtonEffect}
                             group relative w-full h-[70%] p-0 overflow-hidden
                             rounded-[7rem] border-4 border-white
                             shadow-[0px_6px_0px_0px_rgba(0,0,0,0.15)]
-                            bg-zinc-200
-                        `}
-                    >
-                        <ModeContent mode={modes[0]} gridImageUrl={gridImageUrl} />
-                    </Button>
+                            bg-zinc-200 scale-105
+                        `}>
+                        <ModeContent mode={mode} gridImageUrl={gridImageUrl} />
+                        </Button>
+
+                    ))}
+                    
                 </div>    
                     {/* Amigos y Tienda  */}        
                 <div className="flex flex-col gap-10 justify-center h-full">
-                    {modes.slice(1).map((mode, index) => (
+                    {modes.slice(2,4).map((mode, index) => (
                         <Button
                         key={index}
-                        onClick={() => navigate(`/${mode.title.toLowerCase()}`)}
+                        onClick={() => navigate(mode.path)}
                         className={`
                             ${gridButtonEffect}
                             group relative w-full h-full p-0 overflow-hidden
                             rounded-[7rem] border-4 border-white
                             shadow-[0px_6px_0px_0px_rgba(0,0,0,0.15)]
-                            bg-zinc-200
-                        `}
-                        >
+                            bg-zinc-200 scale-90
+                        `}>
                         <ModeContent mode={mode} gridImageUrl={gridImageUrl} />
                         </Button>
                     ))}

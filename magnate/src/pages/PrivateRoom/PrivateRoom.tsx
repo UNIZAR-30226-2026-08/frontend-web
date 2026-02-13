@@ -33,8 +33,7 @@ export function PrivateRoom () {
         join: "/src/assets/images/join.png", 
         host: "/src/assets/images/host.png",
     };
-    const bouncyAnimation = "transition-all duration-150 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:scale-105 active:scale-95";
-
+    const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     const modes = [
         { id: 'join', title: "Unirse", sub: "Introduce el código y únete a la sala", pos: "0% 0%", imageUrl: backgroundImageUrls.join },
         { id: 'host', title: "Crear", sub: "Crea una sala para que se unan tus amigos", pos: "100% 0%", imageUrl: backgroundImageUrls.host },
@@ -43,7 +42,7 @@ export function PrivateRoom () {
     const [displayedImage, setDisplayedImage] = useState<string | null>(null);
     const [roomCode, setRoomCode] = useState<string>('');
 
-    const handleButtonClick = (modeId) => {
+    const handleButtonClick = (modeId : string) => {
         setActiveMode(modeId);
 
         if (modeId === 'join') {

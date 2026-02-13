@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 
+
 const ModeContent = ({ mode, gridImageUrl }) => (
   <>
     <div
@@ -23,16 +24,32 @@ const ModeContent = ({ mode, gridImageUrl }) => (
 
 export function Lobby() {
     const gridImageUrl = "src/assets/bg_city_white.jpg";
-    const bouncyAnimation = "transition-all duration-150 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:scale-105 active:scale-95";
+    const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
     const players = [
-        { title: "usuario1", pos: "0% 0%" },
-        { title: "usuario2", pos: "100% 0%"},
-        { title: "usuario3", pos: "0% 100%"},
+        { title: "usuario1", pos: "0% 0%", isBot:false },
+        { title: "usuario2", pos: "100% 0%", isBot: false},
+        // { title: "usuario3", pos: "0% 100%"},
         // { title: "usuario4", sub: "Amarillo", pos: "0% 100%"},
     ];
 
-    const lobbySlots = Array.from({ length: 4 }, (_, i) => players[i] || null);
+    const [lobbyPlayers, setLobbyPlayers] = useState(players);
+
+    const addBot = (index : number) => {
+        if (lobbyPlayers[index]) return;
+
+        const newBot = { title: `bot ${index + 1}`, pos: "0% 100%", isBot:true };
+        const newPlayers = [...lobbyPlayers];
+        newPlayers[index] = newBot;
+        setLobbyPlayers(newPlayers);
+    }
+    const removeBot = (index : number) => {
+        const newPlayers = [...lobbyPlayers];
+        newPlayers[index] = null;
+        setLobbyPlayers(newPlayers); 
+    }
+
+    const lobbySlots = Array.from({ length: 4 }, (_, i) => lobbyPlayers[i] || null);
 
   return (
     <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none">
@@ -53,21 +70,43 @@ export function Lobby() {
                         key={index}
                         className={`
                             relative w-full h-full overflow-hidden
-                            rounded-[7rem] border-4 
+                            rounded-[7rem] border-4  group
                             flex items-center justify-center
                             ${slot ? 'border-solid border-white shadow-[0px_6px_0px_0px_rgba(0,0,0,0.15)] bg-zinc-200' : 'bg-zinc-100/90 border-dashed'}
-                        `}
-                    >
+                        `} >
                         {slot ? (
-                            // Hay jugador
-                            <Button className="w-full h-full p-0 bg-transparent hover:bg-transparent">
-                                <ModeContent mode={slot} gridImageUrl={gridImageUrl} />
-                            </Button>
+                            <>
+                                <Button className="w-full h-full p-0 bg-transparent hover:bg-transparent cursor-default">
+                                    <ModeContent mode={slot} gridImageUrl={gridImageUrl} />
+                                </Button>
+                                
+                                {slot.isBot && ( 
+                                    <Button
+                                        onClick={() => removeBot(index)}
+                                        className="absolute flex items-center justify-center opacity-0 group-hover:opacity-100
+                                        transition-opacity duration-300 cursor-pointer"
+                                    >
+                                        <span className="text-zinc-300 text-6xl font-light hover:text-white transition-colors">
+                                            ✕
+                                        </span>
+                                    </Button>
+                                )}
+                            </>
                         ) : (
                             // No hay jugador
-                            <div className="flex flex-col items-center opacity-30">
-                                <div className="w-12 h-12 border-4 border-zinc-400 rounded-full border-t-transparent animate-spin mb-4" />
-                                <span className="font-bold uppercase tracking-widest text-zinc-500">Esperando...</span>
+                            <div className="flex flex-col items-center justify-center w-full h-full p-6">
+                                <div className="flex flex-col items-center opacity-30">
+                                    <div className="w-12 h-12 border-4 border-zinc-400 rounded-full border-t-transparent animate-spin mb-4" />
+                                        <span className="font-bold uppercase tracking-widest text-zinc-500">Esperando...</span>
+                                </div>
+                                <div className="absolute bottom-10">
+                                    <Button 
+                                        onClick={() => addBot(index)}
+                                        className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[16px] font-black uppercase px-6 py-2 rounded-full
+                                                    ${bouncyAnimation}`}>
+                                    + Añadir Bot
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -84,8 +123,7 @@ export function Lobby() {
             <div className='flex justify-center p-3 w-full'>
                 <Button type="submit" variant='magnate'
                         className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold w-[350px]
-                        ${bouncyAnimation}
-                        `}> 
+                        ${bouncyAnimation} `}> 
                     Comenzar juego
                 </Button>
             </div>
