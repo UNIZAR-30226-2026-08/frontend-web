@@ -118,7 +118,7 @@ export function PrivateRoom () {
                         variant='magnate'
                         disabled={!activeMode}
                         className={`
-                            text-[var(--color-text)] text-[32px] uppercase font-bold w-[250px]
+                            text-[var(--color-text)] text-[28px] uppercase font-bold w-[250px]
                             ${bouncyAnimation}
                             ${!activeMode ? 'bg-zinc-300 opacity-50' : 'bg-[var(--color-primary)] shadow-2xl'}
                         `}> 
