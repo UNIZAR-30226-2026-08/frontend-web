@@ -2,7 +2,6 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 
-
 const ModeContent = ({ mode, gridImageUrl }) => (
   <>
     <div
