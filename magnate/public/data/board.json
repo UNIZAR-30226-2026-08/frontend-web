@@ -1,0 +1,65 @@
+[
+  { "id": "000", "name": "Salida", "type": "special", "x": 1400, "y": 983, "index": 0 },
+  { "id": "001", "name": "Aula 101", "type": "property", "x": 1298, "y": 983, "index": 1, "price": 60, "color": "0x955436" },
+  { "id": "002", "name": "Aula 102", "type": "property", "x": 1213, "y": 983, "index": 2, "price": 60, "color": "0x955436" },
+  { "id": "003", "name": "Aula 103", "type": "property", "x": 1128, "y": 983, "index": 3, "price": 80, "color": "0x955436" },
+  { "id": "004", "name": "Aula 104", "type": "property", "x": 1043, "y": 983, "index": 4, "price": 100, "color": "0xACE2F2" },
+  { "id": "005", "name": "Aula 105", "type": "property", "x": 958, "y": 983, "index": 5, "price": 100, "color": "0xACE2F2" },
+  { "id": "006", "name": "Aula 106", "type": "property", "x": 873, "y": 983, "index": 6, "price": 120, "color": "0xACE2F2" },
+  { "id": "007", "name": "Aula 107", "type": "property", "x": 788, "y": 983, "index": 7, "price": 140, "color": "0xD93694" },
+  { "id": "008", "name": "Aula 108", "type": "property", "x": 703, "y": 983, "index": 8, "price": 140, "color": "0xD93694" },
+  { "id": "009", "name": "Aula 109", "type": "property", "x": 618, "y": 983, "index": 9, "price": 160, "color": "0xD93694" },
+
+  { "id": "010", "name": "Tranvía", "type": "special", "x": 515, "y": 983, "index": 10 },
+  { "id": "011", "name": "Lab 201", "type": "property", "x": 515, "y": 881, "index": 11, "price": 180, "color": "0xF7941D", "rotation": 90 },
+  { "id": "012", "name": "Lab 202", "type": "property", "x": 515, "y": 796, "index": 12, "price": 180, "color": "0xF7941D", "rotation": 90 },
+  { "id": "013", "name": "Lab 203", "type": "property", "x": 515, "y": 711, "index": 13, "price": 200, "color": "0xF7941D", "rotation": 90 },
+  { "id": "014", "name": "Lab 204", "type": "property", "x": 515, "y": 626, "index": 14, "price": 220, "color": "0xED1C24", "rotation": 90 },
+  { "id": "015", "name": "Puente", "type": "bridge", "x": 640, "y": 541, "index": 15, "price": 220, "color": "0xED1C24", "rotation": 90 },
+  { "id": "016", "name": "Lab 206", "type": "property", "x": 515, "y": 456, "index": 16, "price": 240, "color": "0xED1C24", "rotation": 90 },
+  { "id": "017", "name": "Lab 207", "type": "property", "x": 515, "y": 371, "index": 17, "price": 260, "color": "0xFEF200", "rotation": 90 },
+  { "id": "018", "name": "Lab 208", "type": "property", "x": 515, "y": 286, "index": 18, "price": 260, "color": "0xFEF200", "rotation": 90 },
+  { "id": "019", "name": "Lab 209", "type": "property", "x": 515, "y": 201, "index": 19, "price": 280, "color": "0xFEF200", "rotation": 90 },
+
+  { "id": "020", "name": "Ve a la cárcel", "type": "special", "x": 515, "y": 98, "index": 20 },
+  { "id": "021", "name": "Despacho 1", "type": "property", "x": 618, "y": 98, "index": 21, "price": 300, "color": "0x1FB25A", "rotation": 180 },
+  { "id": "022", "name": "Despacho 2", "type": "property", "x": 703, "y": 98, "index": 22, "price": 300, "color": "0x1FB25A", "rotation": 180 },
+  { "id": "023", "name": "Despacho 3", "type": "property", "x": 788, "y": 98, "index": 23, "price": 320, "color": "0x1FB25A", "rotation": 180 },
+  { "id": "024", "name": "Despacho 4", "type": "property", "x": 873, "y": 98, "index": 24, "price": 350, "color": "0x0072BB", "rotation": 180 },
+  { "id": "025", "name": "Despacho 5", "type": "property", "x": 958, "y": 98, "index": 25, "price": 350, "color": "0x0072BB", "rotation": 180 },
+  { "id": "026", "name": "Despacho 6", "type": "property", "x": 1043, "y": 98, "index": 26, "price": 400, "color": "0x0072BB", "rotation": 180 },
+  { "id": "027", "name": "Cafetería", "type": "property", "x": 1128, "y": 98, "index": 27, "price": 420, "color": "0x111111", "rotation": 180 },
+  { "id": "028", "name": "Biblio", "type": "property", "x": 1213, "y": 98, "index": 28, "price": 450, "color": "0x111111", "rotation": 180 },
+  { "id": "029", "name": "Biblio", "type": "property", "x": 1298, "y": 98, "index": 29, "price": 500, "color": "0x111111", "rotation": 180 },
+
+  { "id": "030", "name": "Tranvia", "type": "special", "x": 1400, "y": 98, "index": 30 },
+  { "id": "031", "name": "Gimnasio", "type": "property", "x": 1400, "y": 201, "index": 31, "price": 150, "color": "0x7F7F7F", "rotation": -90 },
+  { "id": "032", "name": "Piscina", "type": "property", "x": 1400, "y": 286, "index": 32, "price": 150, "color": "0x7F7F7F", "rotation": -90 },
+  { "id": "033", "name": "Teatro", "type": "property", "x": 1400, "y": 371, "index": 33, "price": 200, "color": "0x7F7F7F", "rotation": -90 },
+  { "id": "034", "name": "Teatro", "type": "property", "x": 1400, "y": 456, "index": 34, "price": 200, "color": "0x7F7F7F", "rotation": -90 },
+  { "id": "035", "name": "Puente", "type": "bridge", "x": 1275, "y": 541, "index": 35, "price": 200, "color": "0x7F7F7F", "rotation": -90 },
+  { "id": "036", "name": "Parking B", "type": "property", "x": 1400, "y": 626, "index": 36, "price": 200, "color": "0x7F7F7F", "rotation": -90 },
+  { "id": "037", "name": "Parking C", "type": "property", "x": 1400, "y": 711, "index": 37, "price": 200, "color": "0x7F7F7F", "rotation": -90 },
+  { "id": "038", "name": "Parking D", "type": "property", "x": 1400, "y": 796, "index": 38, "price": 200, "color": "0x7F7F7F", "rotation": -90 },
+  { "id": "039", "name": "Parking E", "type": "property", "x": 1400, "y": 881, "index": 39, "price": 200, "color": "0x7F7F7F", "rotation": -90 },
+
+
+  { "id": "100", "name": "Tranvia", "type": "special_in", "x": 1171, "y": 755, "index": 100 },
+  { "id": "101", "name": "Aula A", "type": "property_in", "x": 1043, "y": 755, "index": 101, "price": 500, "color": "0xFFD700" },
+  { "id": "102", "name": "Aula B", "type": "property_in", "x": 958, "y": 755, "index": 102, "price": 550, "color": "0xFFD700" },
+  { "id": "103", "name": "Aula C", "type": "property_in", "x": 873, "y": 755, "index": 103, "price": 600, "color": "0xFFD700" },
+
+  { "id": "104", "name": "Carcel", "type": "special_in", "x": 745, "y": 755, "index": 104 },
+  { "id": "105", "name": "Lab A", "type": "property_in", "x": 745, "y": 626, "index": 105, "price": 650, "color": "0x00FF00", "rotation": 90 },
+  { "id": "106", "name": "Lab C", "type": "property_in", "x": 745, "y": 456, "index": 107, "price": 750, "color": "0x00FF00", "rotation": 90 },
+
+  { "id": "107", "name": "Tranvia", "type": "special_in", "x": 745, "y": 329, "index": 108 },
+  { "id": "108", "name": "Desp A", "type": "property_in", "x": 873, "y": 329, "index": 109, "price": 800, "color": "0x0000FF", "rotation": 180 },
+  { "id": "109", "name": "Desp B", "type": "property_in", "x": 958, "y": 329, "index": 110, "price": 850, "color": "0x0000FF", "rotation": 180 },
+  { "id": "110", "name": "Desp C", "type": "property_in", "x": 1043, "y": 329, "index": 111, "price": 900, "color": "0x0000FF", "rotation": 180 },
+
+  { "id": "111", "name": "Parking", "type": "special_in", "x": 1171, "y": 329, "index": 112 },
+  { "id": "112", "name": "Sec A", "type": "property_in", "x": 1171, "y": 456, "index": 113, "price": 950, "color": "0xFF00FF", "rotation": -90 },
+  { "id": "113", "name": "Sec C", "type": "property_in", "x": 1171, "y": 626, "index": 115, "price": 1100, "color": "0xFF00FF", "rotation": -90 }
+
+]

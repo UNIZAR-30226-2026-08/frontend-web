@@ -7,7 +7,8 @@ import { BasicRules } from "@/pages/BasicRules/BasicRules";
 import { Home } from "@/pages/Home/Home";
 import { Loading } from "@/pages/Loading/Loading";
 import { Lobby } from "@/pages/Lobby/Lobby";
-import { PrivateRoom } from "./pages/PrivateRoom/PrivateRoom";
+import { PrivateRoom } from "@/pages/PrivateRoom/PrivateRoom";
+import { PhaserGame } from "@/pages/PhaserGame/PhaserGame";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Route path="/loading" element={<Loading />} />
       <Route path="/lobby" element={<Lobby />} />
       <Route path="/private-room" element={<PrivateRoom />} />
+      <Route path="/phaser-game" element={<PhaserGame />} />
     </Routes>
   );
 }
