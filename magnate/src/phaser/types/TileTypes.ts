@@ -3,14 +3,14 @@
 // Enum for different types of tiles on the board
 export enum TileType {  
     PROPERTY = 'property',
-    SPECIAL = 'special',
+    FANTASY = 'fantasy',
     BRIDGE = 'bridge',
     SERVER = 'server',
     START = 'start',
     JAIL = 'jail',
     PARKING = 'parking',
     GO_TO_JAIL = 'go_to_jail',
-    BRIDGE = 'bridge',
+    TRAM = 'tram',
 }
 
 // Interface for a tile on the board
@@ -36,13 +36,43 @@ export interface IPropertyTile extends ITile {
     ownerId?: string | null; // Puntero al jugador
 }
 
-export interface ISpecialTile extends ITile {
-    type: TileType.SPECIAL;
-    icon?: string;
+// Interface for a fantasy tile
+export interface IFantasyTile extends ITile {
+    type: TileType.FANTASY; 
+    color: string;
 }
-
 export interface IBridgeTile extends ITile {
     type: TileType.BRIDGE;
 }
 
-export type TileConfig = IPropertyTile | ISpecialTile | IBridgeTile;
+export interface IServerTile extends ITile {
+    type: TileType.SERVER;
+}
+
+export interface IStartTile extends ITile {
+    type: TileType.START;
+    icon?: string;
+}
+
+export interface IJailTile extends ITile {
+    type: TileType.JAIL;
+    icon?: string;
+}
+
+export interface IGoToJailTile extends ITile {
+    type: TileType.GO_TO_JAIL;
+    icon?: string;
+}
+
+export interface IParkingTile extends ITile {
+    type: TileType.PARKING;
+    icon?: string;
+}
+
+export interface ITramTile extends ITile {
+    type: TileType.TRAM;
+    icon?: string;
+}
+
+
+export type TileConfig = IPropertyTile | IFantasyTile | IBridgeTile | IServerTile | IStartTile | ITramTile | IGoToJailTile | IJailTile | IParkingTile  ;

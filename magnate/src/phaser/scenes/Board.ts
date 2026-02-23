@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser';
 import { Tile } from '../objects/Tile';
-import { TileConfig, TileType, IPropertyTile, ISpecialTile, IBridgeTile } from '../types/TileTypes';
+import { TileConfig, TileType, IPropertyTile, IFantasyTile, IBridgeTile } from '../types/TileTypes';
 import { PropertyTile } from '../objects/PropertyTile';
-import { SpecialTile } from '../objects/SpecialTile';
+import { FantasyTile } from '../objects/FantasyTile';
 import { BridgeTile } from '../objects/BridgeTile';
 
 export class Board extends Phaser.Scene {
@@ -24,8 +24,8 @@ export class Board extends Phaser.Scene {
 
             if (config.type === TileType.PROPERTY) {
                 tile = new PropertyTile(this, config as IPropertyTile);
-            } else if (config.type === TileType.SPECIAL) {
-                tile = new SpecialTile(this, config as ISpecialTile);
+            } else if (config.type === TileType.FANTASY) {
+                tile = new FantasyTile(this, config as IFantasyTile);
             } else if (config.type === TileType.BRIDGE) {
                 tile = new BridgeTile(this, config as IBridgeTile);
             } else {
