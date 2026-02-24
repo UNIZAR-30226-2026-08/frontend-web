@@ -3,6 +3,7 @@ import { ITile } from '../types/TileTypes';
 
 export class Tile extends Phaser.GameObjects.Container {
     public tileConfig: ITile;
+    protected nameText: Phaser.GameObjects.Text;
 
     constructor(scene: Phaser.Scene, config: ITile) {
         super(scene, config.x, config.y);
@@ -22,16 +23,16 @@ export class Tile extends Phaser.GameObjects.Container {
         bg.setOrigin(0.5); 
         this.add(bg);
 
-        const nameText = this.scene.add.text(0, -height / 2 + 10, config.name, {
-            fontSize: '14px',
-            color: '#000000',
+        this.nameText = this.scene.add.text(0, -height / 2 + 10, config.name, {
+            fontFamily: 'LTSuperior',
+            fontStyle: 'bold',
+            fontSize: '16px',
+            color: '#242424',
             align: 'center',
             wordWrap: { width: width - 10 }
         }).setOrigin(0.5, 0);
-        this.add(nameText);
+        this.add(this.nameText);
 
         this.scene.add.existing(this);
     }
 }
-
-//TODO: falta crear clase Fantasy, Server, Player

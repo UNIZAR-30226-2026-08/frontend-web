@@ -40,6 +40,7 @@ export interface IPropertyTile extends ITile {
 export interface IFantasyTile extends ITile {
     type: TileType.FANTASY; 
     color: string;
+    icon: string;
 }
 export interface IBridgeTile extends ITile {
     type: TileType.BRIDGE;
