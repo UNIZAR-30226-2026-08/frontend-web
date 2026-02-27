@@ -19,10 +19,15 @@ export class Board extends Phaser.Scene {
     }
 
     preload() { // precargar imagenes...
+        this.load.image('background', 'images/background_ingame.png');
         this.load.json('board', 'data/board.json');
-        this.load.image('question_mark', 'icons/hat_wizard.svg'); // fantasy tiles
-        this.load.image('tram', 'icons/tram.svg'); // tram tiles
-        this.load.image('dollar', 'icons/dollar.svg');
+        this.load.image('hat', 'images/hat.png'); // fantasy tiles
+        this.load.image('tram', 'images/tram.png'); // tram tiles
+        this.load.image('background_parking', 'images/parking.jpg'); // background parking tile
+        this.load.image('icon_parking', 'images/caravan.png'); // parking tile
+        this.load.image('icon_gotojail', 'images/bodyguard.png'); // background go_to_jail tile
+        this.load.image('icon_jail', 'images/secretary.png'); // background jail tile
+        this.load.image('icon_server', 'images/server.png'); // icon server tile
     } 
 
     create() { // crear escena
@@ -30,11 +35,18 @@ export class Board extends Phaser.Scene {
         const boardTiles = fullData.tiles as TileConfig[];
         const groups = fullData.groups as { group: number, color: string }[];
 
+        const background = this.add.image(960, 540, 'background');
+        background.setDisplaySize(1920, 1080);
+
         boardTiles.forEach((config: TileConfig) => {
             let tile: Tile;
 
             if (config.type === TileType.PROPERTY) {
-                tile = new PropertyTile(this, config as IPropertyTile);
+                const propConfig = config as IPropertyTile;
+                const groupInfo = groups.find(g => g.group === propConfig.group);
+                propConfig.color = groupInfo ? groupInfo.color : '#FFFFFF';
+                tile = new PropertyTile(this, propConfig);
+                
             } else if (config.type === TileType.FANTASY) {
                 tile = new FantasyTile(this, config as IFantasyTile);
             } else if (config.type === TileType.BRIDGE) {

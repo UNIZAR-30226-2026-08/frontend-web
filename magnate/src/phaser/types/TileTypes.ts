@@ -21,7 +21,7 @@ export interface ITile {
     index : number;
     x : number;
     y : number;
-    group? : string;
+    group? : number;
     rotation? : number;
     width?: number;
     height?: number;
@@ -48,6 +48,7 @@ export interface IBridgeTile extends ITile {
 
 export interface IServerTile extends ITile {
     type: TileType.SERVER;
+    icon?: string;
 }
 
 export interface IStartTile extends ITile {
@@ -68,6 +69,7 @@ export interface IGoToJailTile extends ITile {
 export interface IParkingTile extends ITile {
     type: TileType.PARKING;
     icon?: string;
+    subText?: string;
 }
 
 export interface ITramTile extends ITile {

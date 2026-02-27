@@ -21,7 +21,7 @@ export const PhaserGame = () => {
     }, []);
 
     return (
-        <div className="flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-primary)]">
+        <div className="flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-background)]">
             <div id="phaser-container" 
             className="flex items-center justify-center w-full h-full [&>canvas]:mx-auto" />
         </div>

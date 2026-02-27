@@ -4,6 +4,7 @@ import { ITile } from '../types/TileTypes';
 export class Tile extends Phaser.GameObjects.Container {
     public tileConfig: ITile;
     protected nameText: Phaser.GameObjects.Text;
+    protected background: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image;
 
     constructor(scene: Phaser.Scene, config: ITile) {
         super(scene, config.x, config.y);
@@ -17,11 +18,11 @@ export class Tile extends Phaser.GameObjects.Container {
             this.setAngle(config.rotation);
         }
 
-        const bg = this.scene.add.rectangle(0, 0, width, height, 0xffffff)
-            .setStrokeStyle(2, 0x000000); 
+        this.background = this.scene.add.rectangle(0, 0, width, height, 0xffffff)
+            .setStrokeStyle(3, 0x000000); 
         
-        bg.setOrigin(0.5); 
-        this.add(bg);
+        this.background.setOrigin(0.5); 
+        this.add(this.background);
 
         this.nameText = this.scene.add.text(0, -height / 2 + 10, config.name, {
             fontFamily: 'LTSuperior',
