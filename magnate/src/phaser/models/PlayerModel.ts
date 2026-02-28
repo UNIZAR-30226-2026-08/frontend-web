@@ -5,7 +5,7 @@ export class PlayerModel implements IPlayer {
     public id: string;
     public name: string;
     public color: number;
-    public balance: number = 1500;
+    public balance: number = 200;
     public properties: string[] = [];
     public currentTileIndex: number = 0;
 
