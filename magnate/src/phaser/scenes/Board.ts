@@ -22,12 +22,14 @@ export class Board extends Phaser.Scene {
         this.load.image('background', 'images/background_ingame.png');
         this.load.json('board', 'data/board.json');
         this.load.image('hat', 'images/hat.png'); // fantasy tiles
-        this.load.image('tram', 'images/tram.png'); // tram tiles
+        this.load.image('tram', 'icons/tram.svg'); // tram tiles
         this.load.image('background_parking', 'images/parking.jpg'); // background parking tile
         this.load.image('icon_parking', 'images/caravan.png'); // parking tile
         this.load.image('icon_gotojail', 'images/bodyguard.png'); // background go_to_jail tile
         this.load.image('icon_jail', 'images/secretary.png'); // background jail tile
         this.load.image('icon_server', 'images/server.png'); // icon server tile
+        this.load.image('icon_bridge', 'icons/bridge.svg'); // icon bridge tile
+
     } 
 
     create() { // crear escena

@@ -44,6 +44,7 @@ export interface IFantasyTile extends ITile {
 }
 export interface IBridgeTile extends ITile {
     type: TileType.BRIDGE;
+    icon?: string;
 }
 
 export interface IServerTile extends ITile {
@@ -69,12 +70,13 @@ export interface IGoToJailTile extends ITile {
 export interface IParkingTile extends ITile {
     type: TileType.PARKING;
     icon?: string;
-    subText?: string;
+    subText: string;
 }
 
 export interface ITramTile extends ITile {
     type: TileType.TRAM;
     icon?: string;
+    subText: string;
 }
 
 

@@ -7,27 +7,13 @@ export class ParkingTile extends Tile {
 
     constructor(scene: Phaser.Scene, config: IParkingTile) {
         super(scene, config);
-
-        // if (this.background) {
-        //     this.background.destroy();
-        // }
+        const w = config.width || 80;
+        const h = config.height || 120;
         
-        // this.background = this.scene.add.image(0, 0, 'background_parking')
-        //     .setDisplaySize(config.width || 80, config.height || 120)
-        //     .setOrigin(0.5); 
-
-        // this.add(this.background);
-        
-        // const whiteOverlay = this.scene.add.rectangle(0, 0, config.width || 80, config.height || 120, 0xffffff, 0.5);
-        // this.add(whiteOverlay);
-
-        // this.sendToBack(whiteOverlay);
-        // this.sendToBack(this.background);
-        
-         this.nameText.setStyle({ fontSize: '22px', align: 'center' })
-            .setOrigin(0.5, 2.6)
+        this.nameText.setStyle({ fontSize: `${Math.floor(w * 0.2)}px`, align: 'center' })
+            .setOrigin(0.4, 1.4)
             .setAngle(45)
-            .setPosition(1, 1);
+            .setPosition(1, -(h * 0.1));
 
         this.add(this.nameText);
 

@@ -15,12 +15,13 @@ export class PropertyTile extends Tile {
         
         this.add(colorBar);
 
-        this.nameText.setStyle({ fontSize: '16px', align: 'center' })
+        this.nameText.setStyle({ fontSize: '14px', align: 'center' })
             .setOrigin(0.5, 0)
             .setPosition(0, -20);
 
         this.add(this.nameText);
 
+        // TODO: falta precio de las property tiles, lo pasa el backend?
         // const priceText = this.scene.add.text(0, 40, `${config.price}€`, {
         //     fontSize: '12px',
         //     color: '#888888',
