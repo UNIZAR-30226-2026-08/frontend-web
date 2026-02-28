@@ -88,7 +88,7 @@ export class Board extends Phaser.Scene {
         this.emitInitialPlayers();
     }
 
-    createPlayer(id: string, name: string, color: number) {
+    createPlayer(id: string, name: string) {
         // const startTile = this.tiles[0];
         const startTile = this.tiles[this.players.length % this.colorPalette.length];
         
@@ -116,11 +116,11 @@ export class Board extends Phaser.Scene {
             return {
                 id: p.model.id,
                 name: p.model.name,
-                color: cssColor
+                color: cssColor,
+                balance: p.model.balance
             };
         });
 
-        // Send the array to React!
         EventBus.emit('setup-players', playerInitData);
     }
 
