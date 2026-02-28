@@ -7,15 +7,19 @@ export class GoToJailTile extends Tile {
 
     constructor(scene: Phaser.Scene, config: IGoToJailTile) {
         super(scene, config);
+        
+        this.nameText.setColor("#00000000");
 
-        this.nameText.setStyle({
+        this.subText = this.scene.add.text(0, 15, "Ve a ", {
+            fontFamily: 'LTSuperior',
             fontSize: '18px',
-            align: 'center'
-        });
-         
-        this.nameText.setOrigin(0.5, 3);
-        this.nameText.setAngle(-45);
-        this.nameText.setPosition(1, 1);
+            color: '#242424',
+            fontStyle: 'bold'
+        })
+        .setOrigin(0.5, 3)
+        .setAngle(-45)
+        .setPosition(1, 1);
+        this.add(this.subText);
 
         this.icon = this.scene.add.image(0, 15, 'icon_gotojail')
             .setOrigin(0.5, 0.7)

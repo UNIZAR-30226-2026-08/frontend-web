@@ -17,14 +17,14 @@ export class TramTile extends Tile {
             align: 'center',
             wordWrap: { width: w * 0.4 }
         })
-            .setOrigin(0.4, 1.4)
-            .setAngle(45)
+            .setOrigin(0.6, 1.4)
+            .setAngle(-45)
             .setPosition(1, -(h * 0.1));
         
         
         this.icon = this.scene.add.image(0, 0, 'tram')
-            .setOrigin(0.4, 0.3)
-            .setAngle(45)
+            .setOrigin(0.6, 0.3)
+            .setAngle(-45)
             .setDisplaySize(w * 0.4, h * 0.4)
             .setPosition(1, -(h * 0.1));
                 

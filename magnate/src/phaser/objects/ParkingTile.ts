@@ -11,8 +11,8 @@ export class ParkingTile extends Tile {
         const h = config.height || 120;
         
         this.nameText.setStyle({ fontSize: `${Math.floor(w * 0.2)}px`, align: 'center' })
-            .setOrigin(0.4, 1.4)
-            .setAngle(45)
+            .setOrigin(0.6, 1.4)
+            .setAngle(-45)
             .setPosition(1, -(h * 0.1));
 
         this.add(this.nameText);
@@ -20,7 +20,7 @@ export class ParkingTile extends Tile {
         this.icon = this.scene.add.image(0, 15, 'icon_parking')
             .setOrigin(0.5, 0.5)
             .setDisplaySize(90, 60)
-            .setAngle(45)
+            .setAngle(-45)
             .setPosition(1, 1);
         
         this.add(this.icon);
@@ -32,7 +32,7 @@ export class ParkingTile extends Tile {
             fontStyle: 'bold'
         })
         .setOrigin(0.5, -1.)
-        .setAngle(45)
+        .setAngle(-45)
         .setPosition(1, 1);
         
         this.add(this.subText);

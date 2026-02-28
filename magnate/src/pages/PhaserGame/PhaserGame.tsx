@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as Phaser from 'phaser';
 import { GameConfig } from '../../phaser/config';
 import { PlayerHUD } from '@/components/layout/PlayerHUD';
+import { FantasyOverlay } from "./FantasyOverlay";
 
 import { EventBus } from '@/EventBus'
 
@@ -37,7 +38,7 @@ export const PhaserGame = () => {
     }, []);
 
     return (
-        <div className="relative flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-primary)]">
+        <div className="relative flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-background)]">
             
             <div id="phaser-container" className="flex items-center justify-center w-full h-full [&>canvas]:mx-auto" />
 
@@ -54,6 +55,7 @@ export const PhaserGame = () => {
                 ))}
 
             </div>
+            <FantasyOverlay />
         </div>
     );
 };

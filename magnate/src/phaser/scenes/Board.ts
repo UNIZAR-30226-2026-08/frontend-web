@@ -19,6 +19,7 @@ export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
     private players: { model: PlayerModel, token: PlayerToken }[] = [];
     private colorPalette: number[] = [];
+    private fantasyCards: any[] = [];
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -27,6 +28,7 @@ export class Board extends Phaser.Scene {
     preload() { // precargar imagenes...
         this.load.image('background', 'images/background_ingame.png');
         this.load.json('board', 'data/board.json');
+        this.load.json('fantasyCards', 'data/fantasyCard.json');
         this.load.image('hat', 'images/hat.png'); // fantasy tiles
         this.load.image('tram', 'icons/tram.svg'); // tram tiles
         this.load.image('background_parking', 'images/parking.jpg'); // background parking tile
@@ -42,9 +44,13 @@ export class Board extends Phaser.Scene {
         const fullData = this.cache.json.get('board');
         const boardTiles = fullData.tiles as TileConfig[];
         const groups = fullData.groups as { group: number, color: string }[];
+        const fullFantasy = this.cache.json.get('fantasyCards');
+        this.fantasyCards = fullFantasy.fantasy;
+
 
         const background = this.add.image(960, 540, 'background');
         background.setDisplaySize(1920, 1080);
+
         const rawColors = fullData.playerColors as string[];
         this.colorPalette = rawColors.map(c => parseInt(c.replace('#', '0x')));
 
@@ -102,9 +108,9 @@ export class Board extends Phaser.Scene {
 
         // TODO: Esto es solo para probar el movimiento
         token.on('pointerdown', () => {
-            this.handlePlayerClick(id);
+            //this.handlePlayerClick(id);
+            this.handlePlayerClickDebug(id); // Para debugear si quiero enviarlo a una casilla en concreto
         });
-        //
 
         this.players.push({ model, token });
     }
@@ -150,5 +156,46 @@ export class Board extends Phaser.Scene {
         }
 
         p.token.moveTo(finalX, finalY);
+
+        this.time.delayedCall(500, () => {
+            this.checkTileLogic(p.model, targetTile);
+        });
+    }
+
+    // Método para debug, se envía a la primera casilla de un tipo específico
+    public handlePlayerClickDebug(playerId: string) {
+        const p = this.players.find(pair => pair.model.id === playerId);
+        if (!p) return;
+
+        // Buscamos la primera casilla de tipo Fantasy
+        const fantasyIndex = this.tiles.findIndex(t => t instanceof FantasyTile);
+        p.model.currentTileIndex = fantasyIndex;
+        
+        const targetTile = this.tiles[fantasyIndex];
+        p.token.moveTo(targetTile.x, targetTile.y);
+
+        // Ejecutamos la lógica de la casilla
+        this.time.delayedCall(500, () => {
+            this.checkTileLogic(p.model, targetTile);
+        });
+    }
+    
+    private checkTileLogic(player: PlayerModel, tile: Tile) {
+        
+        if (tile instanceof FantasyTile || (tile as any).config?.type === TileType.FANTASY) {
+            // TODO: Vendrá del backend
+            const cartasFantasia = [
+                { title: "¡HACKEO ÉPICO!", description: "Has interceptado las comunicaciones del servidor.", price: 10 }
+            ];
+            
+            const cartaAleatoria = Phaser.Utils.Array.GetRandom(cartasFantasia);
+
+            // Evento hacia react
+            EventBus.emit('show-fantasy-card', {
+                ...cartaAleatoria,
+                playerName: player.name,
+                playerColor: '#' + player.color.toString(16).padStart(6, '0')
+            });
+        }
     }
 }
