@@ -7,9 +7,9 @@ export class FantasyTile extends Tile {
     constructor(scene: Phaser.Scene, config: IFantasyTile) {
         super(scene, config);
         
-        this.icon = this.scene.add.image(0, 15, 'question_mark')
+        this.icon = this.scene.add.image(0, 15, 'hat')
                 .setOrigin(0.5)
-                .setDisplaySize(80, 80);
+                .setDisplaySize(70, 70);
         
         this.add(this.icon);
     }

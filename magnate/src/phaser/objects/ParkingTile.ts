@@ -3,27 +3,38 @@ import { IParkingTile } from '../types/TileTypes';
 
 export class ParkingTile extends Tile {
     private icon: Phaser.GameObjects.Image;
+    private subText: Phaser.GameObjects.Text;
 
     constructor(scene: Phaser.Scene, config: IParkingTile) {
         super(scene, config);
+        const w = config.width || 80;
+        const h = config.height || 120;
+        
+        this.nameText.setStyle({ fontSize: `${Math.floor(w * 0.2)}px`, align: 'center' })
+            .setOrigin(0.4, 1.4)
+            .setAngle(45)
+            .setPosition(1, -(h * 0.1));
 
-        this.nameText.setStyle({
-            fontSize: '22px',
-            align: 'center'
-        });
+        this.add(this.nameText);
 
-        this.icon = this.scene.add.image(0, 15, 'dollar')
-                .setOrigin(0.5, 0.5)
-                .setDisplaySize(70, 70);
-                
+        this.icon = this.scene.add.image(0, 15, 'icon_parking')
+            .setOrigin(0.5, 0.5)
+            .setDisplaySize(90, 60)
+            .setAngle(45)
+            .setPosition(1, 1);
+        
         this.add(this.icon);
-         
-        this.nameText.setOrigin(0.5, 1.8);
-        this.nameText.setAngle(45);
-        this.nameText.setPosition(1, 1);
-
-        this.icon.setOrigin(0.5, 0.2);
-        this.icon.setAngle(45);
-        this.icon.setPosition(1, 1);
+        
+        this.subText = this.scene.add.text(0, 15, "Gratuito", {
+            fontFamily: 'LTSuperior',
+            fontSize: '22px',
+            color: '#242424',
+            fontStyle: 'bold'
+        })
+        .setOrigin(0.5, -1.)
+        .setAngle(45)
+        .setPosition(1, 1);
+        
+        this.add(this.subText);
     }
 }
