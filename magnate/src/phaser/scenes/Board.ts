@@ -15,6 +15,8 @@ import { PlayerModel } from '../models/PlayerModel';
 import { PlayerToken } from '../objects/PlayerToken';
 import { EventBus } from '@/EventBus'
 
+import { create3DDice } from '../objects/Dice3D';
+
 export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
     private players: { model: PlayerModel, token: PlayerToken }[] = [];
@@ -35,6 +37,8 @@ export class Board extends Phaser.Scene {
         this.load.image('icon_jail', 'images/secretary.png'); // background jail tile
         this.load.image('icon_server', 'images/server.png'); // icon server tile
         this.load.image('icon_bridge', 'icons/bridge.svg'); // icon bridge tile
+        this.load.image("dice-albedo", "dice-albedo.png");
+        this.load.obj("dice-obj", "dice.obj");
 
     } 
 
@@ -86,6 +90,12 @@ export class Board extends Phaser.Scene {
         this.createPlayer("0004", "Player 4")
 
         this.emitInitialPlayers();
+
+        EventBus.on('trigger-dice-roll', this.handleDiceRoll, this);
+
+        this.events.on('shutdown', () => {
+            EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
+        });
     }
 
     createPlayer(id: string, name: string) {
@@ -150,5 +160,49 @@ export class Board extends Phaser.Scene {
         }
 
         p.token.moveTo(finalX, finalY);
+    }
+    //
+
+    private handleDiceRoll() {
+        if (this.isRolling) return;
+        this.isRolling = true;
+
+        const dice1 = create3DDice(960 - 220, 540, this, 1000);
+        const dice2 = create3DDice(960, 540, this, 1150); 
+        const dice3 = create3DDice(960 + 220, 540, this, 1300);
+
+        let completedRolls = 0;
+        let totalValue = 0;
+
+        const checkDone = (val: number, diceObj: any) => {
+            totalValue += val;
+            completedRolls++;
+
+            this.time.delayedCall(1500, () => {
+                this.tweens.add({
+                    targets: diceObj.mesh,
+                    alpha: 0,
+                    duration: 400,
+                    onComplete: () => {
+                        diceObj.mesh.destroy();
+                    }
+                });
+            });
+
+            if (completedRolls === 3) {
+                this.time.delayedCall(1900, () => {
+                    try {
+                    } catch (error) {
+                        console.error("Error moving player:", error);
+                    } finally {
+                        this.isRolling = false; 
+                    }
+                });
+            }
+        };
+
+        dice1.roll((val) => checkDone(val, dice1));
+        dice2.roll((val) => checkDone(val, dice2));
+        dice3.roll((val) => checkDone(val, dice3));
     }
 }
