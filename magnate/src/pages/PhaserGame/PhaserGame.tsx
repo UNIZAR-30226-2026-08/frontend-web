@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import * as Phaser from 'phaser';
 import { GameConfig } from '../../phaser/config';
 import { PlayerHUD } from '@/components/layout/PlayerHUD';
+import { ControlsHUD } from '@/components/layout/ControlsHUD';
 import { EventBus } from '@/EventBus';
 
 interface PlayerInitData {
@@ -57,6 +58,8 @@ export const PhaserGame = () => {
     return (
         <div className="relative flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-primary)]">
             <div id="phaser-container" className="flex items-center justify-center w-full h-full [&>canvas]:mx-auto" />
+
+            <ControlsHUD />
 
             <div 
                 className="absolute right-[3vw] top-1/2 -translate-y-1/2 flex flex-col gap-[6vh] pointer-events-none z-10 origin-right transition-transform duration-150"
