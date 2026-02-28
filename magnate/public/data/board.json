@@ -1,4 +1,5 @@
 {
+  "playerColors": ["#f94144", "#f9c74f", "#90be6d", "#2c7da0"],
   "groups":
   [ 
     {"group": 1, "color": "#FC5C65" },
