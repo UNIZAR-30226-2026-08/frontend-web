@@ -11,8 +11,14 @@ import { JailTile } from '../objects/JailTile';
 import { ParkingTile } from '../objects/ParkingTile';
 import { TramTile } from '../objects/TramTile';
 
+import { PlayerModel } from '../models/PlayerModel';
+import { PlayerToken } from '../objects/PlayerToken';
+import { EventBus } from '@/EventBus'
+
 export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
+    private players: { model: PlayerModel, token: PlayerToken }[] = [];
+    private colorPalette: number[] = [];
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -39,6 +45,8 @@ export class Board extends Phaser.Scene {
 
         const background = this.add.image(960, 540, 'background');
         background.setDisplaySize(1920, 1080);
+        const rawColors = fullData.playerColors as string[];
+        this.colorPalette = rawColors.map(c => parseInt(c.replace('#', '0x')));
 
         boardTiles.forEach((config: TileConfig) => {
             let tile: Tile;
@@ -71,5 +79,76 @@ export class Board extends Phaser.Scene {
             
             this.tiles.push(tile);
         });
+
+        this.createPlayer("0001", "Player 1")
+        this.createPlayer("0002", "Player 2")
+        this.createPlayer("0003", "Player 3")
+        this.createPlayer("0004", "Player 4")
+
+        this.emitInitialPlayers();
+    }
+
+    createPlayer(id: string, name: string, color: number) {
+        // const startTile = this.tiles[0];
+        const startTile = this.tiles[this.players.length % this.colorPalette.length];
+        
+        const colorIndex = this.players.length % this.colorPalette.length;
+        const assignedColor = this.colorPalette[colorIndex];
+
+        const model = new PlayerModel(id, name, assignedColor);
+        const token = new PlayerToken(this, startTile.x, startTile.y, assignedColor);
+
+        token.setDepth(10 + this.players.length);
+
+        // TODO: Esto es solo para probar el movimiento
+        token.on('pointerdown', () => {
+            this.handlePlayerClick(id);
+        });
+        //
+
+        this.players.push({ model, token });
+    }
+
+    private emitInitialPlayers() {
+        const playerInitData = this.players.map(p => {
+            const cssColor = '#' + p.model.color.toString(16).padStart(6, '0');
+
+            return {
+                id: p.model.id,
+                name: p.model.name,
+                color: cssColor
+            };
+        });
+
+        // Send the array to React!
+        EventBus.emit('setup-players', playerInitData);
+    }
+
+    // TODO: Esto es solo para probar el movimiento
+    private handlePlayerClick(playerId: string) {
+        const p = this.players.find(pair => pair.model.id === playerId);
+        if (!p) return;
+
+        const roll = Phaser.Math.Between(1, 6);
+        p.model.move(roll, this.tiles.length);
+        const targetIndex = p.model.currentTileIndex;
+
+        const othersCount = this.players.filter(other => 
+            other.model.id !== playerId && 
+            other.model.currentTileIndex === targetIndex
+        ).length;
+
+        const targetTile = this.tiles[targetIndex];
+        targetTile.setOwnerMarker(p.model.color);
+        let finalX = targetTile.x;
+        let finalY = targetTile.y;
+
+        if (othersCount > 0) {
+            const spacing = 22;
+            finalX += (othersCount % 2 === 0) ? spacing : -spacing;
+            finalY += (othersCount > 1) ? spacing : -spacing;
+        }
+
+        p.token.moveTo(finalX, finalY);
     }
 }
