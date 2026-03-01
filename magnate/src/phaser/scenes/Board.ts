@@ -21,7 +21,7 @@ export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
     private players: { model: PlayerModel, token: PlayerToken }[] = [];
     private colorPalette: number[] = [];
-    private fantasyCards: any[] = [];
+    private fantasyCards: any[] = []; // TODO: rellenar con data/fantasyCard.json o recibir de backend
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -192,10 +192,10 @@ export class Board extends Phaser.Scene {
     
     private checkTileLogic(player: PlayerModel, tile: Tile) {
         
-        if (tile instanceof FantasyTile || (tile as any).config?.type === TileType.FANTASY) {
+        if (tile instanceof FantasyTile) {
             // TODO: Vendrá del backend
             const cartasFantasia = [
-                { title: "¡HACKEO ÉPICO!", description: "Has interceptado las comunicaciones del servidor.", price: 10 }
+                { title: "Concurso de Postales EINA", description: "Ganaste el concurso anual de postales navideñas de la EINA. Tu premio: 150€.", price: 130 }
             ];
             
             const cartaAleatoria = Phaser.Utils.Array.GetRandom(cartasFantasia);
@@ -207,8 +207,24 @@ export class Board extends Phaser.Scene {
                 playerColor: '#' + player.color.toString(16).padStart(6, '0')
             });
         }
+        
+        if (tile instanceof PropertyTile) {
+
+            const propConfig = tile.tileConfig as IPropertyTile;
+            // TODO: Vendrá del backend?
+            const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
+
+            EventBus.emit('show-property-card', {
+                title: propConfig.name,
+                headerColor: propConfig.color || '#FFFFFF', 
+                price: 100,
+                rent: rentValues,
+                mortgage: 100,
+                housePrice: 20,
+                playerName: player.name
+            });
+        }
     }
-    //
 
     private handleDiceRoll() {
         if (this.isRolling) return;
