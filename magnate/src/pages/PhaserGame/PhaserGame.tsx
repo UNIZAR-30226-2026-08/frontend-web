@@ -4,6 +4,7 @@ import { GameConfig } from '../../phaser/config';
 import { PlayerHUD } from '@/components/layout/PlayerHUD';
 import { FantasyOverlay } from "./FantasyOverlay";
 import { PropertyOverlay } from "./PropertyOverlay";
+import { AuctionOverlay } from './AuctionOverlay';
 import { ControlsHUD } from '@/components/layout/ControlsHUD';
 import { EventBus } from '@/EventBus';
 
@@ -80,6 +81,7 @@ export const PhaserGame = () => {
             </div>
             <FantasyOverlay />
             <PropertyOverlay />
+            <AuctionOverlay />
         </div>
     );
 };

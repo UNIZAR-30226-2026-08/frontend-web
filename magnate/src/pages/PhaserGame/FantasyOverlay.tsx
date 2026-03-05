@@ -27,7 +27,7 @@ export const FantasyOverlay = () => {
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black/50">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="absolute inset-0 backdrop-blur-sm animate-in fade-in duration-300" />
         
                 <div className="relative z-10 flex flex-row gap-12 animate-in fade-in zoom-in duration-300 scale-90 md:scale-100">
