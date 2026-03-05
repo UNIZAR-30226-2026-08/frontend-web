@@ -17,11 +17,14 @@ import { EventBus } from '@/EventBus'
 
 import { create3DDice } from '../objects/Dice3D';
 
+import { CameraController } from '../utils/CameraController';
+
 export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
     private players: { model: PlayerModel, token: PlayerToken }[] = [];
     private colorPalette: number[] = [];
     private fantasyCards: any[] = []; // TODO: rellenar con data/fantasyCard.json o recibir de backend
+    private cameraController!: CameraController; // TODO: para las cámaras
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -32,7 +35,7 @@ export class Board extends Phaser.Scene {
         this.load.json('board', 'data/board.json');
         this.load.json('fantasyCards', 'data/fantasyCard.json');
         this.load.image('hat', 'images/hat.png'); // fantasy tiles
-        this.load.image('tram', 'icons/tram.svg'); // tram tiles
+        this.load.image('tram', 'images/tram.png'); // tram tiles
         this.load.image('background_parking', 'images/parking.jpg'); // background parking tile
         this.load.image('icon_parking', 'images/caravan.png'); // parking tile
         this.load.image('icon_gotojail', 'images/bodyguard.png'); // background go_to_jail tile
@@ -51,12 +54,13 @@ export class Board extends Phaser.Scene {
         const fullFantasy = this.cache.json.get('fantasyCards');
         this.fantasyCards = fullFantasy.fantasy;
 
-
         const background = this.add.image(960, 540, 'background');
         background.setDisplaySize(1920, 1080);
 
         const rawColors = fullData.playerColors as string[];
         this.colorPalette = rawColors.map(c => parseInt(c.replace('#', '0x')));
+
+        this.cameraController = new CameraController(this);
 
         boardTiles.forEach((config: TileConfig) => {
             let tile: Tile;
@@ -86,7 +90,14 @@ export class Board extends Phaser.Scene {
             } else {
                 tile = new Tile(this, config);
             }
+            // TODO: para las cámaras
+            // tile.setSize(100, 100); 
+            // tile.setInteractive();
             
+            // tile.on('pointerdown', () => {
+            //     console.log("Enfocando casilla:", config.name);
+            //     this.cameraController.focusOnTile(tile, 2)
+            // });
             this.tiles.push(tile);
         });
 
@@ -148,6 +159,8 @@ export class Board extends Phaser.Scene {
         const roll = Phaser.Math.Between(1, 6);
         p.model.move(roll, this.tiles.length);
         const targetIndex = p.model.currentTileIndex;
+        
+        //this.cameraController.followToken(p.token, 1.2);
 
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
@@ -164,12 +177,12 @@ export class Board extends Phaser.Scene {
             finalX += (othersCount % 2 === 0) ? spacing : -spacing;
             finalY += (othersCount > 1) ? spacing : -spacing;
         }
-
+        
         p.token.moveTo(finalX, finalY);
 
-        this.time.delayedCall(500, () => {
-            this.checkTileLogic(p.model, targetTile);
-        });
+        // this.time.delayedCall(1500, () => {
+        //     this.checkTileLogic(p.model, targetTile);
+        // });
     }
 
     // Método para debug, se envía a la primera casilla de un tipo específico
@@ -178,7 +191,7 @@ export class Board extends Phaser.Scene {
         if (!p) return;
 
         // Buscamos la primera casilla de tipo Fantasy
-        const fantasyIndex = this.tiles.findIndex(t => t instanceof FantasyTile);
+        const fantasyIndex = this.tiles.findIndex(t => t instanceof PropertyTile);
         p.model.currentTileIndex = fantasyIndex;
         
         const targetTile = this.tiles[fantasyIndex];
@@ -213,6 +226,11 @@ export class Board extends Phaser.Scene {
             const propConfig = tile.tileConfig as IPropertyTile;
             // TODO: Vendrá del backend?
             const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
+            const playersData = this.players.map(p => ({
+                id: p.model.id,
+                name: p.model.name,
+                color: '#' + p.model.color.toString(16).padStart(6, '0'),
+            }));
 
             EventBus.emit('show-property-card', {
                 title: propConfig.name,
@@ -221,7 +239,8 @@ export class Board extends Phaser.Scene {
                 rent: rentValues,
                 mortgage: 100,
                 housePrice: 20,
-                playerName: player.name
+                playerName: player.name,
+                players: playersData // Para los resultados de la subasta
             });
         }
     }
