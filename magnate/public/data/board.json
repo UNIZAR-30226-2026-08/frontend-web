@@ -42,10 +42,10 @@
 	{ "id": "023", "name": "Laboratorio de Física y Electrónica", "type": "property", "x": 789, "y": 98, "group": 5, "rotation": 180, "width": 85, "height": 120 },
 	{ "id": "024", "name": "Salón de Actos Torres Quevedo", "type": "property", "x": 874, "y": 98, "group": 5, "rotation": 180, "width": 85, "height": 120 },
 	{ "id": "025", "name": "Hendrix", "type": "server", "x": 959, "y": 98, "rotation": 180, "width": 85, "height": 120 },
-	{ "id": "026", "name": "Aula 1.18 Torres Quevedo", "type": "property", "x": 1044, "y": 98,"group": 6, "rotation": 180, "width": 85, "height": 120 },
-	{ "id": "027", "name": "Aula 1.19 Torres Quevedo", "type": "property", "x": 1129, "y": 98, "group": 6, "rotation": 180, "width": 85, "height": 120 },
+	{ "id": "026", "name": "CIRCE", "type": "property", "x": 1044, "y": 98,"group": 6, "rotation": 180, "width": 85, "height": 120 },
+	{ "id": "027", "name": "ITA", "type": "property", "x": 1129, "y": 98, "group": 6, "rotation": 180, "width": 85, "height": 120 },
 	{ "id": "028", "name": "Fantasía", "type": "fantasy", "x": 1214, "y": 98, "rotation": 180, "width": 85, "height": 120 },
-	{ "id": "029", "name": "Aula 1.20 Torres Quevedo", "type": "property", "x": 1299, "y": 98, "group": 6, "rotation": 180, "width": 85, "height": 120 },
+	{ "id": "029", "name": "Plaza de los ingenieros", "type": "property", "x": 1299, "y": 98, "group": 6, "rotation": 180, "width": 85, "height": 120 },
 	{ "id": "030", "name": "Tranvia", "type": "tram", "x": 1402, "y": 98, "rotation": 270, "width": 120, "height": 120, "subText": "La Chimenea" },
 	{ "id": "031", "name": "Microondas Betancourt", "type": "property", "x": 1400, "y": 200, "group": 7, "rotation": -90, "width": 85, "height": 120 },
 	{ "id": "032", "name": "Sala de estudio Tomás Pollán", "type": "property", "x": 1400, "y": 285, "group": 7, "rotation": -90, "width": 85, "height": 120 },
@@ -64,11 +64,11 @@
 	{ "id": "105", "name": "Aula Magna Facultad de Ciencias", "type": "property", "x": 749, "y": 625, "group": 10, "rotation": 90, "width": 85, "height": 165 },
 	{ "id": "106", "name": "Secretaría Facultad de Ciencias", "type": "property", "x": 749, "y": 455, "group": 10, "rotation": 90, "width": 85, "height": 165 },
 	{ "id": "107", "name": "Tranvia", "type": "tram", "x": 749, "y": 330, "rotation": 180, "width": 165, "height": 165, "subText": "Campus Río Ebro" },
-	{ "id": "108", "name": "Cafetería de Matemáticas", "type": "property", "x": 873, "y": 330, "group": 11, "rotation": 180, "width": 85, "height": 165 },
+	{ "id": "108", "name": "Aula D3", "type": "property", "x": 873, "y": 330, "group": 11, "rotation": 180, "width": 85, "height": 165 },
 	{ "id": "109", "name": "Fantasía", "type": "fantasy", "x": 958, "y": 330,  "rotation": 180, "width": 85, "height": 165 },
 	{ "id": "110", "name": "Biblioteca Química", "type": "property", "x": 1043, "y": 330, "group": 11, "rotation": 180, "width": 85, "height": 165 },
 	{ "id": "111", "name": "Parking", "type": "parking", "x": 1167, "y": 330, "rotation": 270, "width": 165, "height": 165 },
 	{ "id": "112", "name": "Biblioteca Matemáticas", "type": "property", "x": 1167, "y": 455, "group": 12, "rotation": -90, "width": 85, "height": 165 },
-	{ "id": "113", "name": "Aula 11", "type": "property", "x": 1167, "y": 625, "group": 12, "rotation": -90, "width": 85, "height": 165 }
+	{ "id": "113", "name": "Cafetería de Matemáticas", "type": "property", "x": 1167, "y": 625, "group": 12, "rotation": -90, "width": 85, "height": 165 }
   ]
 }
