@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
 import { PropertyCardContent } from '@/components/layout/PropertyLayout';
+import { Button } from '@/components/ui/button';
 
 export const PropertyOverlay = () => { 
     const [propData, setPropData] = useState<any>(null);
@@ -67,21 +68,23 @@ export const PropertyOverlay = () => {
                 />
                 <div className="flex gap-4">
                 
-                    <button onClick={() => setPropData(null)} 
-                            className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
+                    <Button onClick={() => setPropData(null)} 
+                            className={`px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
                                 Comprar {propData.price}€
-                    </button>
+                    </Button>
 
                     <div className="relative group">
-                        <button 
+                        <Button 
                             onMouseEnter={() => setShowTooltip(true)}
                             onMouseLeave={() => setShowTooltip(false)}
-                            onClick={() => setPropData(null)} 
-                            className={`px-8 py-4 bg-white hover:bg-gray-100 text-black font-black uppercase rounded-full shadow-xl 
-                            transition-all hover:scale-105 active:scale-95 ${bouncyAnimation}`}
-                        >
+                            onClick={() =>  {
+                                EventBus.emit('start-auction', propData);
+                                setPropData(null);
+                            }} 
+                            className={`px-9 py-6 bg-white hover:bg-gray-100 text-black font-black uppercase rounded-full shadow-xl 
+                            transition-all hover:scale-105 active:scale-95 ${bouncyAnimation}`} >
                             Subastar
-                        </button>
+                        </Button>
 
                         {/* Tooltip */}
                         <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-6 w-72 p-5 

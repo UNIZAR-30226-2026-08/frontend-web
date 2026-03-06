@@ -23,9 +23,9 @@ export class TramTile extends Tile {
         
         
         this.icon = this.scene.add.image(0, 0, 'tram')
-            .setOrigin(0.6, 0.3)
-            .setAngle(-45)
-            .setDisplaySize(w * 0.4, h * 0.4)
+            .setOrigin(0.3, 0)
+            .setAngle(0)
+            .setDisplaySize(w * 0.6, h * 0.6)
             .setPosition(1, -(h * 0.1));
                 
         this.add(this.icon);
