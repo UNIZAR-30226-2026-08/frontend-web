@@ -82,7 +82,7 @@ export const AuctionOverlay = () => {
         const losers = players.filter(p => !p.isWinner);
 
         return (
-            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-sm">
                 <div className="relative bg-[var(--color-background)] p-1 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-[48px] overflow-hidden w-[650px]">
                 
                     <div className="bg-[var(--color-background)] p-10 rounded-[44px] border border-[var(--color-background)] flex flex-col items-center">
@@ -144,7 +144,7 @@ export const AuctionOverlay = () => {
     }
     // Primera pantalla de subasta
     return (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-md">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-sm">
             <div className="flex flex-row items-center gap-12 bg-[var(--color-background)] p-10 rounded-[40px] border border-gray-700 shadow-3xl scale-90">
                 
                 <div className="rotate-[-4deg]">
@@ -188,7 +188,7 @@ export const AuctionOverlay = () => {
                                 className={`absolute right-4 px-5 py-2 rounded-2xl font-black uppercase text-md transition-all  ${bouncyAnimation}
                                     ${isManualBidInvalid 
                                         ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
-                                        : 'bg-[var(--color-primary)] text-black hover:scale-105 active:scale-95'}`} >
+                                        : 'bg-[var(--color-primary)] text-[var(--color-text)] hover:scale-105 active:scale-95'}`} >
                                 Pujar
                             </Button>
                         </div>
