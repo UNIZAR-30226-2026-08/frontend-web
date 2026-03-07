@@ -5,6 +5,7 @@ export class Tile extends Phaser.GameObjects.Container {
     public tileConfig: ITile;
     protected nameText: Phaser.GameObjects.Text;
     protected background: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image;
+    public overlay: Phaser.GameObjects.Rectangle;
 
     constructor(scene: Phaser.Scene, config: ITile) {
         super(scene, config.x, config.y);
@@ -35,5 +36,11 @@ export class Tile extends Phaser.GameObjects.Container {
         this.add(this.nameText);
 
         this.scene.add.existing(this);
+
+        this.overlay = this.scene.add.rectangle(0, 0, width, height, 0x000000, 0.9);
+        this.overlay.setVisible(false);
+        this.overlay.setOrigin(0.5);
+        this.add(this.overlay);
+
     }
 }

@@ -15,6 +15,18 @@ export const PropertyOverlay = () => {
         EventBus.on('show-property-card', handleShowProp);
         return () => { EventBus.off('show-property-card', handleShowProp); };
     }, []);
+    
+    const handleBuy = () => {
+        if (!propData) return;
+
+        // enviamos info a phaser
+        EventBus.emit('property-bought', {
+            tileId: propData.id,
+            playerName: propData.playerName,
+            playerColor: propData.playerColor
+        });
+        setPropData(null);
+    };
 
     if (!propData) {return null;}
 
@@ -59,7 +71,7 @@ export const PropertyOverlay = () => {
 	}
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-8">
                 <GameCard 
                     isFlipped={true}
@@ -68,7 +80,7 @@ export const PropertyOverlay = () => {
                 />
                 <div className="flex gap-4">
                 
-                    <Button onClick={() => setPropData(null)} 
+                    <Button onClick={handleBuy} 
                             className={`px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
                                 Comprar {propData.price}€
                     </Button>

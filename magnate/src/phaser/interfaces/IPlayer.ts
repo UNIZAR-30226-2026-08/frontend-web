@@ -5,4 +5,5 @@ export interface IPlayer {
     balance: number;
     properties: string[];
     currentTileIndex: number;
+    
 }

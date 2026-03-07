@@ -26,6 +26,7 @@ const CORNER_VISUALS: Map<Function, CornerTileContent> = new Map ([
 	[TramTile, { image: 'icons/tram.svg', tileText: 'Tranvía', buttonText: 'Gestionar desplazamiento'}],
 ]);
 import { CameraController } from '../utils/CameraController';
+import { BoardEffects } from '../utils/BoardEffects';
 
 export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
@@ -121,6 +122,40 @@ export class Board extends Phaser.Scene {
         this.events.on('shutdown', () => {
             EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
         });
+
+        // Evento para marcar quien compra propiedad  ----------------------------
+        EventBus.on('property-bought', this.handlePurchase, this);
+
+        
+        //------------------------------------------------- Para debugear trading: no borrar
+        // const debugTradeBtn = this.add.container(150, 120);
+
+        // const rectTrade = this.add.rectangle(0, 0, 200, 50, 0xff8800, 1)
+        //     .setInteractive({ useHandCursor: true });
+
+        // const txtTrade = this.add.text(0, 0, 'DEBUG: trading', { 
+        //     color: '#ffffff', 
+        //     fontSize: '18px',
+        // }).setOrigin(0.5);
+
+        // debugTradeBtn.add([rectTrade, txtTrade]);
+        // debugTradeBtn.setDepth(10001);
+        // debugTradeBtn.setScrollFactor(0);
+
+        // rectTrade.on('pointerdown', () => {
+        //     if (this.players.length >= 2) {
+        //         const tradePayload = {
+        //             sender: this.players[0].model,
+        //             allPlayers: this.players.map(p => ({ 
+        //                 id: p.model.id, 
+        //                 name: p.model.name, 
+        //                 color: '#' + p.model.color.toString(16).padStart(6, '0') 
+        //             }))
+        //         };
+        //         EventBus.emit('open-trade', tradePayload);  
+        //     } 
+        // });
+        //-------------------------------------------------
     }
 
     createPlayer(id: string, name: string) {
@@ -176,7 +211,7 @@ export class Board extends Phaser.Scene {
         ).length;
 
         const targetTile = this.tiles[targetIndex];
-        targetTile.setOwnerMarker(p.model.color);
+        // targetTile.setOwnerMarker(p.model.color);
         let finalX = targetTile.x;
         let finalY = targetTile.y;
 
@@ -187,10 +222,10 @@ export class Board extends Phaser.Scene {
         }
         
         p.token.moveTo(finalX, finalY);
-
-        // this.time.delayedCall(1500, () => {
-        //     this.checkTileLogic(p.model, targetTile);
-        // });
+        
+        this.time.delayedCall(500, () => {
+            this.checkTileLogic(p.model, targetTile);
+        });
     }
 
     // Método para debug, se envía a la primera casilla de un tipo específico
@@ -243,13 +278,16 @@ export class Board extends Phaser.Scene {
             }));
 
             EventBus.emit('show-property-card', {
+                id: propConfig.id,
                 title: propConfig.name,
                 headerColor: propConfig.color || '#FFFFFF', 
                 price: 100,
                 rent: rentValues,
                 mortgage: 100,
                 housePrice: 20,
+                players: playersData, // Para los resultados de la subasta
                 playerName: player.name,
+                playerColor: '#' + player.color.toString(16).padStart(6, '0')
 				isMortgaged: false, 		// Pruebecitas TODO JULIA
 				isAvailable: false, 		// Pruebecitas TODO JULIA
 				constructionLevel: 'house1',	// Pruebecitas TODO JULIA
@@ -344,4 +382,37 @@ export class Board extends Phaser.Scene {
         dice2.roll((val) => checkDone(val, dice2));
         dice3.roll((val) => checkDone(val, dice3));
     }
+
+    // Marcador para cada casilla que compra un player 
+    private handlePurchase (data: { tileId: string, playerColor: string }) {
+        const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
+
+            if (tile) {
+                const colorNum = parseInt(data.playerColor.startsWith('#')  ? data.playerColor.replace('#', '0x') : data.playerColor);
+                        
+                // TODO: añadir server, bridge
+                if (tile instanceof PropertyTile) {
+                    tile.setOwnerMarker(colorNum);
+                }
+            }
+    }
+
+    private setupEventListeners() {
+        // Cuando entramos en modo selección (Trade)
+        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[] }) => {
+            // Solo brillan las propiedades que el jugador posee actualmente
+            BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this);
+        });
+
+        // cancelamos
+        EventBus.on('stop-selection-mode', () => {
+            BoardEffects.setFocusByIds(this.tiles, null, this);
+        });
+
+        // brillan las de un grupo
+        EventBus.on('highlight-group', (groupIds: string[]) => {
+            BoardEffects.setFocusByIds(this.tiles, groupIds, this);
+    });
 }
+}
+

@@ -68,4 +68,6 @@ export class PropertyTile extends Tile {
         
         this.ownerMarker = marker as any;
     }
+
+    
 }
