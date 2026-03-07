@@ -11,12 +11,20 @@ import { JailTile } from '../objects/JailTile';
 import { ParkingTile } from '../objects/ParkingTile';
 import { TramTile } from '../objects/TramTile';
 
+import { CornerTileContent } from '@/components/layout/CornerLayout';
+
 import { PlayerModel } from '../models/PlayerModel';
 import { PlayerToken } from '../objects/PlayerToken';
 import { EventBus } from '@/EventBus'
 
 import { create3DDice } from '../objects/Dice3D';
 
+const CORNER_VISUALS: Map<Function, CornerTileContent> = new Map ([
+	[GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar'}],
+	[JailTile, { image: 'images/secretary.png', tileText: 'Secretaría', buttonText: 'Comenzar turno'}],
+	[ParkingTile, { image: 'images/caravan.png', tileText: 'Parking Gratuito', buttonText: 'Recoger dinero'}],
+	[TramTile, { image: 'icons/tram.svg', tileText: 'Tranvía', buttonText: 'Gestionar desplazamiento'}],
+]);
 import { CameraController } from '../utils/CameraController';
 import { BoardEffects } from '../utils/BoardEffects';
 
@@ -225,11 +233,13 @@ export class Board extends Phaser.Scene {
         const p = this.players.find(pair => pair.model.id === playerId);
         if (!p) return;
 
-        // Buscamos la primera casilla de tipo Fantasy
-        const fantasyIndex = this.tiles.findIndex(t => t instanceof PropertyTile);
+        // Buscamos la primera casilla de tipo __
+		const fantasyIndex = this.tiles.findIndex(t => t instanceof GoToJailTile);
         p.model.currentTileIndex = fantasyIndex;
         
         const targetTile = this.tiles[fantasyIndex];
+
+
         p.token.moveTo(targetTile.x, targetTile.y);
 
         // Ejecutamos la lógica de la casilla
@@ -256,7 +266,7 @@ export class Board extends Phaser.Scene {
             });
         }
         
-        if (tile instanceof PropertyTile) {
+		else if (tile instanceof PropertyTile) {
 
             const propConfig = tile.tileConfig as IPropertyTile;
             // TODO: Vendrá del backend?
@@ -278,8 +288,56 @@ export class Board extends Phaser.Scene {
                 players: playersData, // Para los resultados de la subasta
                 playerName: player.name,
                 playerColor: '#' + player.color.toString(16).padStart(6, '0')
+				isMortgaged: false, 		// Pruebecitas TODO JULIA
+				isAvailable: false, 		// Pruebecitas TODO JULIA
+				constructionLevel: 'house1',	// Pruebecitas TODO JULIA
+                players: playersData // Para los resultados de la subasta
             });
         }
+
+		else if (tile instanceof ServerTile) {
+			const rent = {one:50,all:100}
+			const tileConfig = tile.tileConfig as IServerTile;
+			EventBus.emit('show-service-card', {
+				title: tileConfig.name,
+				typeName: 'Servidor',
+				image:'images/server.png', // TODO override tileConfig.icon
+				price: 80,
+				rent: rent,
+				mortgage: 100,
+				isMortgaged: false,	// Pruebecitas TODO JULIA
+				isAvailable: false,
+				hasAll: 'all'
+			});
+		}
+
+		else if (tile instanceof BridgeTile) {
+			const rent = {one:50,all:100}
+			const tileConfig = tile.tileConfig as IServerTile;
+			EventBus.emit('show-service-card', {
+				title: tileConfig.name,
+				typeName: 'Puente',
+				image:'icons/bridge.svg', // TODO override tileConfig.icon
+				price: 80,
+				rent: rent,
+				mortgage: 100,
+				isMortgaged: false,	// Pruebecitas TODO JULIA
+				isAvailable: true,
+				hasAll: 'one'
+			});
+		}
+
+		else if (tile instanceof StartTile) {}
+
+		else {
+			const cornerConfig = CORNER_VISUALS.get(tile.constructor);
+            EventBus.emit('show-corner-tile', {
+				image: cornerConfig.image,
+				tileText: cornerConfig.tileText,
+				buttonText: cornerConfig.buttonText
+			});
+		}
+
     }
 
     private handleDiceRoll() {

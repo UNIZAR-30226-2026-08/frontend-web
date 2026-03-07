@@ -45,11 +45,17 @@ export interface IFantasyTile extends ITile {
 export interface IBridgeTile extends ITile {
     type: TileType.BRIDGE;
     icon?: string;
+	rent?: number;	// TODO preguntar backend
+	ownerId?: string | null;
+	price: number;
 }
 
 export interface IServerTile extends ITile {
     type: TileType.SERVER;
     icon?: string;
+	rent?: number;	// TODO preguntar backend
+	ownerId?: string | null;
+	price: number;
 }
 
 export interface IStartTile extends ITile {

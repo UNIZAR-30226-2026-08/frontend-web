@@ -1,28 +1,24 @@
 
-interface PropertyData {
+interface ServiceData {
     title: string;
-    headerColor: string;
+    typeName: string;
+    image: string;
     price: number;
     rent: {
-        base: number;
-        house1: number;
-        house2: number;
-        house3: number;
-        house4: number;
-        hotel: number;
+        one: number;
+        all: number;
     };
-    housePrice: number;
     mortgage: number;
 }
 
-interface PropertyCardContentProps {
-    data: PropertyData;
+interface ServiceCardContentProps {
+    data: ServiceData;
     isMortgaged?: boolean;
     isAvailable?: boolean; // True if it has already been bought, False otherwise (pay rent)
-	constructionLevel: keyof PropertyData['rent']; 
+	hasAll?: keyof ServiceData['rent']; 		// Has every one of this group
 }
 
-export const PropertyCardContent = ({ data, isMortgaged, isAvailable, constructionLevel }:  PropertyCardContentProps ) => {
+export const ServiceCardContent = ({ data, isMortgaged, isAvailable, hasAll }:  ServiceCardContentProps ) => {
 
     if (isMortgaged) {
         return (
@@ -35,7 +31,7 @@ export const PropertyCardContent = ({ data, isMortgaged, isAvailable, constructi
 
                     <div className="z-10 w-full">
                         <div className="font-black text-[#e63946] text-xs uppercase tracking-[0.3em] mb-1">
-                            Título de Propiedad
+							<h>{data.typeName}</h>
                         </div>
                         <h2 className="text-2xl font-black uppercase text-black leading-tight border-b-2 border-black pb-2 mx-4">
                             {data.title}
@@ -69,17 +65,22 @@ export const PropertyCardContent = ({ data, isMortgaged, isAvailable, constructi
         <div className="w-full h-full bg-white border-2 border-black p-[12px] flex flex-col shadow-2xl">
             <div className="relative w-full h-full border-2 border-black flex flex-col bg-white overflow-hidden">
                 
-                <div className="h-24 border-b-2 border-black flex flex-col items-center justify-center p-2" 
-                    style={{ backgroundColor: data.headerColor }}>
-                    
+                <div className="h-24 border-b-2 border-black flex flex-col items-center justify-center p-2">
                     <span className="text-[10px] text-black font-bold uppercase tracking-[0.15em] mb-0.5">
-                        Título de Propiedad
+						{data.typeName}
                     </span>
                     
                     <h3 className="text-black font-black uppercase text-center text-xl leading-tight drop-shadow-sm">
                         {data.title}
                     </h3>
                 </div>
+				<div className="border-b-2 border-black flex justify-center items-center h-40 p-4">
+				    <img
+				        src={data.image}
+				        alt="tile icon"
+				        className="max-h-full max-w-full object-contain"
+				    />
+				</div>
 
                 <div className="p-5 flex-1 flex flex-col items-center">
 
@@ -87,56 +88,27 @@ export const PropertyCardContent = ({ data, isMortgaged, isAvailable, constructi
                     <div className="w-full mt-4 space-y-2 text-[20px] font-bold uppercase tracking-tight text-black">
                         
                         <div className="flex justify-center border-b border-black/10 pb-1 text-black font-black">
-                            <span>Alquileres {data.rent.base}€</span>
+                            <span>Alquileres</span>
                         </div>
 
-                        {/* Con 1 Casa */}
+                        {/* Con 1 del grupo*/}
                         <div className="flex justify-between items-end text-gray-600 pt-6">
-                            <span className="shrink-0">Con 1 Casa</span>
+                            <span className="shrink-0">Con 1 {data.typeName}</span>
                             <div className="flex-1 border-b-2 border-dotted border-gray-400 mb-[5px] mx-2" />
-                            <span>{data.rent.house1}€</span>
+                            <span>{data.rent.one}€</span>
                         </div>
 
-                        {/* Con 2 Casas */}
+                        {/* Con los 2 del grupo */}
                         <div className="flex justify-between items-end text-gray-600">
-                            <span className="shrink-0">Con 2 Casas</span>
+                            <span className="shrink-0">Con 2 {data.typeName}</span>
                             <div className="flex-1 border-b-2 border-dotted border-gray-400 mb-[5px] mx-2" />
-                            <span>{data.rent.house2}€</span>
+                            <span>{data.rent.all}€</span>
                         </div>
 
-                        {/* Con 3 Casas */}
-                        <div className="flex justify-between items-end text-gray-600">
-                            <span className="shrink-0">Con 3 Casas</span>
-                            <div className="flex-1 border-b-2 border-dotted border-gray-400 mb-[5px] mx-2" />
-                            <span>{data.rent.house3}€</span>
-                        </div>
-
-                        {/* Con 4 Casas */}
-                        <div className="flex justify-between items-end text-gray-600">
-                            <span className="shrink-0">Con 4 Casas</span>
-                            <div className="flex-1 border-b-2 border-dotted border-gray-400 mb-[5px] mx-2" />
-                            <span>{data.rent.house4}€</span>
-                        </div>
-
-                        {/* HOTEL */}
-                        <div className="flex justify-between items-end text-gray-600">
-                            <span className="shrink-0">Con Hotel</span>
-                            <div className="flex-1 border-b-2 border-dotted border-gray-400 mb-[5px] mx-2" />
-                            <span>{data.rent.hotel}€</span>
-                        </div>
                     </div>
 
                     <div className="mt-auto w-full  pt-4 space-y-3">
                         
-                        <div className="text-center">
-                            <p className="text-[12px] font-black uppercase text-gray-800 leading-none">
-                                Cada casa cuesta {data.housePrice}€
-                            </p>
-                            <p className="text-[12px] font-black uppercase text-gray-800 mt-1">
-                                Cada hotel cuesta {data.housePrice}€ más 4 casas
-                            </p>
-                        </div>
-
                         {/* Hipoteca */}
                         <div className="flex flex-col items-center border-t border-gray-300 pt-3">
                             <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Valor de Hipoteca</p>

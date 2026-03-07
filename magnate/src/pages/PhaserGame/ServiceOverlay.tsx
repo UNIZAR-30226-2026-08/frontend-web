@@ -1,37 +1,24 @@
 import { useEffect, useState } from 'react';
 import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
-import { PropertyCardContent } from '@/components/layout/PropertyLayout';
-import { Button } from '@/components/ui/button';
+import { ServiceCardContent } from '@/components/layout/ServiceLayout';
 
-export const PropertyOverlay = () => { 
+export const ServiceOverlay = () => { 
     const [propData, setPropData] = useState<any>(null);
     const [showTooltip, setShowTooltip] = useState(false);
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
     useEffect(() => {
-        const handleShowProp = (data: any) => setPropData(data);
-        EventBus.on('show-property-card', handleShowProp);
-        return () => { EventBus.off('show-property-card', handleShowProp); };
+        const handle = (data: any) => { setPropData(data); }
+        EventBus.on('show-service-card', handle);
+        return () => { EventBus.off('show-service-card', handle); };
     }, []);
-    
-    const handleBuy = () => {
-        if (!propData) return;
-
-        // enviamos info a phaser
-        EventBus.emit('property-bought', {
-            tileId: propData.id,
-            playerName: propData.playerName,
-            playerColor: propData.playerColor
-        });
-        setPropData(null);
-    };
 
     if (!propData) {return null;}
 
 	// Just in case they are not set
-	const currentLevel = propData.constructionLevel || 'base';
+	const currentLevel = propData.hasAll || 'one';
 	const mortgaged = propData.isMortgaged || false;
 
 	if (propData.isMortgaged) { 
@@ -40,7 +27,7 @@ export const PropertyOverlay = () => {
 	            <div className="flex flex-col items-center gap-8">
 	                <GameCard 
 	                    isFlipped={true}
-	                    front={<PropertyCardContent data={propData} isMortgaged={mortgaged} />}
+	                    front={<ServiceCardContent data={propData} isMortgaged={mortgaged} />}
 	                    back={<div  />} 
 	                />
 	                <button onClick={() => setPropData(null)} 
@@ -56,11 +43,11 @@ export const PropertyOverlay = () => {
 		return ( // pay rent view
 		    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
 	            <div className="flex flex-col items-center gap-8">
-                	<GameCard 
-                	    isFlipped={true}
-                	    front={<PropertyCardContent data={propData} />}
-                	    back={<div />} 
-                	/>
+					<GameCard 
+            	        isFlipped={true}
+            	        front={<ServiceCardContent data={propData} />}
+            	        back={<div />} 
+            	    />
 	                <button onClick={() => setPropData(null)} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
 	                            Pagar {propData.rent[currentLevel]}€
@@ -71,32 +58,30 @@ export const PropertyOverlay = () => {
 	}
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-8">
                 <GameCard 
                     isFlipped={true}
-                    front={<PropertyCardContent data={propData} />}
+                    front={<ServiceCardContent data={propData} />}
                     back={<div />} 
                 />
                 <div className="flex gap-4">
                 
-                    <Button onClick={handleBuy} 
-                            className={`px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
+                    <button onClick={() => setPropData(null)} 
+                            className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
                                 Comprar {propData.price}€
-                    </Button>
+                    </button>
 
                     <div className="relative group">
-                        <Button 
+                        <button 
                             onMouseEnter={() => setShowTooltip(true)}
                             onMouseLeave={() => setShowTooltip(false)}
-                            onClick={() =>  {
-                                EventBus.emit('start-auction', propData);
-                                setPropData(null);
-                            }} 
-                            className={`px-9 py-6 bg-white hover:bg-gray-100 text-black font-black uppercase rounded-full shadow-xl 
-                            transition-all hover:scale-105 active:scale-95 ${bouncyAnimation}`} >
+                            onClick={() => setPropData(null)} 
+                            className={`px-8 py-4 bg-white hover:bg-gray-100 text-black font-black uppercase rounded-full shadow-xl 
+                            transition-all hover:scale-105 active:scale-95 ${bouncyAnimation}`}
+                        >
                             Subastar
-                        </Button>
+                        </button>
 
                         {/* Tooltip */}
                         <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-6 w-72 p-5 
@@ -107,7 +92,7 @@ export const PropertyOverlay = () => {
                         
                             <div className="relative flex flex-col items-center text-center z-10">
                                 <p className="leading-relaxed tracking-wide font-medium">
-                                    Si decides no adquirir esta propiedad, pasará a subasta entre el resto de los jugadores.
+                                    Si decides no adquirir este servicio, pasará a subasta entre el resto de los jugadores.
                                 </p>
                             </div>
 
