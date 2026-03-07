@@ -172,8 +172,8 @@ export class Board extends Phaser.Scene {
 
         // TODO: Esto es solo para probar el movimiento
         token.on('pointerdown', () => {
-            //this.handlePlayerClick(id);
-            this.handlePlayerClickDebug(id); // Para debugear si quiero enviarlo a una casilla en concreto
+            this.handlePlayerClick(id);
+            //this.handlePlayerClickDebug(id); // Para debugear si quiero enviarlo a una casilla en concreto
         });
 
         this.players.push({ model, token });
@@ -287,11 +287,10 @@ export class Board extends Phaser.Scene {
                 housePrice: 20,
                 players: playersData, // Para los resultados de la subasta
                 playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0')
+                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
 				isMortgaged: false, 		// Pruebecitas TODO JULIA
-				isAvailable: false, 		// Pruebecitas TODO JULIA
+				isAvailable: true, 		// Pruebecitas TODO JULIA
 				constructionLevel: 'house1',	// Pruebecitas TODO JULIA
-                players: playersData // Para los resultados de la subasta
             });
         }
 
@@ -306,7 +305,7 @@ export class Board extends Phaser.Scene {
 				rent: rent,
 				mortgage: 100,
 				isMortgaged: false,	// Pruebecitas TODO JULIA
-				isAvailable: false,
+				isAvailable: true,
 				hasAll: 'all'
 			});
 		}
