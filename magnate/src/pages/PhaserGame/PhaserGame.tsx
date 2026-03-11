@@ -10,6 +10,7 @@ import { AuctionOverlay } from './AuctionOverlay';
 import { TradingOverlay  } from './TradingOverlay';
 import { ControlsHUD } from '@/components/layout/ControlsHUD';
 import { EventBus } from '@/EventBus';
+import { PropertyAdminOverlay } from './PropertyAdminOverlay';
 
 interface PlayerInitData {
     id: string;
@@ -88,6 +89,7 @@ export const PhaserGame = () => {
             <ServiceOverlay />
             <AuctionOverlay />
             <TradingOverlay />
+            <PropertyAdminOverlay />
         </div>
     );
 };
