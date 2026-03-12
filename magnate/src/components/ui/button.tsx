@@ -44,7 +44,7 @@ export interface ButtonProps
   sound?: SoundId | null
 }
 
-// By default, silen buttons (null)
+// By default, button_ok
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, sound='button_ok', onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"

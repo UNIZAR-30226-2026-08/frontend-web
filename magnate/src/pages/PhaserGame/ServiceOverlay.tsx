@@ -16,7 +16,7 @@ export const ServiceOverlay = () => {
     useEffect(() => {
         const handle = (data: any) => { 
 			setPropData(data);
-			playSound('card_slide_1');
+			playSound('card_place_1');
 		}
         EventBus.on('show-service-card', handle);
         return () => { EventBus.off('show-service-card', handle); };
