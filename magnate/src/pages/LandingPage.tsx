@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAudio } from "@/context/AudioContext";
+import { useEffect } from "react";
 
 const AuthButtonContent = ({ title, sub }) => (
   <>
@@ -22,6 +24,11 @@ export function LandingPage() {
   const backgroundImage = "src/assets/bg_city_white.jpg";
   const logoImage = "src/assets/images/logo.png";
  const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+
+  const { changeMusic, playSound } = useAudio();
+  useEffect(() => {
+  	changeMusic('bg_menu',1000);
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-[var(--color-background)] select-none">

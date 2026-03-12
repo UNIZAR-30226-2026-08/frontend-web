@@ -102,6 +102,7 @@ export function Home() {
               <Button
                 key={index}
                 onClick={() => navigate(mode.path)}
+			    sound={'button_main'}
                 className={`
                     ${gridButtonEffect}
                     group relative 
@@ -122,6 +123,7 @@ export function Home() {
               <Button
                 key={index}
                 onClick={() => navigate(mode.path)}
+			    sound={'button_main'}
                 className={`
                     ${gridButtonEffect}
                     group relative 

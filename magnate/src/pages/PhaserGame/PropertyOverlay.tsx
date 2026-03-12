@@ -3,6 +3,7 @@ import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
 import { PropertyCardContent } from '@/components/layout/PropertyLayout';
 import { Button } from '@/components/ui/button';
+import { useAudio } from '@/context/AudioContext';
 
 export const PropertyOverlay = () => { 
     const [propData, setPropData] = useState<any>(null);
@@ -10,11 +11,16 @@ export const PropertyOverlay = () => {
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
+	const { playSound } = useAudio();
+
     useEffect(() => {
-        const handleShowProp = (data: any) => setPropData(data);
+        const handleShowProp = (data: any) => {
+			setPropData(data);
+			playSound('card_place_1');
+		}
         EventBus.on('show-property-card', handleShowProp);
         return () => { EventBus.off('show-property-card', handleShowProp); };
-    }, []);
+    }, [playSound]);
     
     const handleBuy = () => {
         if (!propData) return;
@@ -43,10 +49,10 @@ export const PropertyOverlay = () => {
 	                    front={<PropertyCardContent data={propData} isMortgaged={mortgaged} />}
 	                    back={<div  />} 
 	                />
-	                <button onClick={() => setPropData(null)} 
+	                <Button onClick={() => setPropData(null)} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
 	                            Aceptar
-	                </button>
+	                </Button>
 				</div>
 			</div>
 		);
@@ -61,10 +67,10 @@ export const PropertyOverlay = () => {
                 	    front={<PropertyCardContent data={propData} />}
                 	    back={<div />} 
                 	/>
-	                <button onClick={() => setPropData(null)} 
+	                <Button onClick={() => setPropData(null)} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
 	                            Pagar {propData.rent[currentLevel]}€
-	                </button>
+	                </Button>
 				</div>
 			</div>
 		);

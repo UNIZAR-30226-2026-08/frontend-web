@@ -10,6 +10,7 @@ import { AuctionOverlay } from './AuctionOverlay';
 import { TradingOverlay  } from './TradingOverlay';
 import { ControlsHUD } from '@/components/layout/ControlsHUD';
 import { EventBus } from '@/EventBus';
+import { useAudio } from "@/context/AudioContext";
 
 interface PlayerInitData {
     id: string;
@@ -27,12 +28,18 @@ export const PhaserGame = () => {
     });
 
     useEffect(() => {
+
         const handleResize = () => {
             setWindowSize({ width: window.innerWidth, height: window.innerHeight });
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+  	const { changeMusic, playSound } = useAudio();
+  	useEffect(() => {
+  		changeMusic('bg_game',1000);
+  	}, []);
 
     const dynamicScale = useMemo(() => {
         const baseHeight = 1080;

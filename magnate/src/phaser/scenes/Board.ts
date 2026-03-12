@@ -19,11 +19,13 @@ import { EventBus } from '@/EventBus'
 
 import { create3DDice } from '../objects/Dice3D';
 
+import { SoundId } from '@/context/AudioContext';
+
 const CORNER_VISUALS: Map<Function, CornerTileContent> = new Map ([
-	[GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar'}],
-	[JailTile, { image: 'images/secretary.png', tileText: 'Secretaría', buttonText: 'Comenzar turno'}],
-	[ParkingTile, { image: 'images/caravan.png', tileText: 'Parking Gratuito', buttonText: 'Recoger dinero'}],
-	[TramTile, { image: 'icons/tram.svg', tileText: 'Tranvía', buttonText: 'Gestionar desplazamiento'}],
+	[GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar', sound: 'jail_door'}],
+	[JailTile, { image: 'images/secretary.png', tileText: 'Secretaría', buttonText: 'Comenzar turno', sound: 'jail_turn_in'}],
+	[ParkingTile, { image: 'images/caravan.png', tileText: 'Parking Gratuito', buttonText: 'Recoger dinero', sound: 'parking'}],
+	[TramTile, { image: 'icons/tram.svg', tileText: 'Tranvía', buttonText: 'Gestionar desplazamiento', sound: 'tram_bell'}],
 ]);
 import { CameraController } from '../utils/CameraController';
 import { BoardEffects } from '../utils/BoardEffects';
@@ -202,6 +204,7 @@ export class Board extends Phaser.Scene {
         const roll = Phaser.Math.Between(1, 6);
         p.model.move(roll, this.tiles.length);
         const targetIndex = p.model.currentTileIndex;
+		//const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile); // Debug Julia
         
         //this.cameraController.followToken(p.token, 1.2);
 
@@ -333,7 +336,8 @@ export class Board extends Phaser.Scene {
             EventBus.emit('show-corner-tile', {
 				image: cornerConfig.image,
 				tileText: cornerConfig.tileText,
-				buttonText: cornerConfig.buttonText
+				buttonText: cornerConfig.buttonText,
+				sound: cornerConfig.sound
 			});
 		}
 

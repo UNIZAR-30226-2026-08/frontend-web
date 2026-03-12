@@ -2,25 +2,30 @@ import { useEffect, useState } from 'react';
 import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
 import { FantasyCardContent } from '@/components/layout/FantasyLayout';
+import { useAudio } from '@/context/AudioContext';
 
 export const FantasyOverlay = () => {
     const [cardData, setCardData] = useState<any>(null);
     const [isRevealed, setIsRevealed] = useState(false);
 
+	const { playSound } = useAudio();
+
     useEffect(() => {
         const handle = (data: any) => { 
             setCardData(data); 
             setIsRevealed(false); 
+			playSound('fantasy');
         };
         EventBus.on('show-fantasy-card', handle);
         return () => { EventBus.off('show-fantasy-card', handle); };
-    }, []);
+    }, [playSound]);
 
     if (!cardData) return null;
 
     const handleAction = () => {
         if (!isRevealed) {
             setIsRevealed(true);
+			playSound('card_slide'); 
         } else {
             setCardData(null);
         }

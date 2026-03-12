@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
 import { ServiceCardContent } from '@/components/layout/ServiceLayout';
+import { Button } from '@/components/ui/button';
+import { useAudio } from '@/context/AudioContext';
 
 export const ServiceOverlay = () => { 
     const [propData, setPropData] = useState<any>(null);
@@ -9,11 +11,16 @@ export const ServiceOverlay = () => {
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
+	const { playSound } = useAudio();
+
     useEffect(() => {
-        const handle = (data: any) => { setPropData(data); }
+        const handle = (data: any) => { 
+			setPropData(data);
+			playSound('card_slide_1');
+		}
         EventBus.on('show-service-card', handle);
         return () => { EventBus.off('show-service-card', handle); };
-    }, []);
+    }, [playSound]);
 
     if (!propData) {return null;}
 
@@ -30,10 +37,10 @@ export const ServiceOverlay = () => {
 	                    front={<ServiceCardContent data={propData} isMortgaged={mortgaged} />}
 	                    back={<div  />} 
 	                />
-	                <button onClick={() => setPropData(null)} 
+	                <Button onClick={() => setPropData(null)} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
 	                            Aceptar
-	                </button>
+	                </Button>
 				</div>
 			</div>
 		);
@@ -48,10 +55,10 @@ export const ServiceOverlay = () => {
             	        front={<ServiceCardContent data={propData} />}
             	        back={<div />} 
             	    />
-	                <button onClick={() => setPropData(null)} 
+	                <Button onClick={() => setPropData(null)} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
 	                            Pagar {propData.rent[currentLevel]}€
-	                </button>
+	                </Button>
 				</div>
 			</div>
 		);
@@ -67,13 +74,13 @@ export const ServiceOverlay = () => {
                 />
                 <div className="flex gap-4">
                 
-                    <button onClick={() => setPropData(null)} 
+                    <Button onClick={() => setPropData(null)} 
                             className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
                                 Comprar {propData.price}€
-                    </button>
+                    </Button>
 
                     <div className="relative group">
-                        <button 
+                        <Button 
                             onMouseEnter={() => setShowTooltip(true)}
                             onMouseLeave={() => setShowTooltip(false)}
                             onClick={() => setPropData(null)} 
@@ -81,7 +88,7 @@ export const ServiceOverlay = () => {
                             transition-all hover:scale-105 active:scale-95 ${bouncyAnimation}`}
                         >
                             Subastar
-                        </button>
+                        </Button>
 
                         {/* Tooltip */}
                         <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-6 w-72 p-5 
