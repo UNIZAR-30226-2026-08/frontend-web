@@ -130,7 +130,7 @@ export class Board extends Phaser.Scene {
 
         
         //------------------------------------------------- Para debugear trading: no borrar
-        // const debugTradeBtn = this.add.container(150, 120);
+        // const debugTradeBtn = this.add.container(150, 180);
 
         // const rectTrade = this.add.rectangle(0, 0, 200, 50, 0xff8800, 1)
         //     .setInteractive({ useHandCursor: true });
@@ -155,7 +155,40 @@ export class Board extends Phaser.Scene {
         //             }))
         //         };
         //         EventBus.emit('open-trade', tradePayload);  
-        //     } 
+        //     }
+        // });
+        //------------------------------------------------- Para debugear admin: no borrar
+        // const debugTradeBtn2 = this.add.container(150, 120);
+
+        // const rectTrade2 = this.add.rectangle(0, 0, 200, 50, 0xff8800, 1)
+        //     .setInteractive({ useHandCursor: true });
+
+        // const txtTrade2 = this.add.text(0, 0, 'DEBUG: admin', { 
+        //     color: '#ffffff', 
+        //     fontSize: '18px',
+        // }).setOrigin(0.5);
+
+        // debugTradeBtn2.add([rectTrade2, txtTrade2]);
+        // debugTradeBtn2.setDepth(10001);
+        // debugTradeBtn2.setScrollFactor(0);
+
+        // rectTrade2.on('pointerdown', () => {
+            
+        //     const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
+            
+        //     EventBus.emit('open-property-management', {
+        //         data: {
+        //             id: "001",
+        //             name: "ITA",
+        //             headerColor: '#885626', 
+        //             price: 100,
+        //             rent: rentValues,
+        //             mortgage: 100,
+        //             housePrice: 20,
+        //             isMortgaged:  false,
+        //             constructionLevel: 'base'
+        //         }
+        //     });
         // });
         //-------------------------------------------------
     }
@@ -273,7 +306,7 @@ export class Board extends Phaser.Scene {
 
             const propConfig = tile.tileConfig as IPropertyTile;
             // TODO: Vendrá del backend?
-            const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
+            const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800};
             const playersData = this.players.map(p => ({
                 id: p.model.id,
                 name: p.model.name,
@@ -282,7 +315,7 @@ export class Board extends Phaser.Scene {
 
             EventBus.emit('show-property-card', {
                 id: propConfig.id,
-                title: propConfig.name,
+                name: propConfig.name,
                 headerColor: propConfig.color || '#FFFFFF', 
                 price: 100,
                 rent: rentValues,

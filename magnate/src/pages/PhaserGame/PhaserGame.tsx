@@ -11,6 +11,7 @@ import { TradingOverlay  } from './TradingOverlay';
 import { ControlsHUD } from '@/components/layout/ControlsHUD';
 import { EventBus } from '@/EventBus';
 import { useAudio } from "@/context/AudioContext";
+import { PropertyAdminOverlay } from './PropertyAdminOverlay';
 
 interface PlayerInitData {
     id: string;
@@ -95,6 +96,7 @@ export const PhaserGame = () => {
             <ServiceOverlay />
             <AuctionOverlay />
             <TradingOverlay />
+            <PropertyAdminOverlay />
         </div>
     );
 };

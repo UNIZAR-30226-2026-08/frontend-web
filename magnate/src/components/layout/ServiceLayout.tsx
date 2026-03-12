@@ -31,7 +31,7 @@ export const ServiceCardContent = ({ data, isMortgaged, isAvailable, hasAll }:  
 
                     <div className="z-10 w-full">
                         <div className="font-black text-[#e63946] text-xs uppercase tracking-[0.3em] mb-1">
-							<h>{data.typeName}</h>
+							<h3>{data.typeName}</h3>
                         </div>
                         <h2 className="text-2xl font-black uppercase text-black leading-tight border-b-2 border-black pb-2 mx-4">
                             {data.title}
