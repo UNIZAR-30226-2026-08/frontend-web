@@ -15,6 +15,16 @@ export const AuctionOverlay = () => {
     const [players, setPlayers] = useState<any[]>([]); // TODO: lista de jugadores que recibiremos
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+    const stripedBackgroundStyle = { backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
+            repeating-linear-gradient(
+                -45deg,
+                #ffffff,
+                #ffffff 20px,
+                #f3f4f6 20px,
+                #f3f4f6 40px )`,
+        backgroundSize: 'cover'
+    };
 
     useEffect(() => {
         const handleShowProp = (data: any) => { // TODO: para jugadores
@@ -83,58 +93,56 @@ export const AuctionOverlay = () => {
 
         return (
             <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-sm">
-                <div className="relative bg-[var(--color-background)] p-1 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-[48px] overflow-hidden w-[650px]">
-                
-                    <div className="bg-[var(--color-background)] p-10 rounded-[44px] border border-[var(--color-background)] flex flex-col items-center">
-                        
-                        <div className="bg-white/5 border border-white/10 px-4 py-1 rounded-full mb-4">
-                            <span className="text-[var(--color-primary)] text-xs font-black uppercase tracking-[0.3em]">Subasta terminada</span>
+                <div className="relative shadow-[0_30px_60px_rgba(0,0,0,0.2)] rounded-[50px] overflow-hidden w-[550px] border border-gray-500"
+                    style={stripedBackgroundStyle}>                
+                    
+                    <div className="p-10 flex flex-col items-center">
+                        <div className="mb-6">
+                            <span className="text-slate-500 text-[12px] font-black uppercase italic tracking-widest block">
+                                Subasta Finalizada
+                            </span>
                         </div>
-
-                        <h2 className="text-5xl font-black italic uppercase tracking-tighter text-white mb-2 text-center">
+                        <h2 className="text-5xl font-black italic uppercase tracking-tighter text-slate-900 mb-1 text-center">
                             ¡Adjudicado!
                         </h2>
-                        
-                        <p className="text-gray-400 font-medium uppercase tracking-widest text-[16px] mb-8">
-                            {auctionData.title}
+                        <p className="text-slate-800 font-black uppercase tracking-widest text-sm mb-10 mt-3 opacity-60">
+                            {auctionData.name}
                         </p>
 
-                        {/* winner */}
                         {winner && (
-                            <div className="w-full mb-6 relative group">
-                                <div className="absolute -inset-1 from-[var(--color-primary)] to-amber-500 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                                <div className="relative flex items-center justify-between p-6 bg-[#1a1a1a] border border-white/10 rounded-3xl">
-                                    
-                                    <div className="flex items-center gap-5">
+                            <div className="w-full mb-8 relative">
+                                <div className="bg-white border-2 border-slate-100 rounded-[32px] p-8 shadow-[0_15px_30px_rgba(0,0,0,0.05)] flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-4 h-4 rounded-full shadow-inner" style={{ backgroundColor: winner.color }} />
                                         <div>
-                                            <p className="text-[var(--color-primary)] text-[10px] font-black uppercase tracking-widest mb-0.5">Nuevo Propietario</p>
-                                            <p className="text-2xl font-black text-white uppercase">{winner.name}</p>
+                                            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest leading-none mb-1">Nuevo propietario</p>
+                                            <p className="text-3xl font-black text-slate-900 uppercase tracking-tight">{winner.name}</p>
                                         </div>
                                     </div>
-                                    
                                     <div className="text-right">
-                                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-0.5">Inversión</p>
-                                        <p className="text-4xl font-black text-white">{winner.bid}€</p>
+                                        <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest leading-none mb-1">Inversión</p>
+                                        <p className="text-5xl font-black text-slate-900 select-none">{winner.bid}€</p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* losers */}
-                        <div className="w-full grid grid-cols gap-3 mb-10">
+                        <div className="w-full space-y-2 mb-10">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-3">Otras pujas</p>
                             {losers.map((player, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-4 bg-white/[0.03] border border-white/5 rounded-2xl">
+                                <div key={idx} className="flex justify-between items-center px-6 py-4 bg-white/90 border border-slate-170 rounded-2xl">
                                     <div className="flex items-center gap-3">
                                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: player.color }} />
-                                        <span className="font-bold text-gray-400 text-sm uppercase tracking-tight">{player.name}</span>
+                                        <span className="font-bold text-slate-600 text-sm uppercase">{player.name}</span>
                                     </div>
-                                    <span className="font-bold text-gray-200">{player.bid}€</span>
+                                    <span className="font-black text-slate-400">{player.bid}€</span>
                                 </div>
                             ))}
                         </div>
 
                         <Button onClick={() => setAuctionData(null)}
-                            className={`w-35 py-7 text-[20px] font-black uppercase rounded-full bg-[var(--color-primary)] text-[var(--color-text)]  ${bouncyAnimation}`}>
+                            className={`w-[150px] h-[50px] text-xl font-black uppercase rounded-full 
+                                        bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)] shadow-xl ${bouncyAnimation}`}>
                             Aceptar
                         </Button>
                     </div>
@@ -145,7 +153,8 @@ export const AuctionOverlay = () => {
     // Primera pantalla de subasta
     return (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-sm">
-            <div className="flex flex-row items-center gap-12 bg-[var(--color-background)] p-10 rounded-[40px] border border-gray-700 shadow-3xl scale-90">
+            <div className="flex flex-row items-center gap-12 p-10 rounded-[50px] border border-gray-500 shadow-[0_30px_60px_rgba(0,0,0,0.2)]"
+                style={stripedBackgroundStyle}>
                 
                 <div className="rotate-[-4deg]">
                     <GameCard 
@@ -155,7 +164,7 @@ export const AuctionOverlay = () => {
                     />
                 </div>
 
-                <div className="flex flex-col items-center text-white w-[400px]">
+                <div className="flex flex-col items-center text-[var(--color-background)] w-[400px]">
                     <h2 className="text-[40px] font-black italic uppercase tracking-tighter mb-2 leading-none">Subasta a ciegas</h2>
                     <h2 className='text-[14px] leading-tight text-gray-400 font-bold uppercase italic px-2 mb-4'>¿Cuánto estás dispuesto a pagar?</h2>
                     
@@ -163,13 +172,13 @@ export const AuctionOverlay = () => {
                             ${timeLeft <= 5 ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'border-[var(--color-primary)]'}`}>
                             <span className={`
                                 text-2xl font-bold transition-colors duration-300
-                                ${timeLeft <= 5 ? 'text-red-500 animate-pulse' : 'text-white'} `}>
+                                ${timeLeft <= 5 ? 'text-red-500 animate-pulse' : 'text-[var(--color-background)]'} `}>
                                 {timeLeft}
                             </span>
                     </div>
 
                     <div className="bg-white/5 w-full rounded-2xl p-6 border border-white/10 mb-6 text-center">
-                        <p className="text-gray-400 uppercase text-[10px] font-bold tracking-[0.2em] mb-1">Puja Actual</p>
+                        <p className="text-gray-400 uppercase text-[12px] font-bold tracking-[0.2em] mb-1">Puja Actual</p>
                         <p className="text-6xl font-black text-[var(--color-primary)] leading-none">{currentBid}€</p>
                     </div>
 
@@ -180,26 +189,26 @@ export const AuctionOverlay = () => {
                                 value={manualAmount}
                                 onChange={(e) => setManualAmount(e.target.value)}
                                 placeholder={`Mín. ${currentBid + 1}`}
-                                className="w-full bg-black/40 border-2 border-gray-700 rounded-2xl py-7 px-7 text-xl font-bold outline-none 
-                                focus:border-[var(--color-primary)] transition-all placeholder:text-gray-600" />
+                                className="w-full bg-white border-2 border-slate-400 rounded-2xl py-8 px-7 text-xl font-bold text-slate-900 outline-none 
+                                focus:border-slate-700 transition-all placeholder:text-slate-400 shadow-sm" />
                             <Button 
                                 type="submit"
                                 disabled={isManualBidInvalid}
-                                className={`absolute right-4 px-5 py-2 rounded-2xl font-black uppercase text-md transition-all  ${bouncyAnimation}
+                                className={`absolute right-3 px-6 py-3 rounded-xl font-black uppercase text-sm transition-all ${bouncyAnimation}
                                     ${isManualBidInvalid 
-                                        ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
-                                        : 'bg-[var(--color-primary)] text-[var(--color-text)] hover:scale-105 active:scale-95'}`} >
+                                        ? 'bg-slate-250 text-slate-400 cursor-not-allowed' 
+                                        : 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)] shadow-lg'}`} >
                                 Pujar
                             </Button>
                         </div>
                     </form>
-
                     <div className="grid grid-cols-2 gap-4 w-full">
                         {[10, 50].map(amount => (
                             <Button 
                                 key={amount}
                                 onClick={() => handleBid(amount)}
-                                className="py-7 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl font-bold text-md transition-all active:scale-95">
+                                className="py-7 bg-white hover:bg-slate-50 border-2 border-slate-400 rounded-2xl 
+                                            font-black text-slate-500 text-lg transition-all active:scale-95 shadow-sm">
                                 +{amount}€
                             </Button>
                         ))}

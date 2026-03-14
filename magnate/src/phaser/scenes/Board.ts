@@ -279,7 +279,7 @@ export class Board extends Phaser.Scene {
         if (!p) return;
 
         // Buscamos la primera casilla de tipo __
-		const fantasyIndex = this.tiles.findIndex(t => t instanceof GoToJailTile);
+		const fantasyIndex = this.tiles.findIndex(t => t instanceof PropertyTile);
         p.model.currentTileIndex = fantasyIndex;
         
         const targetTile = this.tiles[fantasyIndex];
