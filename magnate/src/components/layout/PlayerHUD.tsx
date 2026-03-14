@@ -6,20 +6,28 @@ interface PlayerHUDProps {
     initialName: string;
     initialColor: string;
     initialBalance: number;
+    isClickable?: boolean;
+    onClick?: () => void;
 }
 
-export const PlayerHUD = ({ playerId, initialName, initialColor, initialBalance }: PlayerHUDProps) => {
+export const PlayerHUD = ({ 
+    playerId, 
+    initialName, 
+    initialColor, 
+    initialBalance,
+    isClickable = false,
+    onClick
+}: PlayerHUDProps) => {
     const [balance, setBalance] = useState(initialBalance);
     const [properties, setProperties] = useState<string[]>([]);
+    const prevBalance = useRef(initialBalance);
 
     useEffect(() => {
         const handlePlayerUpdate = (data: any) => {
             if (data.id === playerId) {
                 if (data.balance !== undefined && data.balance !== prevBalance.current) {
                     setBalance(data.balance);
-                    
-                    const timer = setTimeout(() => setDiff(null), 2000);
-                    return () => clearTimeout(timer);
+                    prevBalance.current = data.balance;
                 }
                 if (data.properties !== undefined) setProperties(data.properties);
             }
@@ -29,10 +37,18 @@ export const PlayerHUD = ({ playerId, initialName, initialColor, initialBalance 
         return () => EventBus.off('player-updated', handlePlayerUpdate);
     }, [playerId]);
 
+    const interactionClasses = isClickable 
+        ? "cursor-pointer hover:scale-110 active:scale-95 group-hover/list:opacity-50 hover:!opacity-100 z-10 hover:z-20" 
+        : "";
+
     return (
-        <div className="relative pointer-events-auto">
+        <div 
+            className={`relative pointer-events-auto transition-all duration-300 ${interactionClasses}`}
+            onClick={isClickable ? onClick : undefined}
+            role={isClickable ? "button" : "presentation"}
+        >
             <div 
-                className="flex flex-col text-white transition-all duration-300 shadow-2xl"
+                className="flex flex-col text-white shadow-2xl"
                 style={{ 
                     width: 'clamp(240px, 18vw, 320px)', 
                     background: `linear-gradient(135deg, ${initialColor} 50%, ${initialColor}dd 100%)`,
