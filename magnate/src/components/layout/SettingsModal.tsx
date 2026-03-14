@@ -82,7 +82,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 onClick={handleClose}
             />
 
-            <div className="relative w-full max-w-2xl bg-white rounded-[3rem] shadow-2xl overflow-hidden border-4 border-white animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-2xl bg-white rounded-[3rem] shadow-2xl overflow-hidden border-4 border-white animate-in fade-in zoom-in-95 duration-200 flex flex-col">
                 <PageHeader 
                     title="Ajustes" 
                     showBackButton={true} 
@@ -90,7 +90,14 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     position="relative" 
                 />
 
-                <div className="p-12 pt-8 w-full relative">
+                <div 
+                    className="p-12 pt-8 w-full overflow-y-auto"
+                    style={{
+                        backgroundImage: `url('/pattern.svg'), linear-gradient(rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.98))`,
+                        backgroundRepeat: "repeat",
+                        backgroundBlendMode: "overlay",
+                    }}
+                >
                     <VolumeSlider label="Volumen de Música" channel="bg" />
                     <VolumeSlider label="Volumen de Efectos" channel="sfx" />
                     <VolumeSlider label="Volumen de Interfaz" channel="ui" />

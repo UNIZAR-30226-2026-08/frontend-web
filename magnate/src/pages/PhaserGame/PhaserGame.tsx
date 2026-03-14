@@ -30,7 +30,6 @@ export const PhaserGame = () => {
     });
 
     useEffect(() => {
-
         const handleResize = () => {
             setWindowSize({ width: window.innerWidth, height: window.innerHeight });
         };
@@ -38,10 +37,21 @@ export const PhaserGame = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-  	const { changeMusic, playSound } = useAudio();
-  	useEffect(() => {
-  		changeMusic('bg_game',1000);
-  	}, []);
+    const { changeMusic, playSound } = useAudio();
+
+    useEffect(() => {
+        changeMusic('bg_game', 1000);
+
+        const handlePlaySfx = (soundId: any) => {
+            playSound(soundId);
+        };
+
+        EventBus.on('play-sfx', handlePlaySfx);
+
+        return () => {
+            EventBus.off('play-sfx', handlePlaySfx);
+        };
+    }, [changeMusic, playSound]);
 
     const dynamicScale = useMemo(() => {
         const baseHeight = 1080;
