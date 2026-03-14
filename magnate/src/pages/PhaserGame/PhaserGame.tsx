@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as Phaser from 'phaser';
 import { GameConfig } from '../../phaser/config';
-import { PlayerHUD } from '@/components/layout/PlayerHUD';
 import { FantasyOverlay } from "./FantasyOverlay";
 import { PropertyOverlay } from "./PropertyOverlay";
 import { CornerOverlay } from "./CornerOverlay";
 import { ServiceOverlay } from "./ServiceOverlay";
 import { AuctionOverlay } from './AuctionOverlay';
 import { TradingOverlay  } from './TradingOverlay';
-import { ControlsHUD } from '@/components/layout/ControlsHUD';
+import { PlayersHUD } from './PlayersHUD';
+import { ControlsHUD } from './ControlsHUD';
+import { ChatHUD } from './ChatHUD';
 import { EventBus } from '@/EventBus';
 import { useAudio } from "@/context/AudioContext";
 import { PropertyAdminOverlay } from './PropertyAdminOverlay';
@@ -74,22 +75,9 @@ export const PhaserGame = () => {
             <div id="phaser-container" className="flex items-center justify-center w-full h-full [&>canvas]:mx-auto" />
 
             <ControlsHUD />
+            <ChatHUD />
+            <PlayersHUD players={players} dynamicScale={dynamicScale} />
 
-            <div 
-                className="absolute right-[3vw] top-1/2 -translate-y-1/2 flex flex-col gap-[6vh] pointer-events-none z-10 origin-right transition-transform duration-150"
-                style={{ transform: `translateY(-50%) scale(${dynamicScale})` }}
-            >
-                {players?.map((player) => (
-                    <div key={player.id} className="pointer-events-auto">
-                        <PlayerHUD 
-                            playerId={player.id} 
-                            initialName={player.name} 
-                            initialColor={player.color} 
-                            initialBalance={player.balance}
-                        />
-                    </div>
-                ))}
-            </div>
             <FantasyOverlay />
             <PropertyOverlay />
             <CornerOverlay />

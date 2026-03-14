@@ -1,0 +1,91 @@
+import { useState } from 'react';
+import { useAudio } from '@/context/AudioContext';
+
+export const ChatHUD = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const { playSound } = useAudio();
+
+    const MessageIcon = (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+    );
+
+    const ChevronIcon = () => (
+        <svg 
+            width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+            strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+        >
+            <path d="m9 18 6-6-6-6" />
+        </svg>
+    );
+
+    const handleToggleChat = () => {
+        playSound('button_back');
+        setIsOpen(!isOpen);
+    };
+
+    return (
+        <div 
+            className={`fixed left-0 top-0 h-screen z-20 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center
+                ${isOpen ? 'translate-x-0' : '-translate-x-[320px]'} 
+            `}
+        >
+            {/* TODO: De momento está a full de height, va a haber qué pasa con el fondo */}
+            <div className="w-[320px] h-full bg-gradient-to-b from-zinc-50 to-zinc-100 border-r-4 border-[var(--color-primary)] p-6 shadow-2xl flex flex-col relative z-10">
+                <div className="flex items-center border-b-2 border-black/5 pb-4 mb-4 mt-2">
+                    <span className="text-zinc-900 font-black italic uppercase tracking-tighter text-2xl">
+                        Chat <span className="text-[var(--color-primary)]">Global</span>
+                    </span>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto space-y-4 pr-2 overflow-x-hidden">
+                    <div className="group">
+                        <p className="text-[11px] text-zinc-400 font-black uppercase mb-1 tracking-wider ml-1">Sistema</p>
+                        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
+                            <p className="text-sm text-zinc-700 font-medium leading-relaxed">
+                                ¡Bienvenido al chat de Magnate! Construye tu imperio.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-4 mb-4">
+                    <input 
+                        type="text" 
+                        placeholder="Escribir mensaje..."
+                        className="w-full bg-white border-2 border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 font-bold text-sm outline-none focus:border-[var(--color-primary)] transition-all shadow-inner"
+                    />
+                </div>
+            </div>
+
+            <button
+                onClick={handleToggleChat}
+                className={`
+                    h-40 w-14 
+                    bg-[var(--color-primary)]
+                    hover:brightness-110
+                    border-r-4 border-y-4 border-l-0 border-[var(--color-primary)]
+                    rounded-r-xl 
+                    flex flex-col items-center justify-center 
+                    pl-[4px] /* FIX: Padding-left pushes the icons right to perfectly balance the right border */
+                    shadow-[10px_0px_20px_rgba(0,0,0,0.2)]
+                    cursor-pointer outline-none focus:outline-none
+                    transition-all duration-300
+                    active:scale-95
+                    group
+                    -ml-[4px]
+                    z-0
+                `}
+            >
+                <div className={`text-white transition-transform duration-500 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
+                    <ChevronIcon />
+                </div>
+                
+                <div className="mt-3 text-white/90 group-hover:text-white group-hover:scale-110 transition-all flex items-center justify-center">
+                    {MessageIcon}
+                </div>
+            </button>
+        </div>
+    );
+};
