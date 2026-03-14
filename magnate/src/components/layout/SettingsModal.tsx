@@ -24,7 +24,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 <button 
                     onClick={() => {
                         toggleMute(channel);
-                        playSound('button_main');
+                        playSound('toggle_settings');
                     }}
                     className={`px-6 py-2 rounded-xl text-sm font-black tracking-widest uppercase transition-all shadow-[0px_4px_0px_0px_rgba(0,0,0,0.2)] active:translate-y-[4px] active:shadow-none ${
                         mutes[channel] 
@@ -45,7 +45,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     value={volumes[channel]}
                     onChange={(e) => updateVolume(channel, e.target.value)}
                     onMouseUp={() => playSound('slidebar_up')}
-                    onTouchEnd={() => playSound('slidebar_up')}
+                    onTouchEnd={() => playSound('slidebar_down')}
                     className={`
                         w-full h-5 bg-zinc-200 rounded-full appearance-none cursor-pointer shadow-inner border-2 border-black/10
                         [&::-webkit-slider-thumb]:appearance-none

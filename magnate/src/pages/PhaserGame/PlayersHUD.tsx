@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlayerHUD } from '@/components/layout/PlayerHUD';
+import { useAudio } from '@/context/AudioContext';
 
 interface PlayerInitData {
     id: string;
@@ -21,6 +22,15 @@ export const PlayersHUD = ({
     isClickable = true, // TODO: Conectar esto
     onPlayerClick 
 }: PlayersHUDProps) => {
+    const { playSound } = useAudio();
+
+    const handlePlayerClick = (playerId: string) => {
+        if (isClickable) {
+            playSound('player_token_hop');
+            onPlayerClick?.(playerId);
+        }
+    };
+
     return (
         <div 
             className="absolute right-[3vw] top-1/2 -translate-y-1/2 flex flex-col gap-[6vh] pointer-events-none z-10 origin-right transition-transform duration-150 group/list"
@@ -34,10 +44,10 @@ export const PlayersHUD = ({
                         initialColor={player.color} 
                         initialBalance={player.balance}
                         isClickable={isClickable}
-                        onClick={() => onPlayerClick?.(player.id)}
+                        onClick={() => handlePlayerClick(player.id)}
                     />
                 </div>
             ))}
         </div>
     );
-};;
+};
