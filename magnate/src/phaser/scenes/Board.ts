@@ -233,21 +233,25 @@ export class Board extends Phaser.Scene {
     private handlePlayerClick(playerId: string) {
         const p = this.players.find(pair => pair.model.id === playerId);
         if (!p) return;
+    
+        const currentIndex = this.tiles.findIndex(t => t.tileConfig.id === p.model.currentTileId);
+        
+        const hopIndex = (currentIndex + 1) % this.tiles.length;
+        const hopTile = this.tiles[hopIndex];
 
-        const roll = Phaser.Math.Between(1, 6);
-        p.model.move(roll, this.tiles.length);
-        const targetIndex = p.model.currentTileIndex;
-		//const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile); // Debug Julia
+        const nextIndex = (currentIndex + 2) % this.tiles.length;
+        const targetTile = this.tiles[nextIndex];
+        const nextTileId = targetTile.tileConfig.id;
+
+        //const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile); // Debug Julia
         
         //this.cameraController.followToken(p.token, 1.2);
-
+        
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
-            other.model.currentTileIndex === targetIndex
+            other.model.currentTileId === nextTileId
         ).length;
 
-        const targetTile = this.tiles[targetIndex];
-        // targetTile.setOwnerMarker(p.model.color);
         let finalX = targetTile.x;
         let finalY = targetTile.y;
 
@@ -256,10 +260,15 @@ export class Board extends Phaser.Scene {
             finalX += (othersCount % 2 === 0) ? spacing : -spacing;
             finalY += (othersCount > 1) ? spacing : -spacing;
         }
-        
-        p.token.moveTo(finalX, finalY);
-        
-        this.time.delayedCall(500, () => {
+
+        const path = [
+            { x: hopTile.x, y: hopTile.y },
+            { x: finalX, y: finalY }
+        ];
+
+        p.model.move(nextTileId);
+
+        p.token.moveTo(path, () => {
             this.checkTileLogic(p.model, targetTile);
         });
     }

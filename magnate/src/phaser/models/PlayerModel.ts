@@ -1,5 +1,5 @@
 import { IPlayer } from '../interfaces/IPlayer';
-import { EventBus } from '@/EventBus'
+import { EventBus } from '@/EventBus';
 
 export class PlayerModel implements IPlayer {
     public id: string;
@@ -7,7 +7,7 @@ export class PlayerModel implements IPlayer {
     public color: number;
     public balance: number = 200;
     public properties: string[] = [];
-    public currentTileIndex: number = 0;
+    public currentTileId: string = "000"; 
 
     constructor(id: string, name: string, color: number) {
         this.id = id;
@@ -15,8 +15,8 @@ export class PlayerModel implements IPlayer {
         this.color = color;
     }
 
-    public move(steps: number, totalTiles: number) {
-        this.currentTileIndex = (this.currentTileIndex + steps) % totalTiles;
+    public move(targetTileId: string) {
+        this.currentTileId = targetTileId;
     }
 
     private emitUpdate() {
