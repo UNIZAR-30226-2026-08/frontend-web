@@ -3,10 +3,37 @@ import { EventBus } from '@/EventBus';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
+// --- HEADER ---
+const TradeHeader = ({ player, isSender }: { player: any, isSender: boolean }) => (
+    <div className={`p-8 pb-4 flex flex-col gap-1 ${isSender ? 'items-start' : 'items-end text-right'}`}>
+        <span className="text-[9px] font-black tracking-[0.2em] text-slate-400 uppercase opacity-80">
+            {isSender ? 'Tus activos' : 'Sus activos'}
+        </span>
+        <div className={`flex items-center gap-4 ${isSender ? 'flex-row' : 'flex-row-reverse'}`}>
+            <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-black italic 
+                        shadow-lg border-2 border-white" 
+                style={{ 
+                    backgroundColor: player?.color || '#cbd5e1', 
+                    color: '#fff',
+                    textShadow: '0px 2px 4px rgba(0,0,0,0.2)' }}>
+            </div>
+            <div className="flex flex-col">
+                <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-800 leading-none">
+                    {player?.name}
+                </h3>
+                <span className={`text-[10px] font-bold text-[var(--color-primary)] opacity-70 ${isSender ? 'text-left' : 'text-right'}`}>
+                    {isSender ? 'ESTÁS OFRECIENDO' : 'ESTÁS PIDIENDO'}
+                </span>
+            </div>
+        </div>
+    </div>
+);
+
 export const TradingOverlay = () => {
-    const [allPlayers, setAllPlayers] = useState<any[]>([]); // Lista completa de la partida
-    const [sender, setSender] = useState<any>(null); // Tú
-    const [receiver, setReceiver] = useState<any>(null); // otro jugador
+    const [allPlayers, setAllPlayers] = useState<any[]>([]);
+    const [sender, setSender] = useState<any>(null);
+    const [receiver, setReceiver] = useState<any>(null);
     
     const [isMinimised, setIsMinimised] = useState(false);
     const [selectingFor, setSelectingFor] = useState<'me' | 'them' | null>(null);
@@ -15,214 +42,242 @@ export const TradingOverlay = () => {
     const [theirOffer, setTheirOffer] = useState<{money: number, properties: any[]}>({ money: 0, properties: [] });
     
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+    const stripedBackgroundStyle = { backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
+            repeating-linear-gradient(
+                -45deg,
+                #ffffff,
+                #ffffff 20px,
+                #f3f4f6 20px,
+                #f3f4f6 40px )`,
+        backgroundSize: 'cover'
+    };
+    const [showProperties, setShowProperties] = useState(false);
 
     useEffect(() => {
         const handleOpenTrade = (data: any) => {
-            setAllPlayers(data.allPlayers);
+            setAllPlayers(data.allPlayers || []);
             setSender(data.sender);
-            setReceiver(null);
-            setMyOffer({ money: 0, properties: [] });
+            //setReceiver(data.receiver);
+            // TODO: pruebas, vendrá de backend
+            const propReceiver = {
+                ...data.receiver,
+                properties: data.receiver?.properties || [   
+                    { id: "013", name: "Cafetería de matemáticas", color: "#3b82f6" }, 
+                    { id: "023", name: "ITA", color: "#c73bf6" },
+                    { id: "021", name: "I3A", color: "#f6f03b" }, ]};
+            setReceiver(propReceiver);
+            setMyOffer({ money: 0, properties: [] }); 
+            setTheirOffer({ money: 0, properties: propReceiver.properties });
             setTheirOffer({ money: 0, properties: [] });
+            setIsMinimised(false);
+            setShowProperties(false);
         };
         
         const handleTileSelected = (tile: any) => {
             if (selectingFor === 'me') {
                 setMyOffer(prev => ({ ...prev, properties: [...prev.properties, tile] }));
-            } else {
+            } else if (selectingFor === 'them') {
                 setTheirOffer(prev => ({ ...prev, properties: [...prev.properties, tile] }));
             }
             setIsMinimised(false);
             setSelectingFor(null);
+            setShowProperties(true);
+            EventBus.emit('dark-mode', false);
         };
 
-        EventBus.on('open-trade', handleOpenTrade);
+        EventBus.on('open-trading-mode', handleOpenTrade);
         EventBus.on('tile-added-to-trade', handleTileSelected);
-        return () => { EventBus.off('open-trade'); EventBus.off('tile-added-to-trade'); };
+        
+        return () => { 
+            EventBus.off('open-trading-mode', handleOpenTrade); 
+            EventBus.off('tile-added-to-trade', handleTileSelected); 
+        };
     }, [selectingFor]);
 
-    if (!allPlayers.length || !sender) return null;
+    const closeTrading = () => {
+        setSender(null);
+        setReceiver(null);
+        setIsMinimised(false);
+        setSelectingFor(null);
+        EventBus.emit('dark-mode', false);
+        EventBus.emit('stop-selection-mode');
+    };
 
-    // --- SELECCIÓN DE JUGADOR ---
-    if (!receiver) {
-        return (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm">
-                <div className="bg-[var(--color-background)] p-10 rounded-[40px] border border-gray-700 shadow-3xl w-[500px] text-center">
-                    <h2 className="text-3xl font-black italic uppercase tracking-tighter text-[var(--color-text)] mb-2">¿Con quién negociamos?</h2>
-                    <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-8 text-balance">Seleccione un rival para proponerle un intercambio</p>
-                    
-                    <div className="flex flex-col gap-3 mb-8">
-                        {allPlayers.filter(p => p.id !== sender.id).map(player => (
-                            <Button key={player.id}
-                                onClick={() => setReceiver(player)}
-                                className={`flex items-center justify-between p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-[var(--color-primary)] 
-                                            hover:bg-white/10 transition-all group ${bouncyAnimation}`}>
-                                
-                                <div className="flex items-center gap-4">
-                                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: player.color }} />
-                                    <span className="font-black uppercase text-lg text-white group-hover:text-[var(--color-primary)]">{player.name}</span>
-                                </div>
-                                <span className="text-gray-600 font-bold text-md uppercase tracking-tighter">Seleccionar</span>
-                            </Button>
-                        ))}
-                    </div>
-
-                    <Button onClick={() => setSender(null)} 
-                            className="text-gray-500 hover:text-red-400 text-[14px] font-black uppercase tracking-widest transition-colors">
-                        Cancelar
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
-    // ---  NEGOCIACIÓN ---
     const startSelection = (who: 'me' | 'them') => {
+        const player = who === 'me' ? sender : receiver;
         setSelectingFor(who);
         setIsMinimised(true);
-        EventBus.emit('start-selection-mode', { ownerId: who === 'me' ? sender.id : receiver.id });
+        EventBus.emit('dark-mode', true);
+        EventBus.emit('start-selection-mode', { 
+            ownerId: player.id, 
+            propertyIds: player.properties?.map((p: any) => p.id || p) || []
+        });
     };
+
+    const handleRemoveProperty = (propertyId: string, side: 'me' | 'them') => {
+        if (side === 'me') {
+            setMyOffer(prev => ({...prev, properties: prev.properties.filter(p => p.id !== propertyId) }));
+        } else {
+            setTheirOffer(prev => ({...prev, properties: prev.properties.filter(p => p.id !== propertyId) }));
+        }
+    };
+
+    if (!sender || !receiver) return null;
 
     return (
         <>
-            {/* Overlay Principal */}
-            <div className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm transition-all 
-                            duration-500 ${isMinimised ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100 scale-100'}`}>
-                <div className="bg-[var(--color-background)] w-[1000px] rounded-[48px] border border-gray-700 shadow-3xl overflow-hidden flex flex-col">
-                    
-                    <div className="p-8 border-b border-white/10 flex justify-between items-center bg-white/5">
-                        <div>
-                            <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white uppercase">Mesa de Negocios</h2>
-                        </div>
-                        <div className="flex items-center gap-4 bg-black/40 px-6 py-3 rounded-2xl border border-white/10">
-                            <span className="text-gray-500 font-bold text-xs">TRATO CON:</span>
-                            <span className="text-white font-black uppercase text-lg">{receiver.name}</span>
-                            <div className="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: receiver.color, color: receiver.color }} />
-                        </div>
-                    </div>
-
-                    <div className="flex flex-row h-[500px]">
-                        <TradeZone 
-                            title="Tus Activos" 
-                            offer={myOffer} 
-                            onAdd={() => startSelection('me')} 
-                            onMoneyChange={(v: any) => setMyOffer({...myOffer, money: v})} 
-                        />
-                        <TradeZone 
-                            title={`Activos de ${receiver.name}`} 
-                            offer={theirOffer} 
-                            onAdd={() => startSelection('them')} 
-                            onMoneyChange={(v: any) => setTheirOffer({...theirOffer, money: v})}
-                        />
-                    </div>
-
-                    <div className="p-8 bg-white/5 border-t border-white/10 flex justify-between items-center">
-                        <Button onClick={() => setReceiver(null)} 
-                                className="text-gray-500 hover:text-red-400 font-black uppercase text-[14px]">Volver atrás
-                        </Button>
-                        <Button className={`px-10 py-8 bg-[var(--color-primary)] text-[var(--color-text)] 
-                                            font-black uppercase text-[20px] rounded-full shadow-xl ${bouncyAnimation}`}>
-                            Enviar Propuesta
+           {isMinimised && (
+                <div className="fixed top-8 right-8 z-[1000] pointer-events-auto">
+                    <div className="bg-white/70 border-2 border-[var(--color-primary)] px-4 py-2 
+                                rounded-full backdrop-blur-sm flex items-center gap-2">
+                        <span className="text-slate-800 font-black italic uppercase tracking-tighter text-sm">
+                            Seleccionando para <span className="text-[var(--color-primary)]">{selectingFor === 'me' ? 'tu oferta' : receiver.name}</span>
+                        </span>
+                        <div className="w-[1px] h-4 bg-slate-200" />
+                        <Button 
+                            onClick={() => { 
+                                setIsMinimised(false); 
+                                EventBus.emit('dark-mode', false); 
+                                EventBus.emit('stop-selection-mode');
+                            }} 
+                            className={`bg-[var(--color-primary)] text-[var(--color-text)] font-black text-[11px] px-5 py-2 rounded-full uppercase 
+                                    ${bouncyAnimation}`}>
+                            Volver al trato
                         </Button>
                     </div>
-                </div>
-            </div>
-
-            {isMinimised && (
-                <div className="fixed top-8 right-8 z-[10000] flex flex-col items-end gap-3 transition-all animate-in fade-in slide-in-from-right-8">
-                    
-                    <div className="bg-white pl-6 pr-4 py-3 rounded-full shadow-2xl flex items-center gap-4 border-b-4 border-r-4 border-[var(--color-background)]">
-                        <div className="flex flex-col items-end">
-                            <span className="text-[12px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">
-                                Modo Selección
-                            </span>
-                            <span className="text-black font-black uppercase text-sm italic leading-none">
-                                {selectingFor === 'me' ? 'Tus propiedades' : `Propiedades de ${receiver.name}`}
-                            </span>
-                        </div>
-                    
-                        <div className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-                        </div>
-                    </div>
-
-                    
-                    <Button onClick={() => { setIsMinimised(false); setSelectingFor(null); EventBus.emit('stop-selection-mode');}}
-                        className={`bg-black/80 hover:bg-black text-white text-[10px] font-black uppercase px-4 py-2 rounded-full 
-                                    border border-white/10 backdrop-blur-md transition-all active:scale-95 ${bouncyAnimation}`}>
-                        Cancelar Selección
-                    </Button>
                 </div>
             )}
+            <div className={`fixed inset-0 z-[1000] pointer-events-none flex justify-between p-10 transition-all duration-500 
+                        ${isMinimised ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+                
+                {/* panel jugador que inicia tradeo */}
+                <aside className="pointer-events-auto w-[285px] ml-1 animate-in slide-in-from-left-20 duration-700 ease-out">
+                    <div className="h-full rounded-[40px] flex flex-col overflow-hidden"
+                        style={stripedBackgroundStyle}>
+                        <TradeHeader player={sender} isSender={true} />
+                        <div className="flex-1 overflow-y-auto px-8">
+                            <TradeZone 
+                                title="Tu Dinero"
+                                offer={myOffer}
+                                playerProperties={sender.properties}
+                                onAdd={() => startSelection('me')} 
+                                onMoneyChange={(v: number) => setMyOffer({...myOffer, money: v})}
+                                onRemoveProperty={(id: string) => handleRemoveProperty(id, 'me')}
+                                showProperties={showProperties}
+                            />
+                        </div>
+                        <div className="flex justify-center items-center p-8">
+                            <Button onClick={closeTrading} 
+                                className={`w-[200px] h-[60px] bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black uppercase text-[14px] 
+                                        rounded-full border border-red-500/20 transition-all ${bouncyAnimation}`}>
+                                Cancelar negociación
+                            </Button>
+                        </div>
+                    </div>
+                </aside>
+
+                {/* panel rival */}
+                <aside className="pointer-events-auto w-[285px] mr-1 animate-in slide-in-from-right-20 duration-700 ease-out">
+                    <div className="h-full rounded-[40px] flex flex-col overflow-hidden"
+                        style={stripedBackgroundStyle}>
+                        <TradeHeader player={receiver} isSender={false} />
+                        <div className="flex-1 overflow-y-auto px-8">
+                            <TradeZone 
+                                title={`Oferta de ${receiver.name}`}
+                                offer={theirOffer} 
+                                playerProperties={receiver.properties}
+                                onAdd={() => startSelection('them')} 
+                                onMoneyChange={(v: number) => setTheirOffer({...theirOffer, money: v})}
+                                onRemoveProperty={(id: string) => handleRemoveProperty(id, 'them')}
+                                showProperties={showProperties}
+                            />
+                        </div>
+                        <div className="flex justify-center items-center p-8">
+                            <Button className={`w-[150px] h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[14px] 
+                                            rounded-full ${bouncyAnimation}`}>
+                                Proponer Trato
+                            </Button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
         </>
     );
 };
 
-const TradeZone = ({ title, offer, onAdd, onMoneyChange }: any) => {
-    const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-[1.02] active:scale-[0.98]";
+const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], onRemoveProperty, showProperties}: any) => {
+    
+    const hasProperties = playerProperties && playerProperties.length > 0;
+    const paperStyle = {
+        background: 'linear-gradient(to bottom, #ffffff, #f9fafb)',
+        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.05)'
+    };
 
     return (
-        <div className="flex-1 p-8 flex flex-col gap-6 bg-white/[0.02] first:border-r first:border-white/5">
-            <div className="flex items-center justify-between">
-                <div className='flex flex-col gap-1'>
-                    <span className={`text-[10px] font-black tracking-[0.2em] text-[var(--color-primary)] uppercase opacity-80`}>
-                        Sección de
-                    </span>
-                    <h3 className="text-xl font-black italic uppercase tracking-tighter text-white">
-                        {title}
-                    </h3>
-                </div>
-                <span className="text-[10px] font-bold text-gray-600 uppercase bg-white/5 px-2 py-1 rounded-md">
-                    {offer.properties.length} Propiedades
+        <div className="flex flex-col gap-5 py-4">
+            <div className="flex items-center justify-between px-1">
+                <span className="text-[12px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                    {title}
                 </span>
+                <div className="h-[1px] flex-1 bg-gray-100 ml-4"></div>
             </div>
-            {/* dinero */}
-            <div className="group relative">
+
+            <div className="relative group">
                 <Input 
-                    type="number" 
-                    placeholder="0" 
-                    className="bg-black/40 border-gray-800 hover:border-gray-700 focus:border-[var(--color-primary)] 
-                               py-10 pl-14 pr-6 text-4xl font-black text-white rounded-[24px] transition-all
-                               [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                    onChange={(e) => onMoneyChange(parseInt(e.target.value) || 0)} 
+                    placeholder="0"
+                    className="w-full bg-white border-2 border-slate-400 rounded-[30px] py-8 px-7 text-xl font-bold text-slate-900 outline-none 
+                    focus:border-slate-700 transition-all placeholder:text-slate-400 shadow-sm"
+                    value={offer.money || ''}
+                    onChange={(e) => onMoneyChange(parseInt(e.target.value) || 0)}
                 />
                 <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none">
-                    <span className="text-3xl font-black text-[var(--color-primary)] group-focus-within:scale-110 transition-transform">€</span>
+                    <span className="text-2xl font-black text-[var(--color-primary)]">€</span>
                 </div>
             </div>
 
-            {/* Propiedades */}
-            <div onClick={onAdd}  
-                className={`flex-1 border-2 border-dashed border-gray-800/50 rounded-[32px] bg-black/20 
-                            p-4 cursor-pointer hover:border-[var(--color-primary)]/50 hover:bg-white/[0.03] 
-                            transition-all flex flex-col relative overflow-hidden group/zone ${bouncyAnimation}`}>
-                {offer.properties.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-3">
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-xl 
-                            group-hover/zone:bg-[var(--color-primary)] group-hover/zone:text-black transition-colors">
-                            +
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[11px] font-black uppercase tracking-tighter text-white">Añadir Activos</p>
-                            <p className="text-[9px] font-bold uppercase tracking-widest opacity-40">Toca el tablero</p>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 gap-2 overflow-y-auto max-h-[220px] pr-2 custom-scrollbar">
-                        {offer.properties.map((p: any, i: number) => (
-                            <div 
-                                key={i} 
-                                className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5 animate-in fade-in slide-in-from-right-4 duration-300"
-                                style={{ borderLeft: `4px solid ${p.color}` }}>
-                                <span className="text-[11px] font-black text-white uppercase truncate ml-2">
-                                    {p.name}
-                                </span>
-                                <button className="text-gray-600 hover:text-red-400 p-1 transition-colors text-xs font-bold">
-                                    ✕
-                                </button>
+            {/* propiedades */}
+            <div style={paperStyle}
+                className={`min-h-[280px] border-2 border-slate-200 rounded-[32px] p-4 transition-all flex flex-col justify-between
+                    ${!hasProperties ? 'opacity-50 grayscale' : ''}`}>
+                
+                <div className="flex flex-col gap-2 overflow-y-auto max-h-[220px] p-1">
+                    {showProperties && offer.properties.length > 0 ? (
+                        offer.properties.map((prop: any) => (
+                            <div key={prop.id} 
+                                className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-slate-100" >
+                                <div className="w-3 h-3 rounded-full" 
+                                    style={{ backgroundColor: prop.color || '#cbd5e1' }} />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-black uppercase text-slate-700 truncate tracking-tighter">
+                                        {prop.name}
+                                    </p>
+                                </div>
+                               
+                                <Button onClick={() => onRemoveProperty(prop.id)}
+                                    className="hover:bg-red-50 text-red-400 rounded-full">
+                                    <span className="text-md font-bold">✕</span>
+                                </Button>
                             </div>
-                        ))}
-                    </div>
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-center p-20 opacity-80">
+                            <p className="text-[14px] font-black uppercase tracking-widest text-gray-800">
+                                {hasProperties ? 'Selecciona activos' : 'Sin propiedades disponibles'}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {hasProperties && (
+                    <Button 
+                        onClick={() => onAdd(playerProperties, showProperties)}
+                        className="mt-4 w-full bg-white hover:bg-slate-50 text-slate-900 border-2 border-slate-200 
+                                 rounded-full py-6 font-black uppercase text-[11px] tracking-widest
+                                 hover:border-[var(--color-primary)] transition-all active:scale-95 group" >
+                        <span className="text-[var(--color-primary)] text-sm mr-2">+</span>
+                        Añadir Propiedades
+                    </Button>
                 )}
             </div>
         </div>

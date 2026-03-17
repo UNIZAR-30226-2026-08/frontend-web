@@ -22,12 +22,17 @@ export const FantasyOverlay = () => {
 
     if (!cardData) return null;
 
+    const closeOverlay = () => {
+        EventBus.emit('close-overlay');
+        setCardData(null);
+    };
+
     const handleAction = () => {
         if (!isRevealed) {
             setIsRevealed(true);
 			playSound('card_slide'); 
         } else {
-            setCardData(null);
+            closeOverlay();
         }
     };
 
@@ -39,7 +44,7 @@ export const FantasyOverlay = () => {
                 
                     {/* CARTA FRONT -> TODO: si ha pulsado la oculta, ya no puede volver a pulsar esta */} 
                     <div className={`transition-all duration-300 ${isRevealed ? 'grayscale blur-[2px] scale-95' : 'hover:scale-110'}`}
-                        onClick={() => setCardData(null)}>
+                        onClick={() => closeOverlay()}>
                         <GameCard 
                             isFlipped={true}
                             front={<FantasyCardContent data={cardData} />}

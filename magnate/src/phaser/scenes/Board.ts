@@ -39,6 +39,7 @@ export class Board extends Phaser.Scene {
     private cameraController!: CameraController; // TODO: para las cámaras
     private isRolling: boolean = false;
     private localPlayerId: string | null = null;
+    // private isSelectionMode: boolean = false;
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -139,6 +140,11 @@ export class Board extends Phaser.Scene {
 
         // Evento para marcar quien compra propiedad  ----------------------------
         EventBus.on('property-bought', this.handlePurchase, this);
+        this.setupEventListeners();
+        
+        EventBus.on('close-overlay', () => {
+            this.cameraController.resetView(2000); // camara vuelve vista general
+        });
 
         
         //------------------------------------------------- Para debugear trading: no borrar
@@ -169,40 +175,6 @@ export class Board extends Phaser.Scene {
         //         EventBus.emit('open-trade', tradePayload);  
         //     }
         // });
-        //------------------------------------------------- Para debugear admin: no borrar
-        // const debugTradeBtn2 = this.add.container(150, 120);
-
-        // const rectTrade2 = this.add.rectangle(0, 0, 200, 50, 0xff8800, 1)
-        //     .setInteractive({ useHandCursor: true });
-
-        // const txtTrade2 = this.add.text(0, 0, 'DEBUG: admin', { 
-        //     color: '#ffffff', 
-        //     fontSize: '18px',
-        // }).setOrigin(0.5);
-
-        // debugTradeBtn2.add([rectTrade2, txtTrade2]);
-        // debugTradeBtn2.setDepth(10001);
-        // debugTradeBtn2.setScrollFactor(0);
-
-        // rectTrade2.on('pointerdown', () => {
-            
-        //     const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
-            
-        //     EventBus.emit('open-property-management', {
-        //         data: {
-        //             id: "001",
-        //             name: "ITA",
-        //             headerColor: '#885626', 
-        //             price: 100,
-        //             rent: rentValues,
-        //             mortgage: 100,
-        //             housePrice: 20,
-        //             isMortgaged:  false,
-        //             constructionLevel: 'base'
-        //         }
-        //     });
-        // });
-        //-------------------------------------------------
     }
 
     createPlayer(id: string, name: string) {
@@ -262,8 +234,6 @@ export class Board extends Phaser.Scene {
 
         //const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile); // Debug Julia
         
-        //this.cameraController.followToken(p.token, 1.2);
-        
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
             other.model.currentTileId === nextTileId
@@ -282,33 +252,45 @@ export class Board extends Phaser.Scene {
             { x: hopTile.x, y: hopTile.y },
             { x: finalX, y: finalY }
         ];
+        
+        // this.cameraController.followToken(p.token, 2.2);
 
-        p.model.move(nextTileId);
+        // p.model.move(nextTileId);
 
-        p.token.moveTo(path, () => {
-            this.checkTileLogic(p.model, targetTile);
+        // p.token.moveTo(path, () => {
+        //     this.checkTileLogic(p.model, targetTile);
+        // });
+        const tileRotation = targetTile.tileConfig.rotation || 0;
+
+        this.cameraController.followToken(p.token, 2.2, tileRotation, () => {
+            p.model.move(nextTileId);
+            p.token.moveTo(path, () => {
+                this.time.delayedCall(800, () => {
+                    this.checkTileLogic(p.model, targetTile);
+                });
+            });
         });
     }
 
     // Método para debug, se envía a la primera casilla de un tipo específico
-    public handlePlayerClickDebug(playerId: string) {
-        const p = this.players.find(pair => pair.model.id === playerId);
-        if (!p) return;
+    // public handlePlayerClickDebug(playerId: string) {
+    //     const p = this.players.find(pair => pair.model.id === playerId);
+    //     if (!p) return;
 
-        // Buscamos la primera casilla de tipo __
-		const fantasyIndex = this.tiles.findIndex(t => t instanceof PropertyTile);
-        p.model.currentTileIndex = fantasyIndex;
+    //     // Buscamos la primera casilla de tipo __
+	// 	const fantasyIndex = this.tiles.findIndex(t => t instanceof PropertyTile);
+    //     p.model.currentTileIndex = fantasyIndex;
         
-        const targetTile = this.tiles[fantasyIndex];
+    //     const targetTile = this.tiles[fantasyIndex];
 
 
-        p.token.moveTo(targetTile.x, targetTile.y);
+    //     p.token.moveTo(targetTile.x, targetTile.y);
 
-        // Ejecutamos la lógica de la casilla
-        this.time.delayedCall(500, () => {
-            this.checkTileLogic(p.model, targetTile);
-        });
-    }
+    //     // Ejecutamos la lógica de la casilla
+    //     this.time.delayedCall(500, () => {
+    //         this.checkTileLogic(p.model, targetTile);
+    //     });
+    // }
     
     private checkTileLogic(player: PlayerModel, tile: Tile) {
         
@@ -507,33 +489,107 @@ export class Board extends Phaser.Scene {
     // Marcador para cada casilla que compra un player 
     private handlePurchase (data: { tileId: string, playerColor: string }) {
         const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
-
-            if (tile) {
-                const colorNum = parseInt(data.playerColor.startsWith('#')  ? data.playerColor.replace('#', '0x') : data.playerColor);
-                        
-                // TODO: añadir server, bridge
-                if (tile instanceof PropertyTile) {
-                    tile.setOwnerMarker(colorNum);
-                }
+        if (tile) {
+            const colorNum = parseInt(data.playerColor.startsWith('#')  ? data.playerColor.replace('#', '0x') : data.playerColor);
+                    
+            // TODO: añadir server, bridge
+            if (tile instanceof PropertyTile) {
+                tile.setOwnerMarker(colorNum);
             }
+        }
     }
 
     private setupEventListeners() {
-        // Cuando entramos en modo selección (Trade)
-        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[] }) => {
-            // Solo brillan las propiedades que el jugador posee actualmente
+        // cuando entramos en modo trade
+        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[], showProperties: boolean}) => {
             BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this);
+            this.tiles.forEach(tile => {
+
+                if (data.propertyIds.includes(tile.tileConfig.id)) {
+                    tile.removeAllListeners('pointerdown');
+
+                    tile.once('pointerdown', () => {
+                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
+    
+                        const propConfig = tile.tileConfig as IPropertyTile;
+                        
+                        EventBus.emit('tile-added-to-trade', {
+                            id: propConfig.id,
+                            name: propConfig.name,
+                            color: propConfig.color || '#cbd5e1'
+                        });
+                        data.showProperties = true;
+                    });
+                } else {
+                    tile.disableInteractive();
+                }
+            });
         });
 
-        // cancelamos
+        // Limpia el tablero y bloquea clicks de selección
         EventBus.on('stop-selection-mode', () => {
+            // this.isSelectionMode = false;
             BoardEffects.setFocusByIds(this.tiles, null, this);
         });
 
         // brillan las de un grupo
         EventBus.on('highlight-group', (groupIds: string[]) => {
             BoardEffects.setFocusByIds(this.tiles, groupIds, this);
-    });
-}
+        });
+
+        // Evento para mostrar casillas cuando se pulsa el boton de administrar
+        EventBus.on('open-property-selection-mode', (propertyIds: string[]) => {
+            BoardEffects.setFocusByIds(this.tiles, propertyIds, this);
+            this.tiles.forEach(tile => {
+
+                if (propertyIds.includes(tile.tileConfig.id)) {
+                    tile.removeAllListeners('pointerdown');
+
+                    tile.once('pointerdown', () => {
+                        BoardEffects.setFocusByIds(this.tiles, null, this);
+                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
+                        const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
+                        const propConfig = tile.tileConfig as IPropertyTile;
+                        
+                        EventBus.emit('open-property-management', { 
+                            data: {
+                                ...tile.tileConfig,
+                                headerColor: propConfig.color || '#FFFFFF' ,
+                                rent: rentValues,
+                                housePrice: 20,
+                            }
+                        });
+                    });
+                } else {
+                    tile.disableInteractive();
+                }
+            });
+        });
+
+        EventBus.on('dark-mode', () => {
+            BoardEffects.setFocusByIds(this.tiles, [], this); // oscurece tablero
+            this.players.forEach(p => p.token.setAlpha(0.3).setDepth(1)); // oscurece fichas
+        });
+
+    }
+
+    // private handleTileClick(tile: Tile) {
+    //     if (this.isSelectionMode && tile.alpha === 1) {
+    //         const prop = tile.tileConfig as IPropertyTile;
+            
+    //         EventBus.emit('tile-added-to-trade', {
+    //             id: prop.id,
+    //             name: prop.name,
+    //             color: prop.color || '#cbd5e1'
+    //         });
+    //         this.tweens.add({
+    //             targets: tile,
+    //             scale: 1.05,
+    //             duration: 100,
+    //             yoyo: true
+    //         });
+    //         EventBus.emit('play-sfx', 'ui_click');
+    //     }
+    // }
 }
 

@@ -58,14 +58,19 @@ export const ControlsHUD = () => {
 
     const handleAdministerClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         console.log('Administer properties clicked!');
-        // TODO: Conectar con la administración de propiedades
         e.currentTarget.blur();
+        const playerPropertyIds = ["001", "008", "013"]; // TODO: propertys del jugador que pulsa 
+        EventBus.emit('open-property-selection-mode', playerPropertyIds);
+        console.log('enviado');
     };
 
     const handleTradeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         console.log('Trading clicked!');
         // TODO: Conectar con el tradeo
         e.currentTarget.blur();
+        EventBus.emit('dark-mode');
+        EventBus.emit('set-trading-selection-mode', true);
+        console.log('enviado');
     };
 
     const handleFinishTurnClick = (e: React.MouseEvent<HTMLButtonElement>) => {

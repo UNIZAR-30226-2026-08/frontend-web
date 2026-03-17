@@ -31,6 +31,7 @@ export const PropertyOverlay = () => {
             playerName: propData.playerName,
             playerColor: propData.playerColor
         });
+        EventBus.emit('close-overlay');
         setPropData(null);
     };
 

@@ -10,6 +10,10 @@ export class PropertyTile extends Tile {
         const colorBarHeight = 30;
         const width = config.width || 80;
         const height = config.height || 120;
+        
+        this.setSize(width, height);
+        this.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+        // this.input!.cursor = 'pointer';
 
         const colorBar = this.scene.add.rectangle(0, - (height / 2), width - 3, colorBarHeight, 
             Phaser.Display.Color.HexStringToColor(config.color).color
