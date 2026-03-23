@@ -65,7 +65,10 @@ export const TradingOverlay = () => {
                 properties: data.receiver?.properties || [   
                     { id: "013", name: "Cafetería de matemáticas", color: "#3b82f6" }, 
                     { id: "023", name: "ITA", color: "#c73bf6" },
-                    { id: "021", name: "I3A", color: "#f6f03b" }, ]};
+                    { id: "021", name: "I3A", color: "#f6f03b" },
+                    { id: "031", name: "I3A", color: "#f6f03b" },
+                    { id: "026", name: "Circe", color: "#f6f03b" },
+                    { id: "037", name: "Circe", color: "#f6f03b" },]};
             setReceiver(propReceiver);
             setMyOffer({ money: 0, properties: [] }); 
             setTheirOffer({ money: 0, properties: propReceiver.properties });
@@ -75,10 +78,18 @@ export const TradingOverlay = () => {
         };
         
         const handleTileSelected = (tile: any) => {
-            if (selectingFor === 'me') {
-                setMyOffer(prev => ({ ...prev, properties: [...prev.properties, tile] }));
-            } else if (selectingFor === 'them') {
-                setTheirOffer(prev => ({ ...prev, properties: [...prev.properties, tile] }));
+           if (selectingFor === 'them') {
+                setTheirOffer(prev => {
+                    const isAlreadyAdded = prev.properties.some(p => p.id === tile.id);
+                    if (isAlreadyAdded) return prev;
+                    return { ...prev, properties: [...prev.properties, tile] };
+                });
+            } else if (selectingFor === 'me') {
+                setMyOffer(prev => {
+                    const isAlreadyAdded = prev.properties.some(p => p.id === tile.id);
+                    if (isAlreadyAdded) return prev;
+                    return { ...prev, properties: [...prev.properties, tile] };
+                });
             }
             setIsMinimised(false);
             setSelectingFor(null);
@@ -128,31 +139,47 @@ export const TradingOverlay = () => {
     return (
         <>
            {isMinimised && (
-                <div className="fixed top-8 right-8 z-[1000] pointer-events-auto">
-                    <div className="bg-white/70 border-2 border-[var(--color-primary)] px-4 py-2 
-                                rounded-full backdrop-blur-sm flex items-center gap-2">
-                        <span className="text-slate-800 font-black italic uppercase tracking-tighter text-sm">
-                            Seleccionando para <span className="text-[var(--color-primary)]">{selectingFor === 'me' ? 'tu oferta' : receiver.name}</span>
-                        </span>
-                        <div className="w-[1px] h-4 bg-slate-200" />
+                <div className="fixed z-[1001] pointer-events-auto animate-in slide-in-from-right-5 top-10 right-10">
+                    <div className="bg-white/70 border-2 border-[var(--color-primary)] px-8 py-8
+                                rounded-[30px] backdrop-blur-md flex flex-col items-center gap-2">
+                        
+                        <div className="text-center">
+                           <h4 className="text-slate-800 font-black italic uppercase tracking-tighter text-sm">
+                                {selectingFor === 'me' ? (
+                                    <span className="text-[var(--color-primary)] text-[16px]">Tus propiedades</span>
+                                ) : (
+                                    <>
+                                        <span className="text-black text-[16px] block mb-1">Propiedades de:</span>
+                                        <span className="text-slate-400 text-[16px] leading-none">
+                                            {receiver?.name}
+                                        </span>
+                                    </>
+                                )}
+                            </h4>
+                        </div>
+                                    
                         <Button 
-                            onClick={() => { 
+                            onClick={(e) => { 
                                 setIsMinimised(false); 
                                 EventBus.emit('dark-mode', false); 
                                 EventBus.emit('stop-selection-mode');
                             }} 
-                            className={`bg-[var(--color-primary)] text-[var(--color-text)] font-black text-[11px] px-5 py-2 rounded-full uppercase 
+                            className={`bg-[var(--color-primary)] text-[var(--color-text)] font-black text-[12px] px-5 py-2 rounded-full uppercase 
                                     ${bouncyAnimation}`}>
                             Volver al trato
                         </Button>
+
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Click en el tablero
+                        </span>
                     </div>
                 </div>
             )}
-            <div className={`fixed inset-0 z-[1000] pointer-events-none flex justify-between p-10 transition-all duration-500 
+            <div className={`fixed inset-0 z-[1000] pointer-events-none flex justify-between py-8 px-4 transition-all duration-500 
                         ${isMinimised ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
                 
                 {/* panel jugador que inicia tradeo */}
-                <aside className="pointer-events-auto w-[285px] ml-1 animate-in slide-in-from-left-20 duration-700 ease-out">
+                <aside className="pointer-events-auto w-[300px] animate-in slide-in-from-left-20 duration-700 ease-out">
                     <div className="h-full rounded-[40px] flex flex-col overflow-hidden"
                         style={stripedBackgroundStyle}>
                         <TradeHeader player={sender} isSender={true} />
@@ -178,7 +205,7 @@ export const TradingOverlay = () => {
                 </aside>
 
                 {/* panel rival */}
-                <aside className="pointer-events-auto w-[285px] mr-1 animate-in slide-in-from-right-20 duration-700 ease-out">
+                <aside className="pointer-events-auto w-[300px] animate-in slide-in-from-right-20 duration-700 ease-out">
                     <div className="h-full rounded-[40px] flex flex-col overflow-hidden"
                         style={stripedBackgroundStyle}>
                         <TradeHeader player={receiver} isSender={false} />
@@ -241,7 +268,7 @@ const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], 
                 className={`min-h-[280px] border-2 border-slate-200 rounded-[32px] p-4 transition-all flex flex-col justify-between
                     ${!hasProperties ? 'opacity-50 grayscale' : ''}`}>
                 
-                <div className="flex flex-col gap-2 overflow-y-auto max-h-[220px] p-1">
+                <div className="flex flex-col gap-2 overflow-y-auto max-h-[300px] p-1">
                     {showProperties && offer.properties.length > 0 ? (
                         offer.properties.map((prop: any) => (
                             <div key={prop.id} 
@@ -249,7 +276,7 @@ const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], 
                                 <div className="w-3 h-3 rounded-full" 
                                     style={{ backgroundColor: prop.color || '#cbd5e1' }} />
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] font-black uppercase text-slate-700 truncate tracking-tighter">
+                                    <p className="text-[11px] font-black uppercase text-slate-700 leading-tight whitespace-normal break-words">
                                         {prop.name}
                                     </p>
                                 </div>

@@ -39,7 +39,6 @@ export class Board extends Phaser.Scene {
     private cameraController!: CameraController; // TODO: para las cámaras
     private isRolling: boolean = false;
     private localPlayerId: string | null = null;
-    // private isSelectionMode: boolean = false;
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -114,14 +113,6 @@ export class Board extends Phaser.Scene {
             } else {
                 tile = new Tile(this, config);
             }
-            // TODO: para las cámaras
-            // tile.setSize(100, 100); 
-            // tile.setInteractive();
-            
-            // tile.on('pointerdown', () => {
-            //     console.log("Enfocando casilla:", config.name);
-            //     this.cameraController.focusOnTile(tile, 2)
-            // });
             this.tiles.push(tile);
         });
 
@@ -142,39 +133,9 @@ export class Board extends Phaser.Scene {
         EventBus.on('property-bought', this.handlePurchase, this);
         this.setupEventListeners();
         
-        EventBus.on('close-overlay', () => {
-            this.cameraController.resetView(2000); // camara vuelve vista general
+        EventBus.on('close-overlay', () => { // Evento para que camara vuelva a la vista general
+            this.cameraController.resetView(2000);
         });
-
-        
-        //------------------------------------------------- Para debugear trading: no borrar
-        // const debugTradeBtn = this.add.container(150, 180);
-
-        // const rectTrade = this.add.rectangle(0, 0, 200, 50, 0xff8800, 1)
-        //     .setInteractive({ useHandCursor: true });
-
-        // const txtTrade = this.add.text(0, 0, 'DEBUG: trading', { 
-        //     color: '#ffffff', 
-        //     fontSize: '18px',
-        // }).setOrigin(0.5);
-
-        // debugTradeBtn.add([rectTrade, txtTrade]);
-        // debugTradeBtn.setDepth(10001);
-        // debugTradeBtn.setScrollFactor(0);
-
-        // rectTrade.on('pointerdown', () => {
-        //     if (this.players.length >= 2) {
-        //         const tradePayload = {
-        //             sender: this.players[0].model,
-        //             allPlayers: this.players.map(p => ({ 
-        //                 id: p.model.id, 
-        //                 name: p.model.name, 
-        //                 color: '#' + p.model.color.toString(16).padStart(6, '0') 
-        //             }))
-        //         };
-        //         EventBus.emit('open-trade', tradePayload);  
-        //     }
-        // });
     }
 
     createPlayer(id: string, name: string) {
@@ -260,7 +221,7 @@ export class Board extends Phaser.Scene {
         // p.token.moveTo(path, () => {
         //     this.checkTileLogic(p.model, targetTile);
         // });
-        const tileRotation = targetTile.tileConfig.rotation || 0;
+        const tileRotation = targetTile.tileConfig.rotation || 0; // TODO: revisar giro de la cámara dependiendo de la rotación de la ficha
 
         this.cameraController.followToken(p.token, 2.2, tileRotation, () => {
             p.model.move(nextTileId);
@@ -501,7 +462,7 @@ export class Board extends Phaser.Scene {
 
     private setupEventListeners() {
         // cuando entramos en modo trade
-        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[], showProperties: boolean}) => {
+        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[]}) => {
             BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this);
             this.tiles.forEach(tile => {
 
@@ -518,7 +479,6 @@ export class Board extends Phaser.Scene {
                             name: propConfig.name,
                             color: propConfig.color || '#cbd5e1'
                         });
-                        data.showProperties = true;
                     });
                 } else {
                     tile.disableInteractive();
@@ -528,7 +488,6 @@ export class Board extends Phaser.Scene {
 
         // Limpia el tablero y bloquea clicks de selección
         EventBus.on('stop-selection-mode', () => {
-            // this.isSelectionMode = false;
             BoardEffects.setFocusByIds(this.tiles, null, this);
         });
 
@@ -572,24 +531,5 @@ export class Board extends Phaser.Scene {
         });
 
     }
-
-    // private handleTileClick(tile: Tile) {
-    //     if (this.isSelectionMode && tile.alpha === 1) {
-    //         const prop = tile.tileConfig as IPropertyTile;
-            
-    //         EventBus.emit('tile-added-to-trade', {
-    //             id: prop.id,
-    //             name: prop.name,
-    //             color: prop.color || '#cbd5e1'
-    //         });
-    //         this.tweens.add({
-    //             targets: tile,
-    //             scale: 1.05,
-    //             duration: 100,
-    //             yoyo: true
-    //         });
-    //         EventBus.emit('play-sfx', 'ui_click');
-    //     }
-    // }
 }
 
