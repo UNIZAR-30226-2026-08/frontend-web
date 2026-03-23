@@ -25,6 +25,12 @@ export const CornerOverlay = () => {
     }, [playSound]);
 
     if (!propData) {return null;}
+
+    const closeOverlay = () => {
+        EventBus.emit('close-overlay');
+        setPropData(null);
+    };
+
 	return ( 
 		<div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-8">
@@ -32,7 +38,7 @@ export const CornerOverlay = () => {
                     image={propData.image}
                     tileText={propData.tileText}
                 />
-                <Button onClick={() => setPropData(null)} 
+                <Button onClick={() => closeOverlay()} 
                         className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
                             {propData.buttonText}
                 </Button>

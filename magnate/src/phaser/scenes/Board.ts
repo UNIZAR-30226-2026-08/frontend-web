@@ -113,14 +113,6 @@ export class Board extends Phaser.Scene {
             } else {
                 tile = new Tile(this, config);
             }
-            // TODO: para las cámaras
-            // tile.setSize(100, 100); 
-            // tile.setInteractive();
-            
-            // tile.on('pointerdown', () => {
-            //     console.log("Enfocando casilla:", config.name);
-            //     this.cameraController.focusOnTile(tile, 2)
-            // });
             this.tiles.push(tile);
         });
 
@@ -139,70 +131,11 @@ export class Board extends Phaser.Scene {
 
         // Evento para marcar quien compra propiedad  ----------------------------
         EventBus.on('property-bought', this.handlePurchase, this);
-
+        this.setupEventListeners();
         
-        //------------------------------------------------- Para debugear trading: no borrar
-        // const debugTradeBtn = this.add.container(150, 180);
-
-        // const rectTrade = this.add.rectangle(0, 0, 200, 50, 0xff8800, 1)
-        //     .setInteractive({ useHandCursor: true });
-
-        // const txtTrade = this.add.text(0, 0, 'DEBUG: trading', { 
-        //     color: '#ffffff', 
-        //     fontSize: '18px',
-        // }).setOrigin(0.5);
-
-        // debugTradeBtn.add([rectTrade, txtTrade]);
-        // debugTradeBtn.setDepth(10001);
-        // debugTradeBtn.setScrollFactor(0);
-
-        // rectTrade.on('pointerdown', () => {
-        //     if (this.players.length >= 2) {
-        //         const tradePayload = {
-        //             sender: this.players[0].model,
-        //             allPlayers: this.players.map(p => ({ 
-        //                 id: p.model.id, 
-        //                 name: p.model.name, 
-        //                 color: '#' + p.model.color.toString(16).padStart(6, '0') 
-        //             }))
-        //         };
-        //         EventBus.emit('open-trade', tradePayload);  
-        //     }
-        // });
-        //------------------------------------------------- Para debugear admin: no borrar
-        // const debugTradeBtn2 = this.add.container(150, 120);
-
-        // const rectTrade2 = this.add.rectangle(0, 0, 200, 50, 0xff8800, 1)
-        //     .setInteractive({ useHandCursor: true });
-
-        // const txtTrade2 = this.add.text(0, 0, 'DEBUG: admin', { 
-        //     color: '#ffffff', 
-        //     fontSize: '18px',
-        // }).setOrigin(0.5);
-
-        // debugTradeBtn2.add([rectTrade2, txtTrade2]);
-        // debugTradeBtn2.setDepth(10001);
-        // debugTradeBtn2.setScrollFactor(0);
-
-        // rectTrade2.on('pointerdown', () => {
-            
-        //     const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
-            
-        //     EventBus.emit('open-property-management', {
-        //         data: {
-        //             id: "001",
-        //             name: "ITA",
-        //             headerColor: '#885626', 
-        //             price: 100,
-        //             rent: rentValues,
-        //             mortgage: 100,
-        //             housePrice: 20,
-        //             isMortgaged:  false,
-        //             constructionLevel: 'base'
-        //         }
-        //     });
-        // });
-        //-------------------------------------------------
+        EventBus.on('close-overlay', () => { // Evento para que camara vuelva a la vista general
+            this.cameraController.resetView(2000);
+        });
     }
 
     createPlayer(id: string, name: string) {
@@ -262,8 +195,6 @@ export class Board extends Phaser.Scene {
 
         //const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile); // Debug Julia
         
-        //this.cameraController.followToken(p.token, 1.2);
-        
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
             other.model.currentTileId === nextTileId
@@ -282,33 +213,45 @@ export class Board extends Phaser.Scene {
             { x: hopTile.x, y: hopTile.y },
             { x: finalX, y: finalY }
         ];
+        
+        // this.cameraController.followToken(p.token, 2.2);
 
-        p.model.move(nextTileId);
+        // p.model.move(nextTileId);
 
-        p.token.moveTo(path, () => {
-            this.checkTileLogic(p.model, targetTile);
+        // p.token.moveTo(path, () => {
+        //     this.checkTileLogic(p.model, targetTile);
+        // });
+        const tileRotation = targetTile.tileConfig.rotation || 0; // TODO: revisar giro de la cámara dependiendo de la rotación de la ficha
+
+        this.cameraController.followToken(p.token, 2.2, tileRotation, () => {
+            p.model.move(nextTileId);
+            p.token.moveTo(path, () => {
+                this.time.delayedCall(800, () => {
+                    this.checkTileLogic(p.model, targetTile);
+                });
+            });
         });
     }
 
     // Método para debug, se envía a la primera casilla de un tipo específico
-    public handlePlayerClickDebug(playerId: string) {
-        const p = this.players.find(pair => pair.model.id === playerId);
-        if (!p) return;
+    // public handlePlayerClickDebug(playerId: string) {
+    //     const p = this.players.find(pair => pair.model.id === playerId);
+    //     if (!p) return;
 
-        // Buscamos la primera casilla de tipo __
-		const fantasyIndex = this.tiles.findIndex(t => t instanceof PropertyTile);
-        p.model.currentTileIndex = fantasyIndex;
+    //     // Buscamos la primera casilla de tipo __
+	// 	const fantasyIndex = this.tiles.findIndex(t => t instanceof PropertyTile);
+    //     p.model.currentTileIndex = fantasyIndex;
         
-        const targetTile = this.tiles[fantasyIndex];
+    //     const targetTile = this.tiles[fantasyIndex];
 
 
-        p.token.moveTo(targetTile.x, targetTile.y);
+    //     p.token.moveTo(targetTile.x, targetTile.y);
 
-        // Ejecutamos la lógica de la casilla
-        this.time.delayedCall(500, () => {
-            this.checkTileLogic(p.model, targetTile);
-        });
-    }
+    //     // Ejecutamos la lógica de la casilla
+    //     this.time.delayedCall(500, () => {
+    //         this.checkTileLogic(p.model, targetTile);
+    //     });
+    // }
     
     private checkTileLogic(player: PlayerModel, tile: Tile) {
         
@@ -507,25 +450,43 @@ export class Board extends Phaser.Scene {
     // Marcador para cada casilla que compra un player 
     private handlePurchase (data: { tileId: string, playerColor: string }) {
         const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
-
-            if (tile) {
-                const colorNum = parseInt(data.playerColor.startsWith('#')  ? data.playerColor.replace('#', '0x') : data.playerColor);
-                        
-                // TODO: añadir server, bridge
-                if (tile instanceof PropertyTile) {
-                    tile.setOwnerMarker(colorNum);
-                }
+        if (tile) {
+            const colorNum = parseInt(data.playerColor.startsWith('#')  ? data.playerColor.replace('#', '0x') : data.playerColor);
+                    
+            // TODO: añadir server, bridge
+            if (tile instanceof PropertyTile) {
+                tile.setOwnerMarker(colorNum);
             }
+        }
     }
 
     private setupEventListeners() {
-        // Cuando entramos en modo selección (Trade)
-        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[] }) => {
-            // Solo brillan las propiedades que el jugador posee actualmente
+        // cuando entramos en modo trade
+        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[]}) => {
             BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this);
+            this.tiles.forEach(tile => {
+
+                if (data.propertyIds.includes(tile.tileConfig.id)) {
+                    tile.removeAllListeners('pointerdown');
+
+                    tile.once('pointerdown', () => {
+                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
+    
+                        const propConfig = tile.tileConfig as IPropertyTile;
+                        
+                        EventBus.emit('tile-added-to-trade', {
+                            id: propConfig.id,
+                            name: propConfig.name,
+                            color: propConfig.color || '#cbd5e1'
+                        });
+                    });
+                } else {
+                    tile.disableInteractive();
+                }
+            });
         });
 
-        // cancelamos
+        // Limpia el tablero y bloquea clicks de selección
         EventBus.on('stop-selection-mode', () => {
             BoardEffects.setFocusByIds(this.tiles, null, this);
         });
@@ -533,7 +494,42 @@ export class Board extends Phaser.Scene {
         // brillan las de un grupo
         EventBus.on('highlight-group', (groupIds: string[]) => {
             BoardEffects.setFocusByIds(this.tiles, groupIds, this);
-    });
-}
+        });
+
+        // Evento para mostrar casillas cuando se pulsa el boton de administrar
+        EventBus.on('open-property-selection-mode', (propertyIds: string[]) => {
+            BoardEffects.setFocusByIds(this.tiles, propertyIds, this);
+            this.tiles.forEach(tile => {
+
+                if (propertyIds.includes(tile.tileConfig.id)) {
+                    tile.removeAllListeners('pointerdown');
+
+                    tile.once('pointerdown', () => {
+                        BoardEffects.setFocusByIds(this.tiles, null, this);
+                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
+                        const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
+                        const propConfig = tile.tileConfig as IPropertyTile;
+                        
+                        EventBus.emit('open-property-management', { 
+                            data: {
+                                ...tile.tileConfig,
+                                headerColor: propConfig.color || '#FFFFFF' ,
+                                rent: rentValues,
+                                housePrice: 20,
+                            }
+                        });
+                    });
+                } else {
+                    tile.disableInteractive();
+                }
+            });
+        });
+
+        EventBus.on('dark-mode', () => {
+            BoardEffects.setFocusByIds(this.tiles, [], this); // oscurece tablero
+            this.players.forEach(p => p.token.setAlpha(0.3).setDepth(1)); // oscurece fichas
+        });
+
+    }
 }
 

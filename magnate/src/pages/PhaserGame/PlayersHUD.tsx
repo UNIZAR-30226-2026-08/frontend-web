@@ -1,6 +1,7 @@
 import React from 'react';
 import { PlayerHUD } from '@/components/layout/PlayerHUD';
 import { useAudio } from '@/context/AudioContext';
+import { EventBus } from '@/EventBus';
 
 interface PlayerInitData {
     id: string;
@@ -27,6 +28,17 @@ export const PlayersHUD = ({
     const handlePlayerClick = (playerId: string) => {
         if (isClickable) {
             playSound('player_token_hop');
+            
+            const targetPlayer = players.find(p => p.id === playerId);
+            const me = players[0]; // TODO: backend
+            if (targetPlayer && me) {
+                EventBus.emit('open-trading-mode', { // TODO: aquí pasar propiedades de los dos jugadores
+                    sender: me,
+                    receiver: targetPlayer,
+                    allPlayers: players
+                });
+            }
+            EventBus.emit('dark-mode', false);
             onPlayerClick?.(playerId);
         }
     };
