@@ -8,6 +8,7 @@ export const ControlsHUD = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isBankruptOpen, setIsBankruptOpen] = useState(false);
     const [isRolling, setIsRolling] = useState(false);
+    const [isDark, setIsDark] = useState(false); // Para oscurecer botones
 
     const [canRoll, setCanRoll] = useState(true);
     const [canAdminister, setCanAdminister] = useState(true);
@@ -30,6 +31,10 @@ export const ControlsHUD = () => {
             if (states.bankrupt !== undefined) setCanBankrupt(states.bankrupt);
         };
 
+        // Para oscurecer/aclarar botones
+        const handleDarkMode = (active: boolean = true) => setIsDark(active);
+        EventBus.on('dark-mode', handleDarkMode);
+
         const handleRollComplete = () => {
             setIsRolling(false);
         };
@@ -38,12 +43,17 @@ export const ControlsHUD = () => {
         EventBus.on('dice-roll-complete', handleRollComplete);
 
         return () => {
+            EventBus.off('dark-mode', handleDarkMode);
             EventBus.off('update-controls-state', handleUpdateControls);
             EventBus.off('dice-roll-complete', handleRollComplete);
         };
     }, []);
 
     const bouncyButtonClass = "rounded-full flex items-center justify-center w-24 h-24 p-0 shadow-[0px_6px_0px_0px_rgba(0,0,0,0.3)] active:shadow-[0px_2px_0px_0px_rgba(0,0,0,0.3)] active:translate-y-[4px] border-none cursor-pointer transform-gpu transition-all duration-150 ease-in-out active:scale-95 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none disabled:translate-y-[4px] disabled:grayscale";
+
+    const darkButton = isDark 
+        ? "opacity-70 pointer-events-none scale-95" 
+        : "opacity-100 pointer-events-auto scale-100";
 
     const handleRollClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setIsRolling(true);
@@ -57,20 +67,14 @@ export const ControlsHUD = () => {
     };
 
     const handleAdministerClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        console.log('Administer properties clicked!');
         e.currentTarget.blur();
         const playerPropertyIds = ["001", "008", "013"]; // TODO: propertys del jugador que pulsa 
         EventBus.emit('open-property-selection-mode', playerPropertyIds);
-        console.log('enviado');
     };
 
     const handleTradeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        console.log('Trading clicked!');
-        // TODO: Conectar con el tradeo
         e.currentTarget.blur();
-        EventBus.emit('dark-mode');
-        EventBus.emit('set-trading-selection-mode', true);
-        console.log('enviado');
+        EventBus.emit('dark-mode', true);
     };
 
     const handleFinishTurnClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -92,10 +96,10 @@ export const ControlsHUD = () => {
     return (
         <>
             {!isRolling && (
-                <div className="absolute left-[3vw] top-[4vh] z-10 pointer-events-auto">
+                <div className={`absolute left-[3vw] top-[4vh] z-10 pointer-events-auto ${darkButton}`}>
                     <Button
                         onClick={handleRollClick}
-                        disabled={!canRoll}
+                        disabled={!canRoll || isDark}
                         aria-label="Roll Dice"
                         className={`bg-white hover:bg-zinc-50 ${bouncyButtonClass}`}
                     >
@@ -109,10 +113,10 @@ export const ControlsHUD = () => {
                 </div>
             )}
 
-            <div className="absolute left-[10vw] top-1/2 -translate-y-1/2 flex flex-col gap-10 z-10 pointer-events-auto">
+            <div className={`absolute left-[10vw] top-1/2 -translate-y-1/2 flex flex-col gap-10 z-10 pointer-events-auto ${darkButton}`}>
                 <Button
                     onClick={handleAdministerClick}
-                    disabled={!canAdminister}
+                    disabled={!canAdminister || isDark}
                     title="Administrar propiedades"
                     aria-label="Administrar propiedades"
                     className={`bg-white bg-zinc-50 ${bouncyButtonClass}`}
@@ -127,7 +131,7 @@ export const ControlsHUD = () => {
                 
                 <Button
                     onClick={handleTradeClick}
-                    disabled={!canTrade}
+                    disabled={!canTrade || isDark}
                     title="Intercambiar"
                     aria-label="Intercambiar"
                     className={`bg-white hover:bg-zinc-50 ${bouncyButtonClass}`}
@@ -142,7 +146,7 @@ export const ControlsHUD = () => {
 
                 <Button
                     onClick={handleFinishTurnClick}
-                    disabled={!canFinishTurn}
+                    disabled={!canFinishTurn || isDark}
                     title="Terminar turno"
                     aria-label="Terminar turno"
                     className={`bg-white hover:bg-zinc-50 ${bouncyButtonClass}`}
@@ -157,7 +161,7 @@ export const ControlsHUD = () => {
 
                 <Button
                     onClick={handleBankruptClick}
-                    disabled={!canBankrupt}
+                    disabled={!canBankrupt || isDark}
                     title="Declararse en bancarrota"
                     aria-label="Declararse en bancarrota"
                     className={`bg-white hover:bg-zinc-50 ${bouncyButtonClass}`}
@@ -171,9 +175,10 @@ export const ControlsHUD = () => {
                 </Button>
             </div>
 
-            <div className="absolute left-[3vw] bottom-[4vh] z-10 pointer-events-auto">
+            <div className={`absolute left-[3vw] bottom-[4vh] z-10 pointer-events-auto ${darkButton}`}>
                 <Button
                     onClick={handleSettingsClick}
+                    disabled={isDark}
                     aria-label="Ajustes"
                     className={`bg-white hover:bg-zinc-50 ${bouncyButtonClass}`}
                 >

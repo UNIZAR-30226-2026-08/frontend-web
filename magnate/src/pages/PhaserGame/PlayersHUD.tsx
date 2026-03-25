@@ -38,7 +38,6 @@ export const PlayersHUD = ({
                     allPlayers: players
                 });
             }
-            EventBus.emit('dark-mode', false);
             onPlayerClick?.(playerId);
         }
     };
