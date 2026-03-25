@@ -4,7 +4,8 @@ import { Board } from './scenes/Board';
 export const GameConfig: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,  // decide si usa WebGL o canvas segun navegador
     parent: 'phaser-container', // ID del div donde se meterá el juego
-    backgroundColor: '#222222',
+    transparent: true,
+    // backgroundColor: '#222222',
    
     scale: {
         mode: Phaser.Scale.FIT, // Ajusta el juego al contenedor manteniendo proporciones

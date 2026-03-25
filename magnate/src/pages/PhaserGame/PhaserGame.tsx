@@ -14,6 +14,8 @@ import { EventBus } from '@/EventBus';
 import { useAudio } from "@/context/AudioContext";
 import { PropertyAdminOverlay } from './PropertyAdminOverlay';
 
+import { GameBackground } from '@/components/layout/GameBackground';
+
 interface PlayerInitData {
     id: string;
     name: string;
@@ -81,8 +83,13 @@ export const PhaserGame = () => {
     }, []);
 
     return (
-        <div className="relative flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-primary)]">
-            <div id="phaser-container" className="flex items-center justify-center w-full h-full [&>canvas]:mx-auto" />
+        <div className="relative flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-black)]">
+            <GameBackground />
+
+            <div 
+                id="phaser-container" 
+                className="relative z-10 flex items-center justify-center w-full h-full [&>canvas]:mx-auto" 
+            />
 
             <ControlsHUD />
             <ChatHUD />
