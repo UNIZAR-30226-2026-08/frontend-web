@@ -48,41 +48,49 @@ export const PlayerHUD = ({
             role={isClickable ? "button" : "presentation"}
         >
             <div 
-                className="flex flex-col text-white shadow-2xl"
                 style={{ 
                     width: 'clamp(240px, 18vw, 320px)', 
-                    background: `linear-gradient(135deg, ${initialColor} 50%, ${initialColor}dd 100%)`,
+                    background: '#ffffff',
                     clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 20px 50%)',
-                    padding: '12px 14px 12px 42px',
-                    filter: 'drop-shadow(0px 6px 8px rgba(0,0,0,0.4))'
+                    padding: '4px',
+                    filter: 'drop-shadow(0px 6px 0px rgba(0,0,0,0.3))'
                 }}
             >
-                <div className="flex items-center justify-between gap-2">
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-[9px] uppercase opacity-70 font-bold tracking-widest leading-none mb-1">
-                            Jugador
-                        </span>
-                        <h3 className="m-0 text-[16px] font-black uppercase italic tracking-tighter leading-none drop-shadow-sm">
-                            {initialName}
-                        </h3>
+                <div 
+                    className="flex flex-col text-white h-full w-full"
+                    style={{ 
+                        background: `linear-gradient(135deg, ${initialColor} 50%, ${initialColor}dd 100%)`,
+                        clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 20px 50%)',
+                        padding: '9px 11px 9px 39px'
+                    }}
+                >
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[9px] uppercase opacity-70 font-bold tracking-widest leading-none mb-1">
+                                Jugador
+                            </span>
+                            <h3 className="m-0 text-[16px] font-black uppercase italic tracking-tighter leading-none drop-shadow-sm">
+                                {initialName}
+                            </h3>
+                        </div>
+
+                        <div className="bg-black/30 backdrop-blur-md px-2.5 py-1.5 rounded-lg flex items-baseline gap-0.5 border border-white/10 shadow-inner">
+                            <span className="text-[10px] text-yellow-400 font-bold">$</span>
+                            <span className="text-xl font-mono font-black tabular-nums tracking-tighter">
+                                {balance.toLocaleString()}
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="bg-black/30 backdrop-blur-md px-2.5 py-1.5 rounded-lg flex items-baseline gap-0.5 border border-white/10 shadow-inner">
-                        <span className="text-[10px] text-yellow-400 font-bold">$</span>
-                        <span className="text-xl font-mono font-black tabular-nums tracking-tighter">
-                            {balance.toLocaleString()}
-                        </span>
+                    <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider opacity-90">
+                                {properties.length} Propiedades
+                            </span>
+                        </div>
+                        
+                        <span className="text-[8px] opacity-40 font-mono">#{playerId.slice(-4)}</span>
                     </div>
-                </div>
-
-                <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-black uppercase tracking-wider opacity-90">
-                            {properties.length} Propiedades
-                        </span>
-                    </div>
-                    
-                    <span className="text-[8px] opacity-40 font-mono">#{playerId.slice(-4)}</span>
                 </div>
             </div>
         </div>
