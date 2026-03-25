@@ -10,6 +10,7 @@ import { Lobby } from "@/pages/Lobby/Lobby";
 import { PrivateRoom } from "@/pages/PrivateRoom/PrivateRoom";
 import { PhaserGame } from "@/pages/PhaserGame/PhaserGame";
 import { AudioProvider } from "@/context/AudioContext";
+import { Shop } from "@/pages/Shop/Shop";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
    	   <Route path="/lobby" element={<Lobby />} />
    	   <Route path="/private-room" element={<PrivateRoom />} />
    	   <Route path="/phaser-game" element={<PhaserGame />} />
+	   <Route path="/shop" element={<Shop />} />
    	 </Routes>
 	</AudioProvider>
   );

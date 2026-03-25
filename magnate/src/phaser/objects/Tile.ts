@@ -41,6 +41,5 @@ export class Tile extends Phaser.GameObjects.Container {
         this.overlay.setVisible(false);
         this.overlay.setOrigin(0.5);
         this.add(this.overlay);
-
     }
 }

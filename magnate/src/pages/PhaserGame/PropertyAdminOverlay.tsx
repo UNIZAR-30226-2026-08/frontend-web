@@ -19,7 +19,7 @@ export const PropertyAdminOverlay = () => {
         };
 
         EventBus.on('open-property-management', handleShowProp);
-        return () => { EventBus.off('open-property-management', handleShowProp); };
+        return () => { EventBus.off('open-property-management', handleShowProp); EventBus.emit('dark-mode', false); };
     }, []);
 
     if (!propData) return null;
@@ -66,7 +66,7 @@ export const PropertyAdminOverlay = () => {
                     />
                 </div>
                 <div className='flex gap-4'>
-                    <Button onClick={() => { setPropData(null); }}
+                    <Button onClick={() => { setPropData(null); EventBus.emit('dark-mode', false);}}
                         className={`px-9 py-8 bg-[var(--color-primary)] select-none text-white font-black uppercase rounded-full shadow-2xl 
                                 ${bouncyAnimation} transition-all`}>
                         <div className="flex flex-col items-center">

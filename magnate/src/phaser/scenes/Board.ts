@@ -461,19 +461,20 @@ export class Board extends Phaser.Scene {
     }
 
     private setupEventListeners() {
-        // cuando entramos en modo trade
-        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[]}) => {
-            BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this);
-            this.tiles.forEach(tile => {
 
+        // Trading overlay
+        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[]}) => {
+            // BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this);
+            BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this, this.players);
+            
+            this.tiles.forEach(tile => {
                 if (data.propertyIds.includes(tile.tileConfig.id)) {
+                    tile.setInteractive({ useHandCursor: true });
                     tile.removeAllListeners('pointerdown');
 
                     tile.once('pointerdown', () => {
                         // TODO: esto viene del backend o tendremos que añadirlo a cada property
-    
                         const propConfig = tile.tileConfig as IPropertyTile;
-                        
                         EventBus.emit('tile-added-to-trade', {
                             id: propConfig.id,
                             name: propConfig.name,
@@ -486,26 +487,22 @@ export class Board extends Phaser.Scene {
             });
         });
 
-        // Limpia el tablero y bloquea clicks de selección
-        EventBus.on('stop-selection-mode', () => {
-            BoardEffects.setFocusByIds(this.tiles, null, this);
-        });
-
         // brillan las de un grupo
         EventBus.on('highlight-group', (groupIds: string[]) => {
-            BoardEffects.setFocusByIds(this.tiles, groupIds, this);
+            BoardEffects.setFocusByIds(this.tiles, groupIds, this, this.players);
         });
 
         // Evento para mostrar casillas cuando se pulsa el boton de administrar
         EventBus.on('open-property-selection-mode', (propertyIds: string[]) => {
-            BoardEffects.setFocusByIds(this.tiles, propertyIds, this);
+            EventBus.emit('dark-mode', true);
+            BoardEffects.setFocusByIds(this.tiles, propertyIds, this, []);
             this.tiles.forEach(tile => {
 
                 if (propertyIds.includes(tile.tileConfig.id)) {
                     tile.removeAllListeners('pointerdown');
 
                     tile.once('pointerdown', () => {
-                        BoardEffects.setFocusByIds(this.tiles, null, this);
+                        BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
                         // TODO: esto viene del backend o tendremos que añadirlo a cada property
                         const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
                         const propConfig = tile.tileConfig as IPropertyTile;
@@ -524,12 +521,16 @@ export class Board extends Phaser.Scene {
                 }
             });
         });
-
-        EventBus.on('dark-mode', () => {
-            BoardEffects.setFocusByIds(this.tiles, [], this); // oscurece tablero
-            this.players.forEach(p => p.token.setAlpha(0.3).setDepth(1)); // oscurece fichas
+        
+        EventBus.on('dark-mode', (active: boolean = true) => {
+            if (active) {
+                // Oscurece todo el tablero
+                BoardEffects.setFocusByIds(this.tiles, [], this, this.players);
+            } else {
+                // Limpia oscurecimiento
+                BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
+            }
         });
-
     }
 }
 

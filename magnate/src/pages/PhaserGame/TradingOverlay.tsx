@@ -68,7 +68,7 @@ export const TradingOverlay = () => {
                     { id: "021", name: "I3A", color: "#f6f03b" },
                     { id: "031", name: "I3A", color: "#f6f03b" },
                     { id: "026", name: "Circe", color: "#f6f03b" },
-                    { id: "037", name: "Circe", color: "#f6f03b" },]};
+                    { id: "037", name: "Circe", color: "#f88000" },]};
             setReceiver(propReceiver);
             setMyOffer({ money: 0, properties: [] }); 
             setTheirOffer({ money: 0, properties: propReceiver.properties });
@@ -94,7 +94,8 @@ export const TradingOverlay = () => {
             setIsMinimised(false);
             setSelectingFor(null);
             setShowProperties(true);
-            EventBus.emit('dark-mode', false);
+            EventBus.emit('dark-mode', true);
+            
         };
 
         EventBus.on('open-trading-mode', handleOpenTrade);
@@ -112,7 +113,6 @@ export const TradingOverlay = () => {
         setIsMinimised(false);
         setSelectingFor(null);
         EventBus.emit('dark-mode', false);
-        EventBus.emit('stop-selection-mode');
     };
 
     const startSelection = (who: 'me' | 'them') => {
@@ -161,8 +161,7 @@ export const TradingOverlay = () => {
                         <Button 
                             onClick={(e) => { 
                                 setIsMinimised(false); 
-                                EventBus.emit('dark-mode', false); 
-                                EventBus.emit('stop-selection-mode');
+                                EventBus.emit('dark-mode'); 
                             }} 
                             className={`bg-[var(--color-primary)] text-[var(--color-text)] font-black text-[12px] px-5 py-2 rounded-full uppercase 
                                     ${bouncyAnimation}`}>
@@ -175,7 +174,7 @@ export const TradingOverlay = () => {
                     </div>
                 </div>
             )}
-            <div className={`fixed inset-0 z-[1000] pointer-events-none flex justify-between py-8 px-4 transition-all duration-500 
+            <div className={`fixed inset-0 z-[1000] pointer-events-none flex justify-between py-8 px-6 transition-all duration-500 
                         ${isMinimised ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
                 
                 {/* panel jugador que inicia tradeo */}

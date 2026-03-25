@@ -27,7 +27,7 @@ export const ChatHUD = () => {
 
     return (
         <div 
-            className={`fixed left-0 top-0 h-screen z-20 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center
+            className={`fixed left-0 top-0 h-screen z-[2000] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center
                 ${isOpen ? 'translate-x-0' : '-translate-x-[320px]'} 
             `}
         >
