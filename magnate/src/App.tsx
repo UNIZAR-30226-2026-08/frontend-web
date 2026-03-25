@@ -8,7 +8,7 @@ import { Home } from "@/pages/Home/Home";
 import { Loading } from "@/pages/Loading/Loading";
 import { Lobby } from "@/pages/Lobby/Lobby";
 import { PrivateRoom } from "@/pages/PrivateRoom/PrivateRoom";
-import { PhaserGame } from "@/pages/PhaserGame/PhaserGame";
+import { PhaserGame } from "@/pages/PhaserGame/PhaserGameOverlay";
 import { AudioProvider } from "@/context/AudioContext";
 import { Shop } from "@/pages/Shop/Shop";
 
