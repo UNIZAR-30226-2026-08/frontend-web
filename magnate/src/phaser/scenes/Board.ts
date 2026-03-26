@@ -53,7 +53,7 @@ export class Board extends Phaser.Scene {
     }
 
     preload() { // precargar imagenes...
-        this.load.image('background', 'images/background_ingame.png');
+        // this.load.image('background', 'images/background_ingame.png');
         this.load.json('board', 'data/board.json');
         this.load.json('fantasyCards', 'data/fantasyCard.json');
         this.load.image('hat', 'images/hat.png'); // fantasy tiles
@@ -77,8 +77,8 @@ export class Board extends Phaser.Scene {
         const fullFantasy = this.cache.json.get('fantasyCards');
         this.fantasyCards = fullFantasy.fantasy;
 
-        const background = this.add.image(960, 540, 'background');
-        background.setDisplaySize(1920, 1080);
+        // const background = this.add.image(960, 540, 'background');
+        // background.setDisplaySize(1920, 1080);
 
         const rawColors = fullData.playerColors as string[];
         this.colorPalette = rawColors.map(c => parseInt(c.replace('#', '0x')));
