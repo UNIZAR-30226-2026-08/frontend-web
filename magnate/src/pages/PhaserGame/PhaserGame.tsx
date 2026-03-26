@@ -13,7 +13,7 @@ import { ChatHUD } from './ChatHUD';
 import { EventBus } from '@/EventBus';
 import { useAudio } from "@/context/AudioContext";
 import { PropertyAdminOverlay } from './PropertyAdminOverlay';
-import { GameOverOverlay } from './GameOverOverlay';
+import { GameOver } from './GameOver';
 
 interface PlayerInitData {
     id: string;
@@ -96,7 +96,7 @@ export const PhaserGame = () => {
             <AuctionOverlay />
             <TradingOverlay />
             <PropertyAdminOverlay />
-            <GameOverOverlay />
+            <GameOver />
         </div>
     );
 };

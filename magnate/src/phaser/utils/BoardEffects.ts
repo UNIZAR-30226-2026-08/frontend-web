@@ -1,32 +1,5 @@
 import { Tile } from '../objects/Tile';
 
-// export const BoardEffects = {
-
-//     setFocusByIds: (allTiles: Tile[], targetIds: string[] | null, scene: Phaser.Scene) => {
-       
-//         const isSelectionMode = targetIds !== null;
-
-//         allTiles.forEach(tile => {
-//             const isTarget = !isSelectionMode || targetIds.includes(tile.tileConfig.id);
-
-//             // overlay por encima de todo
-//             tile.bringToTop(tile.overlay);
-            
-//             if (!isTarget) tile.overlay.setVisible(true);
-            
-//             scene.tweens.add({
-//                 targets: tile.overlay,
-//                 alpha: isTarget ? 0 : 0.75,
-//                 duration: 300,
-//                 ease: 'Cubic.easeOut',
-//             });
-
-//             tile.setDepth(isTarget && isSelectionMode ? 100 : 1);
-//         });
-//     }
-// };
-
-
 export const BoardEffects = {
     darkOverlay: null as Phaser.GameObjects.Rectangle | null,
 
