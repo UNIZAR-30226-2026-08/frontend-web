@@ -13,6 +13,7 @@ import { ChatHUD } from './ChatHUD';
 import { EventBus } from '@/EventBus';
 import { useAudio } from "@/context/AudioContext";
 import { PropertyAdminOverlay } from './PropertyAdminOverlay';
+import { GameOver } from './GameOver';
 
 import { GameBackground } from '@/components/layout/GameBackground';
 
@@ -102,6 +103,7 @@ export const PhaserGame = () => {
             <AuctionOverlay />
             <TradingOverlay />
             <PropertyAdminOverlay />
+            <GameOver />
         </div>
     );
 };
