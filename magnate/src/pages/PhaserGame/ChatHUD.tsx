@@ -31,8 +31,7 @@ export const ChatHUD = () => {
                 ${isOpen ? 'translate-x-0' : '-translate-x-[320px]'} 
             `}
         >
-            {/* TODO: De momento está a full de height, va a haber qué pasa con el fondo */}
-            <div className="w-[320px] h-full bg-gradient-to-b from-zinc-50 to-zinc-100 border-r-4 border-[var(--color-primary)] p-6 shadow-2xl flex flex-col relative z-10">
+            <div className="w-[320px] h-full bg-gradient-to-b from-zinc-50 to-zinc-100 p-6 shadow-2xl flex flex-col relative z-10">
                 <div className="flex items-center border-b-2 border-black/5 pb-4 mb-4 mt-2">
                     <span className="text-zinc-900 font-black italic uppercase tracking-tighter text-2xl">
                         Chat <span className="text-[var(--color-primary)]">Global</span>
@@ -65,10 +64,10 @@ export const ChatHUD = () => {
                     h-40 w-14 
                     bg-[var(--color-primary)]
                     hover:brightness-110
-                    border-r-4 border-y-4 border-l-0 border-[var(--color-primary)]
+                    border-r-[3px] border-y-[3px] border-l-0 border-white
                     rounded-r-xl 
                     flex flex-col items-center justify-center 
-                    pl-[4px] /* FIX: Padding-left pushes the icons right to perfectly balance the right border */
+                    pl-[4px]
                     shadow-[10px_0px_20px_rgba(0,0,0,0.2)]
                     cursor-pointer outline-none focus:outline-none
                     transition-all duration-300
