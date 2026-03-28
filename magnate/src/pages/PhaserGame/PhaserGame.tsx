@@ -16,6 +16,8 @@ import { PropertyAdminOverlay } from './PropertyAdminOverlay';
 import { GameOver } from './GameOver';
 
 import { GameBackground } from '@/components/layout/GameBackground';
+import { BannerMessage } from '@/components/layout/BannerMessage';
+import { ToastMessage } from '@/components/layout/ToastMessage';
 
 interface PlayerInitData {
     id: string;
@@ -91,6 +93,9 @@ export const PhaserGame = () => {
                 id="phaser-container" 
                 className="relative z-10 flex items-center justify-center w-full h-full [&>canvas]:mx-auto" 
             />
+
+            <BannerMessage />
+            <ToastMessage />
 
             <ControlsHUD />
             <ChatHUD />
