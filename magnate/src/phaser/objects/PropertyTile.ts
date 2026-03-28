@@ -65,7 +65,7 @@ export class PropertyTile extends Tile {
         );
     
         marker.setOrigin(0, 0); 
-        marker.setStrokeStyle(1, 0x000000);
+        marker.setStrokeStyle(3, 0xffffff);
         
         this.add(marker);
         this.sendToBack(marker);
