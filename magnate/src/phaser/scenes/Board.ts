@@ -179,8 +179,27 @@ export class Board extends Phaser.Scene {
         EventBus.emit('setup-players', playerInitData);
     }
 
-    // TODO: Esto es solo para probar el movimiento
-    private handlePlayerClick(playerId: string) {
+    public announceTurn(playerName: string, playerColor: string): Promise<void> {
+        // Estoy prometiendo que voy a acabar
+        return new Promise((resolve) => {
+            EventBus.emit('show-banner', {
+                message: `¡Turno de ${playerName}!`,
+                color: playerColor
+            });
+
+            this.time.delayedCall(2500, () => {
+                EventBus.emit('hide-banner');
+                resolve();
+            });
+        });
+    }
+
+    public showToast(message: string, duration?: number) {
+        EventBus.emit('show-toast', { message, duration });
+    }
+
+    // TODO: Esto es solo para probar el movimiento (async !!!!!)
+    private async handlePlayerClick(playerId: string) {
         const p = this.players.find(pair => pair.model.id === playerId);
         if (!p) return;
     
@@ -213,6 +232,9 @@ export class Board extends Phaser.Scene {
             { x: hopTile.x, y: hopTile.y },
             { x: finalX, y: finalY }
         ];
+
+        const cssColor = '#' + p.model.color.toString(16).padStart(6, '0');
+        await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
         
         // this.cameraController.followToken(p.token, 2.2);
 
@@ -231,6 +253,8 @@ export class Board extends Phaser.Scene {
                 });
             });
         });
+
+        this.showToast(`¡${p.model.name} ha comprado la casilla!`);
     }
 
     // Método para debug, se envía a la primera casilla de un tipo específico
@@ -530,6 +554,18 @@ export class Board extends Phaser.Scene {
                 // Limpia oscurecimiento
                 BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
             }
+        });
+    }
+
+    update() {
+        const cam = this.cameras.main;
+        if (!cam) return;
+
+        // Broadcast the camera's exact center coordinates in the 2D world and its zoom
+        EventBus.emit('sync-3d-camera', {
+            zoom: cam.zoom,
+            x: cam.midPoint.x,
+            y: cam.midPoint.y
         });
     }
 }
