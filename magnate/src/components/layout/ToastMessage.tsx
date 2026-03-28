@@ -32,7 +32,7 @@ export function ToastMessage() {
         setToast((prev) => ({ ...prev, exiting: true }));
         removeTimeoutId = setTimeout(() => {
           setToast((prev) => ({ ...prev, visible: false, exiting: false }));
-        }, 1000);
+        }, 300);
       }, data.duration || 3000);
     };
 
@@ -48,7 +48,7 @@ export function ToastMessage() {
   if (!toast.visible) return null;
 
   return (
-    <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[10000] pointer-events-none">
+    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[10000] pointer-events-none">
       <div
         className={`px-8 py-4 rounded-full shadow-2xl border-2 border-white/20 text-white font-bold text-lg md:text-xl tracking-wide whitespace-nowrap duration-300 ${
           toast.exiting 
