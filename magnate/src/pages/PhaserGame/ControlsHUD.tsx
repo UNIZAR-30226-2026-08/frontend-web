@@ -96,7 +96,7 @@ export const ControlsHUD = () => {
     return (
         <>
             {!isRolling && (
-                <div className={`absolute left-[3vw] top-[4vh] z-10 pointer-events-auto ${darkButton}`}>
+                <div className={`absolute left-[3vw] top-[11vh] z-10 pointer-events-auto ${darkButton}`}>
                     <Button
                         onClick={handleRollClick}
                         disabled={!canRoll || isDark}
@@ -175,7 +175,7 @@ export const ControlsHUD = () => {
                 </Button>
             </div>
 
-            <div className={`absolute left-[3vw] bottom-[4vh] z-10 pointer-events-auto ${darkButton}`}>
+            <div className={`absolute left-[3vw] bottom-[11vh] z-10 pointer-events-auto ${darkButton}`}>
                 <Button
                     onClick={handleSettingsClick}
                     disabled={isDark}

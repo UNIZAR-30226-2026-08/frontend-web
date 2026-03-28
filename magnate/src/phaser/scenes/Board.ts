@@ -54,6 +54,7 @@ export class Board extends Phaser.Scene {
 
     preload() { // precargar imagenes...
         // this.load.image('background', 'images/background_ingame.png');
+        this.load.video('background_video', 'videos/game_background.webm');
         this.load.json('board', 'data/board.json');
         this.load.json('fantasyCards', 'data/fantasyCard.json');
         this.load.image('hat', 'images/hat.png'); // fantasy tiles
@@ -79,6 +80,39 @@ export class Board extends Phaser.Scene {
 
         // const background = this.add.image(960, 540, 'background');
         // background.setDisplaySize(1920, 1080);
+        
+        const { width, height } = this.scale;
+        
+        const bgVideo = this.add.video(width / 2, height / 2, 'background_video');
+        bgVideo.setOrigin(0.5, 0.5);
+        bgVideo.setDepth(-100);
+
+        const resizeVideo = (screenWidth: number, screenHeight: number) => {
+            const videoW = bgVideo.width;
+            const videoH = bgVideo.height;
+
+            if (videoW === 0 || videoH === 0) return; 
+
+            const scaleX = screenWidth / videoW;
+            const scaleY = screenHeight / videoH;
+            
+            const scale = Math.max(scaleX, scaleY); 
+            
+            bgVideo.setScale(scale);
+            bgVideo.setPosition(screenWidth / 2, screenHeight / 2);
+        };
+
+        bgVideo.on('play', () => {
+            resizeVideo(this.scale.width, this.scale.height);
+        });
+
+        bgVideo.play(true);
+
+        this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+            resizeVideo(gameSize.width, gameSize.height);
+        }, this);
+
+
 
         const rawColors = fullData.playerColors as string[];
         this.colorPalette = rawColors.map(c => parseInt(c.replace('#', '0x')));
@@ -554,18 +588,6 @@ export class Board extends Phaser.Scene {
                 // Limpia oscurecimiento
                 BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
             }
-        });
-    }
-
-    update() {
-        const cam = this.cameras.main;
-        if (!cam) return;
-
-        // Broadcast the camera's exact center coordinates in the 2D world and its zoom
-        EventBus.emit('sync-3d-camera', {
-            zoom: cam.zoom,
-            x: cam.midPoint.x,
-            y: cam.midPoint.y
         });
     }
 }

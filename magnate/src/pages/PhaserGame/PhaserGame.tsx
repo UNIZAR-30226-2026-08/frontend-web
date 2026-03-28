@@ -15,7 +15,6 @@ import { useAudio } from "@/context/AudioContext";
 import { PropertyAdminOverlay } from './PropertyAdminOverlay';
 import { GameOver } from './GameOver';
 
-import { GameBackground } from '@/components/layout/GameBackground';
 import { BannerMessage } from '@/components/layout/BannerMessage';
 import { ToastMessage } from '@/components/layout/ToastMessage';
 
@@ -87,8 +86,6 @@ export const PhaserGame = () => {
 
     return (
         <div className="relative flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-black)]">
-            <GameBackground />
-
             <div 
                 id="phaser-container" 
                 className="relative z-10 flex items-center justify-center w-full h-full [&>canvas]:mx-auto" 
