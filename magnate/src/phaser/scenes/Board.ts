@@ -40,6 +40,10 @@ export class Board extends Phaser.Scene {
     private isRolling: boolean = false;
     private localPlayerId: string | null = null;
 
+	// kinda global (handlePlayerClick)
+	private selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
+	private hasTramTicket: boolean = true; // TODO afinaresto tb por player(?) ig es en vdd
+
     constructor() {
         super({ key: 'BoardScene' });
     }
@@ -264,17 +268,19 @@ export class Board extends Phaser.Scene {
     private async handlePlayerClick(playerId: string) {
         const p = this.players.find(pair => pair.model.id === playerId);
         if (!p) return;
+
+		this.selectedPlayer = p;
     
         const currentIndex = this.tiles.findIndex(t => t.tileConfig.id === p.model.currentTileId);
         
         const hopIndex = (currentIndex + 1) % this.tiles.length;
         const hopTile = this.tiles[hopIndex];
 
-        const nextIndex = (currentIndex + 20) % this.tiles.length;
+        //const nextIndex = (currentIndex + 10) % this.tiles.length; // Next tram tile
+        const nextIndex = this.tiles.findIndex(t => t instanceof TramTile); // Debug Julia
         const targetTile = this.tiles[nextIndex];
         const nextTileId = targetTile.tileConfig.id;
 
-        //const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile); // Debug Julia
         
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
@@ -481,11 +487,23 @@ export class Board extends Phaser.Scene {
 
 		else {
 			const cornerConfig = CORNER_VISUALS.get(tile.constructor);
+			if (tile instanceof TramTile) { 
+				if(!this.hasTramTicket) {
+					console.log("no tengo ticket");
+					this.hasTramTicket = true;
+					return;
+				}
+				else {
+					this.hasTramTicket = false;
+				}
+			}
+			console.log("tengo ticket");
             EventBus.emit('show-corner-tile', {
 				image: cornerConfig.image,
 				tileText: cornerConfig.tileText,
 				buttonText: cornerConfig.buttonText,
-				sound: cornerConfig.sound
+				sound: cornerConfig.sound,
+				id: tile.tileConfig.id
 			});
 		}
     }
@@ -637,7 +655,62 @@ export class Board extends Phaser.Scene {
             });
         });
 
-        // brillan las de un grupo
+		EventBus.on('start-tram-selection', () => { // TODO DesGemificar
+			// 1. Identificamos todas las casillas que sean Tranvías
+			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
+			const tramTileIds = tramTiles.map(t => t.tileConfig.id);
+
+			// 2. Oscurecemos el mapa pero ILUMINAMOS los tranvías.
+			// OJO: Pasamos [] al final para NO iluminar a los jugadores/tokens
+			BoardEffects.setFocusByIds(this.tiles, tramTileIds, this, this.players);
+
+			// 3. Hacemos que solo esas casillas sean clickables
+			this.tiles.forEach(tile => {
+				if (tramTileIds.includes(tile.tileConfig.id)) {
+					tile.setInteractive({ useHandCursor: true });
+					tile.removeAllListeners('pointerdown');
+
+					tile.once('pointerdown', () => {
+						const tramConfig = tile.tileConfig as ITramTile;
+
+						// Emitimos de vuelta a React el Tranvía seleccionado
+						EventBus.emit('tram-tile-selected', {
+							id: tramConfig.id,
+							name: tramConfig.name
+						});
+
+						// Quitamos el foco inmediatamente tras el clic
+						BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
+					});
+				} else {
+					tile.disableInteractive();
+				}
+			});
+		});
+
+		EventBus.on('execute-tram-travel', (data: {targetId: string, cost: number}) => {
+        	const p = this.selectedPlayer;
+			if (!p) console.log("no encontré el jugador seleccionado");
+			console.log("voy a buscar a la tile");
+			console.log(data.targetId);
+			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
+			if (!targetTile) console.log("no encontré target tile");
+			const path = [{ x: targetTile.x, y: targetTile.y }];
+			p.token.moveTo(path, () => {
+				this.time.delayedCall(800, () => {
+					this.checkTileLogic(p.model, targetTile);
+				});
+			});
+
+			// unset interactiveness of tram tiles
+			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
+			tramTiles.forEach(tile => {
+				tile.disableInteractive();
+			});
+
+			// Tell backend (about cost or tileId seguramente?)
+		});
+		// brillan las de un grupo
         EventBus.on('highlight-group', (groupIds: string[]) => {
             BoardEffects.setFocusByIds(this.tiles, groupIds, this, this.players);
         });

@@ -29,6 +29,12 @@ export const CornerOverlay = () => {
     const closeOverlay = () => {
         EventBus.emit('close-overlay');
         setPropData(null);
+		if (propData.tileText=='Tranvía') { // depends on UI: src/phaser/scenes/Board.ts
+			// Funcionamiento del tranvía
+			EventBus.emit('open-tram-overlay', { currentTileId: propData.id });
+		}
+
+		setPropData(null);
     };
 
 	return ( 
@@ -39,7 +45,7 @@ export const CornerOverlay = () => {
                     tileText={propData.tileText}
                 />
                 <Button onClick={() => closeOverlay()} 
-                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
+                        className={`px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
                             {propData.buttonText}
                 </Button>
 			</div>
