@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayerHUD } from '@/components/layout/PlayerHUD';
 import { useAudio } from '@/context/AudioContext';
 import { EventBus } from '@/EventBus';
@@ -20,19 +20,33 @@ interface PlayersHUDProps {
 export const PlayersHUD = ({ 
     players, 
     dynamicScale, 
-    isClickable = true, // TODO: Conectar esto
+    isClickable = true, 
     onPlayerClick 
 }: PlayersHUDProps) => {
     const { playSound } = useAudio();
+    const [isVisible, setIsVisible] = useState(true);
+
+    useEffect(() => {
+        const handleHide = () => setIsVisible(false);
+        const handleShow = () => setIsVisible(true);
+
+        EventBus.on('hide-players-hud', handleHide);
+        EventBus.on('show-players-hud', handleShow);
+
+        return () => {
+            EventBus.off('hide-players-hud', handleHide);
+            EventBus.off('show-players-hud', handleShow);
+        };
+    }, []);
 
     const handlePlayerClick = (playerId: string) => {
         if (isClickable) {
             playSound('player_token_hop');
             
             const targetPlayer = players.find(p => p.id === playerId);
-            const me = players[0]; // TODO: backend
+            const me = players[0]; 
             if (targetPlayer && me) {
-                EventBus.emit('open-trading-mode', { // TODO: aquí pasar propiedades de los dos jugadores
+                EventBus.emit('open-trading-mode', { 
                     sender: me,
                     receiver: targetPlayer,
                     allPlayers: players
@@ -44,8 +58,10 @@ export const PlayersHUD = ({
 
     return (
         <div 
-            className="absolute right-[3vw] top-1/2 -translate-y-1/2 flex flex-col gap-[6vh] pointer-events-none z-10 origin-right transition-transform duration-150 group/list"
-            style={{ transform: `translateY(-50%) scale(${dynamicScale})` }}
+            className="absolute right-[3vw] top-1/2 flex flex-col gap-[6vh] pointer-events-none z-10 origin-right transition-transform duration-300 ease-in-out group/list"
+            style={{ 
+                transform: `translateY(-50%) translateX(${isVisible ? '0' : '150%'}) scale(${dynamicScale})` 
+            }}
         >
             {players?.map((player) => (
                 <div key={player.id} className="pointer-events-auto">

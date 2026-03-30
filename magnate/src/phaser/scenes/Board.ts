@@ -169,7 +169,20 @@ export class Board extends Phaser.Scene {
         
         EventBus.on('close-overlay', () => { // Evento para que camara vuelva a la vista general
             this.cameraController.resetView(2000);
+            this.time.delayedCall(2000, () => {
+                this.showUI();
+            });
         });
+    }
+
+    public hideUI() {
+        EventBus.emit('hide-players-hud');
+        EventBus.emit('hide-controls-hud');
+    }
+
+    public showUI() {
+        EventBus.emit('show-players-hud');
+        EventBus.emit('show-controls-hud');
     }
 
     createPlayer(id: string, name: string) {
@@ -232,6 +245,21 @@ export class Board extends Phaser.Scene {
         EventBus.emit('show-toast', { message, duration });
     }
 
+    public playSecretaryCutscene(): Promise<void> {
+        return new Promise((resolve) => {
+            this.hideUI();
+
+            const onComplete = () => {
+                EventBus.off('secretary-animation-complete', onComplete); 
+                this.showUI();
+                resolve();
+            };
+
+            EventBus.on('secretary-animation-complete', onComplete);
+            EventBus.emit('play-secretary-animation');
+        });
+    }
+
     // TODO: Esto es solo para probar el movimiento (async !!!!!)
     private async handlePlayerClick(playerId: string) {
         const p = this.players.find(pair => pair.model.id === playerId);
@@ -242,7 +270,7 @@ export class Board extends Phaser.Scene {
         const hopIndex = (currentIndex + 1) % this.tiles.length;
         const hopTile = this.tiles[hopIndex];
 
-        const nextIndex = (currentIndex + 2) % this.tiles.length;
+        const nextIndex = (currentIndex + 20) % this.tiles.length;
         const targetTile = this.tiles[nextIndex];
         const nextTileId = targetTile.tileConfig.id;
 
@@ -267,28 +295,36 @@ export class Board extends Phaser.Scene {
             { x: finalX, y: finalY }
         ];
 
+        this.hideUI();
+
         const cssColor = '#' + p.model.color.toString(16).padStart(6, '0');
-        await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
+
+        // await this.playSecretaryCutscene();
+
+        // await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
         
         // this.cameraController.followToken(p.token, 2.2);
 
-        // p.model.move(nextTileId);
+        p.model.move(nextTileId);
 
-        // p.token.moveTo(path, () => {
-        //     this.checkTileLogic(p.model, targetTile);
-        // });
-        const tileRotation = targetTile.tileConfig.rotation || 0; // TODO: revisar giro de la cámara dependiendo de la rotación de la ficha
-
-        this.cameraController.followToken(p.token, 2.2, tileRotation, () => {
-            p.model.move(nextTileId);
-            p.token.moveTo(path, () => {
-                this.time.delayedCall(800, () => {
-                    this.checkTileLogic(p.model, targetTile);
-                });
-            });
+        p.token.moveTo(path, () => {
+            this.checkTileLogic(p.model, targetTile);
         });
 
-        this.showToast(`¡${p.model.name} ha comprado la casilla!`);
+
+        // const tileRotation = targetTile.tileConfig.rotation || 0; // TODO: revisar giro de la cámara dependiendo de la rotación de la ficha
+
+        // this.cameraController.followToken(p.token, 2.2, tileRotation, () => {
+        //     p.model.move(nextTileId);
+        //     p.token.moveTo(path, () => {
+        //         this.time.delayedCall(800, () => {
+        //             this.checkTileLogic(p.model, targetTile);
+        //         });
+        //     });
+        // });
+
+
+        // this.showToast(`¡${p.model.name} ha comprado la casilla!`);
     }
 
     // Método para debug, se envía a la primera casilla de un tipo específico
@@ -310,6 +346,54 @@ export class Board extends Phaser.Scene {
     //         this.checkTileLogic(p.model, targetTile);
     //     });
     // }
+
+    public async sendToSecretary(playerId: string) {
+        const p = this.players.find(pair => pair.model.id === playerId);
+        const jailTile = this.tiles.find(t => t instanceof JailTile);
+        
+        if (!p || !jailTile) return;
+     
+        await this.playSecretaryCutscene();
+
+        const othersCount = this.players.filter(other => 
+            other.model.id !== playerId && 
+            other.model.currentTileId === jailTile.tileConfig.id
+        ).length;
+     
+        let finalX = jailTile.x;
+        let finalY = jailTile.y;
+     
+        if (othersCount > 0) {
+            const spacing = 22;
+            finalX += (othersCount % 2 === 0) ? spacing : -spacing;
+            finalY += (othersCount > 1) ? spacing : -spacing;
+        }
+     
+        p.model.currentTileId = jailTile.tileConfig.id; 
+
+        p.token.setAlpha(0);
+        
+        p.token.setPosition(finalX, finalY - 600);
+
+        this.cameraController.focusOnTile(jailTile, 2.2);
+
+        this.tweens.add({
+            targets: p.token,
+            alpha: 1,
+            duration: 100, 
+        });
+     
+        this.tweens.add({
+            targets: p.token,
+            y: finalY,
+            ease: 'Bounce.easeOut',
+            duration: 600,
+            onComplete: () => {
+                // TODO: A ver si podemos poner algun sonidito
+                // this.checkTileLogic(p.model, jailTile); (NO HAGO LA LOGICA DE CAER EN NUEVA CASILLA)
+            }
+        });
+    }
     
     private checkTileLogic(player: PlayerModel, tile: Tile) {
         
@@ -389,6 +473,10 @@ export class Board extends Phaser.Scene {
 			});
 		}
 
+        else if (tile instanceof GoToJailTile) {
+            this.sendToSecretary(player.id);
+        }
+
 		else if (tile instanceof StartTile) {}
 
 		else {
@@ -400,11 +488,13 @@ export class Board extends Phaser.Scene {
 				sound: cornerConfig.sound
 			});
 		}
-
     }
 
     private handleDiceRoll() {
         if (this.isRolling) return;
+
+        this.hideUI();
+
         this.isRolling = true;
 
         EventBus.emit('play-sfx', 'dice_shake');
@@ -491,6 +581,8 @@ export class Board extends Phaser.Scene {
                                         this.isRolling = false; 
 
                                         EventBus.emit('dice-roll-complete');
+
+                                        this.showUI();
                                     }
                                 });
                             });
