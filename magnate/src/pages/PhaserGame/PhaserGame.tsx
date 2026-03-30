@@ -18,6 +18,8 @@ import { GameOver } from './GameOver';
 import { BannerMessage } from '@/components/layout/BannerMessage';
 import { ToastMessage } from '@/components/layout/ToastMessage';
 
+import { SecretaryAnimation } from './SecretaryAnimation';
+
 interface PlayerInitData {
     id: string;
     name: string;
@@ -93,6 +95,8 @@ export const PhaserGame = () => {
 
             <BannerMessage />
             <ToastMessage />
+
+            <SecretaryAnimation />
 
             <ControlsHUD />
             <ChatHUD />

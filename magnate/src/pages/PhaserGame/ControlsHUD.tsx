@@ -9,6 +9,7 @@ export const ControlsHUD = () => {
     const [isBankruptOpen, setIsBankruptOpen] = useState(false);
     const [isRolling, setIsRolling] = useState(false);
     const [isDark, setIsDark] = useState(false); // Para oscurecer botones
+    const [isHidden, setIsHidden] = useState(false);
 
     const [canRoll, setCanRoll] = useState(true);
     const [canAdminister, setCanAdminister] = useState(true);
@@ -39,13 +40,20 @@ export const ControlsHUD = () => {
             setIsRolling(false);
         };
 
+        const handleHide = () => setIsHidden(true);
+        const handleShow = () => setIsHidden(false);
+
         EventBus.on('update-controls-state', handleUpdateControls);
         EventBus.on('dice-roll-complete', handleRollComplete);
+        EventBus.on('hide-controls-hud', handleHide);
+        EventBus.on('show-controls-hud', handleShow);
 
         return () => {
             EventBus.off('dark-mode', handleDarkMode);
             EventBus.off('update-controls-state', handleUpdateControls);
             EventBus.off('dice-roll-complete', handleRollComplete);
+            EventBus.off('hide-controls-hud', handleHide);
+            EventBus.off('show-controls-hud', handleShow);
         };
     }, []);
 
@@ -54,6 +62,8 @@ export const ControlsHUD = () => {
     const darkButton = isDark 
         ? "opacity-70 pointer-events-none scale-95" 
         : "opacity-100 pointer-events-auto scale-100";
+
+    const slideTransition = `transform-gpu transition-all duration-500 ease-in-out ${isHidden ? '-translate-x-[20vw] opacity-0 pointer-events-none' : 'translate-x-0'}`;
 
     const handleRollClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setIsRolling(true);
@@ -96,7 +106,7 @@ export const ControlsHUD = () => {
     return (
         <>
             {!isRolling && (
-                <div className={`absolute left-[3vw] top-[11vh] z-10 pointer-events-auto ${darkButton}`}>
+                <div className={`absolute left-[3vw] top-[11vh] z-10 pointer-events-auto ${darkButton} ${slideTransition}`}>
                     <Button
                         onClick={handleRollClick}
                         disabled={!canRoll || isDark}
@@ -113,13 +123,13 @@ export const ControlsHUD = () => {
                 </div>
             )}
 
-            <div className={`absolute left-[10vw] top-1/2 -translate-y-1/2 flex flex-col gap-10 z-10 pointer-events-auto ${darkButton}`}>
+            <div className={`absolute left-[10vw] top-1/2 -translate-y-1/2 flex flex-col gap-10 z-10 pointer-events-auto ${darkButton} ${slideTransition}`}>
                 <Button
                     onClick={handleAdministerClick}
                     disabled={!canAdminister || isDark}
                     title="Administrar propiedades"
                     aria-label="Administrar propiedades"
-                    className={`bg-white bg-zinc-50 ${bouncyButtonClass}`}
+                    className={`bg-white hover:bg-zinc-50 ${bouncyButtonClass}`}
                 >
                     <img 
                         src="/icons/hotel.svg" 
@@ -175,7 +185,7 @@ export const ControlsHUD = () => {
                 </Button>
             </div>
 
-            <div className={`absolute left-[3vw] bottom-[11vh] z-10 pointer-events-auto ${darkButton}`}>
+            <div className={`absolute left-[3vw] bottom-[11vh] z-10 pointer-events-auto ${darkButton} ${slideTransition}`}>
                 <Button
                     onClick={handleSettingsClick}
                     disabled={isDark}
