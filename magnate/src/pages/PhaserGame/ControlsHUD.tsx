@@ -85,6 +85,8 @@ export const ControlsHUD = () => {
     const handleTradeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.blur();
         EventBus.emit('dark-mode', true);
+        EventBus.emit('set-hud-clickable', true);
+        EventBus.emit('start-selection-mode');
     };
 
     const handleFinishTurnClick = (e: React.MouseEvent<HTMLButtonElement>) => {

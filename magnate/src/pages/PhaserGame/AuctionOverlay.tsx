@@ -140,7 +140,11 @@ export const AuctionOverlay = () => {
                             ))}
                         </div>
 
-                        <Button onClick={() => setAuctionData(null)}
+                        <Button 
+                            onClick={() => {
+                                setAuctionData(null);
+                                EventBus.emit('close-overlay');
+                            }}
                             className={`w-[150px] h-[50px] text-xl font-black uppercase rounded-full 
                                         bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)] shadow-xl ${bouncyAnimation}`}>
                             Aceptar

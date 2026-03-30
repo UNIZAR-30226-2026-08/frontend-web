@@ -22,6 +22,19 @@ export const ServiceOverlay = () => {
         return () => { EventBus.off('show-service-card', handle); };
     }, [playSound]);
 
+    const handleBuy = () => {
+        if (!propData) return;
+
+        // enviamos info a phaser
+        EventBus.emit('property-bought', {
+            tileId: propData.id,
+            playerName: propData.playerName,
+            playerColor: propData.playerColor
+        });
+        EventBus.emit('close-overlay');
+        setPropData(null);
+    };
+
     if (!propData) {return null;}
 
 	// Just in case they are not set
@@ -74,7 +87,7 @@ export const ServiceOverlay = () => {
                 />
                 <div className="flex gap-4">
                 
-                <Button onClick={() => setPropData(null)}  // TODO: añadir marcador
+                <Button onClick={handleBuy}  // TODO: añadir marcador
                             className={`px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
                                 Comprar {propData.price}€
                     </Button>

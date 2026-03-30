@@ -22,14 +22,15 @@ import { create3DDiceBus } from '../objects/DiceBus3D';
 
 import { SoundId } from '@/context/AudioContext';
 
+import { CameraController } from '../utils/CameraController';
+import { BoardEffects } from '../utils/BoardEffects';
+
 const CORNER_VISUALS: Map<Function, CornerTileContent> = new Map ([
 	[GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar', sound: 'jail_door'}],
 	[JailTile, { image: 'images/secretary.png', tileText: 'Secretaría', buttonText: 'Comenzar turno', sound: 'jail_turn_in'}],
 	[ParkingTile, { image: 'images/caravan.png', tileText: 'Parking Gratuito', buttonText: 'Recoger dinero', sound: 'parking'}],
 	[TramTile, { image: 'icons/tram.svg', tileText: 'Tranvía', buttonText: 'Gestionar desplazamiento', sound: 'tram_bell'}],
 ]);
-import { CameraController } from '../utils/CameraController';
-import { BoardEffects } from '../utils/BoardEffects';
 
 export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
@@ -39,10 +40,6 @@ export class Board extends Phaser.Scene {
     private cameraController!: CameraController; // TODO: para las cámaras
     private isRolling: boolean = false;
     private localPlayerId: string | null = null;
-
-	// kinda global (handlePlayerClick)
-	private selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
-	private hasTramTicket: boolean = true; // TODO afinaresto tb por player(?) ig es en vdd
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -79,11 +76,9 @@ export class Board extends Phaser.Scene {
         const fullData = this.cache.json.get('board');
         const boardTiles = fullData.tiles as TileConfig[];
         const groups = fullData.groups as { group: number, color: string }[];
+        
         const fullFantasy = this.cache.json.get('fantasyCards');
         this.fantasyCards = fullFantasy.fantasy;
-
-        // const background = this.add.image(960, 540, 'background');
-        // background.setDisplaySize(1920, 1080);
         
         const { width, height } = this.scale;
         
@@ -268,19 +263,19 @@ export class Board extends Phaser.Scene {
     private async handlePlayerClick(playerId: string) {
         const p = this.players.find(pair => pair.model.id === playerId);
         if (!p) return;
-
-		this.selectedPlayer = p;
     
         const currentIndex = this.tiles.findIndex(t => t.tileConfig.id === p.model.currentTileId);
-        
+
         const hopIndex = (currentIndex + 1) % this.tiles.length;
         const hopTile = this.tiles[hopIndex];
 
-        //const nextIndex = (currentIndex + 10) % this.tiles.length; // Next tram tile
-        const nextIndex = this.tiles.findIndex(t => t instanceof TramTile); // Debug Julia
-        const targetTile = this.tiles[nextIndex];
-        const nextTileId = targetTile.tileConfig.id;
+        // const nextIndex = (currentIndex + 3) % this.tiles.length;
+        // const targetTile = this.tiles[nextIndex];
+        // const nextTileId = targetTile.tileConfig.id;
 
+        const targetIndex = this.tiles.findIndex(t => t instanceof TramTile); // Debug Julia
+        const targetTile = this.tiles[targetIndex];
+        const nextTileId = targetTile.tileConfig.id;
         
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
@@ -306,29 +301,24 @@ export class Board extends Phaser.Scene {
         const cssColor = '#' + p.model.color.toString(16).padStart(6, '0');
 
         // await this.playSecretaryCutscene();
+        await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
 
-        // await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
-        
-        // this.cameraController.followToken(p.token, 2.2);
+        // p.model.move(nextTileId);
 
-        p.model.move(nextTileId);
-
-        p.token.moveTo(path, () => {
-            this.checkTileLogic(p.model, targetTile);
-        });
-
-
-        // const tileRotation = targetTile.tileConfig.rotation || 0; // TODO: revisar giro de la cámara dependiendo de la rotación de la ficha
-
-        // this.cameraController.followToken(p.token, 2.2, tileRotation, () => {
-        //     p.model.move(nextTileId);
-        //     p.token.moveTo(path, () => {
-        //         this.time.delayedCall(800, () => {
-        //             this.checkTileLogic(p.model, targetTile);
-        //         });
-        //     });
+        // p.token.moveTo(path, () => {
+        //     this.checkTileLogic(p.model, targetTile);
         // });
 
+        const tileRotation = targetTile.tileConfig.rotation || 0; // TODO: revisar giro de la cámara dependiendo de la rotación de la ficha
+
+        this.cameraController.followToken(p.token, 2.2, tileRotation, () => {
+            p.model.move(nextTileId);
+            p.token.moveTo(path, () => {
+                this.time.delayedCall(800, () => {
+                    this.checkTileLogic(p.model, targetTile);
+                });
+            });
+        });
 
         // this.showToast(`¡${p.model.name} ha comprado la casilla!`);
     }
@@ -451,6 +441,7 @@ export class Board extends Phaser.Scene {
 			const rent = {one:50,all:100}
 			const tileConfig = tile.tileConfig as IServerTile;
 			EventBus.emit('show-service-card', {
+                id: tileConfig.id,
 				title: tileConfig.name,
 				typeName: 'Servidor',
 				image:'images/server.png', // TODO override tileConfig.icon
@@ -459,7 +450,9 @@ export class Board extends Phaser.Scene {
 				mortgage: 100,
 				isMortgaged: false,	// Pruebecitas TODO JULIA
 				isAvailable: true,
-				hasAll: 'all'
+				hasAll: 'all',
+                playerName: player.name,
+                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
 			});
 		}
 
@@ -467,6 +460,7 @@ export class Board extends Phaser.Scene {
 			const rent = {one:50,all:100}
 			const tileConfig = tile.tileConfig as IServerTile;
 			EventBus.emit('show-service-card', {
+                id: tileConfig.id,
 				title: tileConfig.name,
 				typeName: 'Puente',
 				image:'icons/bridge.svg', // TODO override tileConfig.icon
@@ -475,7 +469,9 @@ export class Board extends Phaser.Scene {
 				mortgage: 100,
 				isMortgaged: false,	// Pruebecitas TODO JULIA
 				isAvailable: true,
-				hasAll: 'one'
+				hasAll: 'one',
+                playerName: player.name,
+                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
 			});
 		}
 
@@ -487,23 +483,11 @@ export class Board extends Phaser.Scene {
 
 		else {
 			const cornerConfig = CORNER_VISUALS.get(tile.constructor);
-			if (tile instanceof TramTile) { 
-				if(!this.hasTramTicket) {
-					console.log("no tengo ticket");
-					this.hasTramTicket = true;
-					return;
-				}
-				else {
-					this.hasTramTicket = false;
-				}
-			}
-			console.log("tengo ticket");
             EventBus.emit('show-corner-tile', {
 				image: cornerConfig.image,
 				tileText: cornerConfig.tileText,
 				buttonText: cornerConfig.buttonText,
-				sound: cornerConfig.sound,
-				id: tile.tileConfig.id
+				sound: cornerConfig.sound
 			});
 		}
     }
@@ -617,14 +601,21 @@ export class Board extends Phaser.Scene {
 
     // Marcador para cada casilla que compra un player 
     private handlePurchase (data: { tileId: string, playerColor: string }) {
+        console.log("Recibida compra:", data);
         const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
         if (tile) {
             const colorNum = parseInt(data.playerColor.startsWith('#')  ? data.playerColor.replace('#', '0x') : data.playerColor);
                     
-            // TODO: añadir server, bridge
             if (tile instanceof PropertyTile) {
                 tile.setOwnerMarker(colorNum);
+            } else if (tile instanceof ServerTile) {
+                console.log("Entro");
+                tile.setOwnerMarker(colorNum);
+            } else if (tile instanceof BridgeTile) {
+                tile.setOwnerMarker(colorNum);
             }
+        } else {
+            console.warn("No se encontró la casilla con ID:", data.tileId);
         }
     }
 
@@ -632,9 +623,9 @@ export class Board extends Phaser.Scene {
 
         // Trading overlay
         EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[]}) => {
-            // BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this);
-            BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this, this.players);
             
+            BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this, this.players);
+
             this.tiles.forEach(tile => {
                 if (data.propertyIds.includes(tile.tileConfig.id)) {
                     tile.setInteractive({ useHandCursor: true });
@@ -655,68 +646,15 @@ export class Board extends Phaser.Scene {
             });
         });
 
-		EventBus.on('start-tram-selection', () => { // TODO DesGemificar
-			// 1. Identificamos todas las casillas que sean Tranvías
-			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
-			const tramTileIds = tramTiles.map(t => t.tileConfig.id);
-
-			// 2. Oscurecemos el mapa pero ILUMINAMOS los tranvías.
-			// OJO: Pasamos [] al final para NO iluminar a los jugadores/tokens
-			BoardEffects.setFocusByIds(this.tiles, tramTileIds, this, this.players);
-
-			// 3. Hacemos que solo esas casillas sean clickables
-			this.tiles.forEach(tile => {
-				if (tramTileIds.includes(tile.tileConfig.id)) {
-					tile.setInteractive({ useHandCursor: true });
-					tile.removeAllListeners('pointerdown');
-
-					tile.once('pointerdown', () => {
-						const tramConfig = tile.tileConfig as ITramTile;
-
-						// Emitimos de vuelta a React el Tranvía seleccionado
-						EventBus.emit('tram-tile-selected', {
-							id: tramConfig.id,
-							name: tramConfig.name
-						});
-
-						// Quitamos el foco inmediatamente tras el clic
-						BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
-					});
-				} else {
-					tile.disableInteractive();
-				}
-			});
-		});
-
-		EventBus.on('execute-tram-travel', (data: {targetId: string, cost: number}) => {
-        	const p = this.selectedPlayer;
-			if (!p) console.log("no encontré el jugador seleccionado");
-			console.log("voy a buscar a la tile");
-			console.log(data.targetId);
-			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
-			if (!targetTile) console.log("no encontré target tile");
-			const path = [{ x: targetTile.x, y: targetTile.y }];
-			p.token.moveTo(path, () => {
-				this.time.delayedCall(800, () => {
-					this.checkTileLogic(p.model, targetTile);
-				});
-			});
-
-			// unset interactiveness of tram tiles
-			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
-			tramTiles.forEach(tile => {
-				tile.disableInteractive();
-			});
-
-			// Tell backend (about cost or tileId seguramente?)
-		});
-		// brillan las de un grupo
+        // brillan las de un grupo
         EventBus.on('highlight-group', (groupIds: string[]) => {
             BoardEffects.setFocusByIds(this.tiles, groupIds, this, this.players);
         });
 
         // Evento para mostrar casillas cuando se pulsa el boton de administrar
         EventBus.on('open-property-selection-mode', (propertyIds: string[]) => {
+            EventBus.emit('hide-players-hud');
+
             EventBus.emit('dark-mode', true);
             BoardEffects.setFocusByIds(this.tiles, propertyIds, this, []);
             this.tiles.forEach(tile => {
