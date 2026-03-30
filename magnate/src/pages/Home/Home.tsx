@@ -69,6 +69,7 @@ export function Home() {
         <div className="p-8 flex justify-end items-center gap-4 " >
           <Button
             size="lg"
+            onClick={() => navigate("/profile")}
             className=" bg-[var(--color-background)]
                             hover:bg-[var(--color-background)]-800 
                             rounded-full text-white font-bold text-lg px-7

@@ -11,6 +11,7 @@ export class TramTile extends Tile {
         const w = config.width || 80;
         const h = config.height || 120;
 
+		this.setSize(w,h);
         
         this.nameText.setStyle({ 
             fontSize: `${Math.floor(w * 0.2)}px`,
