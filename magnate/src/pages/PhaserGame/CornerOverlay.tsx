@@ -27,14 +27,12 @@ export const CornerOverlay = () => {
     if (!propData) {return null;}
 
     const closeOverlay = () => {
-        EventBus.emit('close-overlay');
         setPropData(null);
+        EventBus.emit('close-overlay');
 		if (propData.tileText=='Tranvía') { // depends on UI: src/phaser/scenes/Board.ts
-			// Funcionamiento del tranvía
-			EventBus.emit('open-tram-overlay', { currentTileId: propData.id });
+		 	// Funcionamiento del tranvía
+		    EventBus.emit('open-tram-overlay', { currentTileId: propData.id });
 		}
-
-		setPropData(null);
     };
 
 	return ( 
