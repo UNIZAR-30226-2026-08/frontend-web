@@ -23,21 +23,20 @@ export class CameraController {
         this.mainCam.stopFollow();
 
         const duration = 1000;
-        const radians = Phaser.Math.DegToRad(degrees);
+        //const radians = Phaser.Math.DegToRad(degrees);
 
         this.mainCam.pan(token.x, token.y, duration, "Cubic.easeInOut");
         this.mainCam.zoomTo(zoom, 1500, "Cubic.easeInOut");
 
         this.scene.tweens.add({
             targets: this.mainCam,
-            rotation: - radians,
+            // rotation: - radians,
             duration: duration,
             ease: 'Cubic.easeInOut'
         });
 
         this.mainCam.once('camerapancomplete', () => {
             this.mainCam.startFollow(token, true, 0.08, 0.08);
-
             if (onArrived) { onArrived(); }
         });
     }
@@ -55,7 +54,7 @@ export class CameraController {
         this.mainCam.zoomTo(1, duration, "Cubic.easeInOut");
         this.scene.tweens.add({
             targets: this.mainCam,
-            rotation: 0,
+            //rotation: 0,
             duration: duration,
             ease: 'Cubic.easeInOut'
         });

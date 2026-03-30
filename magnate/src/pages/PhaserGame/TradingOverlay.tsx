@@ -75,6 +75,7 @@ export const TradingOverlay = () => {
             setTheirOffer({ money: 0, properties: [] });
             setIsMinimised(false);
             setShowProperties(false);
+            EventBus.emit('set-hud-clickable', false);
         };
         
         const handleTileSelected = (tile: any) => {
@@ -113,13 +114,16 @@ export const TradingOverlay = () => {
         setIsMinimised(false);
         setSelectingFor(null);
         EventBus.emit('dark-mode', false);
+        EventBus.emit('set-hud-clickable', false);
     };
 
     const startSelection = (who: 'me' | 'them') => {
         const player = who === 'me' ? sender : receiver;
         setSelectingFor(who);
         setIsMinimised(true);
+
         EventBus.emit('dark-mode', true);
+
         EventBus.emit('start-selection-mode', { 
             ownerId: player.id, 
             propertyIds: player.properties?.map((p: any) => p.id || p) || []
@@ -140,16 +144,16 @@ export const TradingOverlay = () => {
         <>
            {isMinimised && (
                 <div className="fixed z-[1001] pointer-events-auto animate-in slide-in-from-right-5 top-10 right-10">
-                    <div className="bg-white/70 border-2 border-[var(--color-primary)] px-8 py-8
-                                rounded-[30px] backdrop-blur-md flex flex-col items-center gap-2">
+                    <div className="px-8 py-8 rounded-[30px] backdrop-blur-md flex flex-col items-center gap-2"
+                        style={stripedBackgroundStyle} >
                         
                         <div className="text-center">
                            <h4 className="text-slate-800 font-black italic uppercase tracking-tighter text-sm">
                                 {selectingFor === 'me' ? (
-                                    <span className="text-[var(--color-primary)] text-[16px]">Tus propiedades</span>
+                                    <span className="text-[var(--color-background)] text-[16px]">Tus propiedades</span>
                                 ) : (
                                     <>
-                                        <span className="text-black text-[16px] block mb-1">Propiedades de:</span>
+                                        <span className="text-[var(--color-background)] text-[16px] block mb-1">Propiedades de:</span>
                                         <span className="text-slate-400 text-[16px] leading-none">
                                             {receiver?.name}
                                         </span>
@@ -159,9 +163,9 @@ export const TradingOverlay = () => {
                         </div>
                                     
                         <Button 
-                            onClick={(e) => { 
+                            onClick={() => { 
                                 setIsMinimised(false); 
-                                EventBus.emit('dark-mode'); 
+                                EventBus.emit('dark-mode', true);
                             }} 
                             className={`bg-[var(--color-primary)] text-[var(--color-text)] font-black text-[12px] px-5 py-2 rounded-full uppercase 
                                     ${bouncyAnimation}`}>
@@ -264,8 +268,8 @@ const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], 
 
             {/* propiedades */}
             <div style={paperStyle}
-                className={`min-h-[280px] border-2 border-slate-200 rounded-[32px] p-4 transition-all flex flex-col justify-between
-                    ${!hasProperties ? 'opacity-50 grayscale' : ''}`}>
+                className={`min-h-[350px] border-2 border-slate-200 rounded-[32px] p-4 transition-all flex flex-col justify-between
+                    ${!hasProperties ? 'opacity-70 grayscale' : ''}`}>
                 
                 <div className="flex flex-col gap-2 overflow-y-auto max-h-[300px] p-1">
                     {showProperties && offer.properties.length > 0 ? (
@@ -287,8 +291,8 @@ const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], 
                             </div>
                         ))
                     ) : (
-                        <div className="flex flex-col items-center justify-center text-center p-20 opacity-80">
-                            <p className="text-[14px] font-black uppercase tracking-widest text-gray-800">
+                        <div className="flex flex-col items-center justify-center text-center p-20">
+                            <p className="text-[14px] font-black uppercase tracking-widest text-gray-700">
                                 {hasProperties ? 'Selecciona activos' : 'Sin propiedades disponibles'}
                             </p>
                         </div>

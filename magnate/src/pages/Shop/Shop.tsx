@@ -106,11 +106,11 @@ function ShopSection({ title, items, onBuy }: any) {
                                         </div>
                                         
                                         <div className="text-center">
-                                            <h3 className="font-black uppercase text-[12px] text-black tracking-tight leading-none mb-1">
+                                            <h3 className="font-black uppercase text-[14px] text-black tracking-tight leading-none mb-1">
                                                 {item.name}
                                             </h3>
                                             <p className={`${isAvailable ? 'text-[var(--color-primary)]' : 'text-slate-400'} font-black text-md`}>
-                                                {isAvailable ? `${item.price} €` : 'Bloqueado'}
+                                                {isAvailable ? `${item.price} M` : 'Bloqueado'}
                                             </p>
                                         </div>
 
@@ -149,12 +149,23 @@ function ShopSection({ title, items, onBuy }: any) {
 const Confirm = ({ isOpen, title, price, onConfirm, onCancel }: any) => {
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     if (!isOpen) return null;
+    const stripedBackgroundStyle = { backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
+            repeating-linear-gradient(
+                -45deg,
+                #ffffff,
+                #ffffff 20px,
+                #f3f4f6 20px,
+                #f3f4f6 40px )`,
+        backgroundSize: 'cover'
+    };
 
     return (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 animate-in fade-in duration-200">
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onCancel} />
 
-            <div className="relative bg-white rounded-[40px] p-8 w-full max-w-[400px] flex flex-col items-center text-center">
+            <div className="relative rounded-[40px] p-8 w-full max-w-[400px] flex flex-col items-center text-center border-4 border-gray-200"
+                style={stripedBackgroundStyle}>
                 
                 <h3 className="text-[var(--color-background)] text-[18px] font-black uppercase italic tracking-widest block">
                     ¿Confirmar Compra?
@@ -162,7 +173,7 @@ const Confirm = ({ isOpen, title, price, onConfirm, onCancel }: any) => {
                 
                 <p className="text-slate-500 text-md font-medium mb-6">
                     Estás a punto de adquirir <span className="font-bold text-slate-800">{title}</span> por 
-                    <span className="text-[var(--color-primary)] font-black"> {price} €</span>
+                    <span className="text-[var(--color-primary)] font-black"> {price} M</span>
                 </p>
 
                 <div className="flex flex-col gap-3 ">

@@ -47,7 +47,6 @@ export function Home() {
   const modes = [
     { title: "Partida pública", sub: "Construye tu imperio", pos: "0% 0%", iconUrl: "/icons/online.svg", path: '/loading' },
     { title: "Partida privada", sub: "Compite con tus amigos", pos: "0% 0%", iconUrl: "/icons/gamepad.svg", path: '/private-room' },
-    { title: "Amigos", sub: "Gestiona tu red", pos: "100% 0%", iconUrl: "/icons/multi_player.svg", path: '/friends' },
     { title: "Tienda", sub: "Compra de cosméticos", pos: "0% 100%", iconUrl: "/icons/shop.svg", path: '/shop' },
   ];
 
@@ -84,12 +83,10 @@ export function Home() {
           </Button>
           <Button
             size="icon"
-            className="
-                            bg-[var(--color-background)] hover:bg-zinc-900 rounded-full flex items-center justify-center w-14 h-14 shadow-xl 
+            className="bg-[var(--color-background)] hover:bg-zinc-900 rounded-full flex items-center justify-center w-14 h-14 shadow-xl 
                             hover:-translate-y-0.5
                             active:translate-y-0
-                            transition-all duration-200
-                        " >
+                            transition-all duration-200" >
             <img src="/icons/gear-white.svg" className="w-6 h-6" alt="Back" />
           </Button>
         </div>
@@ -103,7 +100,7 @@ export function Home() {
               <Button
                 key={index}
                 onClick={() => navigate(mode.path)}
-			    sound={'button_main'}
+			          sound={'button_main'}
                 className={`
                     ${gridButtonEffect}
                     group relative 
@@ -120,15 +117,15 @@ export function Home() {
 
           {/* Amigos y Tienda */}
           <div className="flex flex-col gap-8 justify-center items-start w-full h-full py-16 pr-8">
-            {modes.slice(2, 4).map((mode, index) => (
+            {modes.slice(2, 3).map((mode, index) => (
               <Button
                 key={index}
                 onClick={() => navigate(mode.path)}
-			    sound={'button_main'}
+			          sound={'button_main'}
                 className={`
                     ${gridButtonEffect}
                     group relative 
-                    w-[95%] flex-1
+                    w-[95%] h-[60%]
                     p-0 overflow-hidden
                     rounded-[5rem] border-4 border-white
                     shadow-[0px_6px_0px_0px_rgba(0,0,0,0.15)]
