@@ -33,8 +33,6 @@ export const PlayersHUD = ({
         const handleShow = () => setIsVisible(true);
         const handleDarkMode = (active: boolean) => {
             setIsDarkMode(active);
-            if (active) setIsVisible(true); 
-            //if (!active) setCanClick(false);
         };
 
         const handleSetClickable = (active: boolean) => {

@@ -99,7 +99,7 @@ export const TramOverlay = () => {
 			{/* Contenedor con ancho fijo para asegurar que el texto y botones respiren */}
 			<div className="w-[350px] animate-in zoom-in-95 duration-300 ease-out">
 				<div
-					className="rounded-[40px] flex flex-col overflow-hidden shadow-2xl"
+					className="rounded-[40px] flex flex-col overflow-hidden shadow-2xl border-2 border-gray-200"
 					style={stripedBackgroundStyle}
 				>
 					{/* Contenido centrado con padding equilibrado */}
@@ -118,19 +118,19 @@ export const TramOverlay = () => {
 							{/* Botón de Acción Principal */}
 							<Button
 								onClick={confirmTramTravel}
-								className={`w-full h-[70px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[13px] tracking-wide rounded-full shadow-lg flex items-center justify-center px-4 ${bouncyAnimation}`}
+								className={`w-full h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[14px] tracking-wide rounded-full shadow-lg flex items-center justify-center px-4 ${bouncyAnimation}`}
 							>
 								<span className="leading-tight">
 									{selectedTram.id === currentTileId
 										? 'Permanecer aquí'
-										: 'Cambiar de estación (50€)'}
+										: 'Cambiar de estación (50M)'}
 								</span>
 							</Button>
 
 							{/* Botón de Cancelar / Volver */}
 							<Button
 								onClick={reOpenOverlay}
-								className={`w-full h-[60px] bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black uppercase text-[11px] tracking-wider rounded-full border border-red-500/20 transition-all ${bouncyAnimation}`}
+								className={`w-full h-[60px] bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black uppercase text-[14px] tracking-wider rounded-full border border-red-500/20 transition-all ${bouncyAnimation}`}
 							>
 								Elegir otra estación
 							</Button>

@@ -224,7 +224,8 @@ export const TradingOverlay = () => {
                             />
                         </div>
                         <div className="flex justify-center items-center p-8">
-                            <Button className={`w-[150px] h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[14px] 
+                            <Button onClick={closeTrading}
+                            className={`w-[150px] h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[14px] 
                                             rounded-full ${bouncyAnimation}`}>
                                 Proponer Trato
                             </Button>
