@@ -29,10 +29,12 @@ export const CornerOverlay = () => {
     const closeOverlay = () => {
         setPropData(null);
         EventBus.emit('close-overlay');
-		if (propData.tileText=='Tranvía') { // depends on UI: src/phaser/scenes/Board.ts
+		if (propData.tileText == 'Tranvía') { // depends on UI: src/phaser/scenes/Board.ts
 		 	// Funcionamiento del tranvía
 		    EventBus.emit('open-tram-overlay', { currentTileId: propData.id });
-		}
+		} else if (propData.tileText == 'Parking Gratuito') {
+            EventBus.emit('collect-parking-money', { currentTileId: propData.id  });
+        }
     };
 
 	return ( 

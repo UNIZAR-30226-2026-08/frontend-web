@@ -19,7 +19,7 @@ export class CameraController {
         //this.uiCam.setScroll(0, 0); // fijar posición, nunca se desplaza
     }
 
-    public followToken(token: any, zoom: number = 2.2, degrees: number = 0,  onArrived?: () => void) {
+    public followToken(token: any, zoom: number = 2.2, onArrived?: () => void) {
         this.mainCam.stopFollow();
 
         const duration = 1000;

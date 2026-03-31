@@ -1,8 +1,12 @@
 import { Tile } from './Tile';
 import { IPropertyTile } from '../types/TileTypes';
+import { BuildingToken } from './BuildingToken';
 
 export class PropertyTile extends Tile {
     private ownerMarker: Phaser.GameObjects.Polygon | null = null;
+    
+    private buildings: BuildingToken[] = [];
+    private readonly MAX_HOUSES = 4;
 
     constructor(scene: Phaser.Scene, config: IPropertyTile) {
         super(scene, config);
@@ -72,6 +76,38 @@ export class PropertyTile extends Tile {
         
         this.ownerMarker = marker as any;
     }
-
     
+    public setConstructionLevel(level: number) {
+        this.clearBuildings();
+
+        if (level <= 0) return; // Nivel base
+
+        const tileHeight = this.tileConfig.height || 120;
+        const posY = -(tileHeight / 2) + 15;
+
+        // Nivel = 5 -> Hotel
+        if (level === this.MAX_HOUSES + 1) {
+            const hotel = new BuildingToken(this.scene, 0, posY, 'hotel');
+            this.add(hotel);
+            this.buildings.push(hotel);
+        } 
+        // Nivel es 1-4, -> dibujamos casas
+        else {
+            const spacing = 19;
+            const totalOccupiedWidth = (level - 1) * spacing;
+            const startX = -(totalOccupiedWidth / 2);
+
+            for (let i = 0; i < level; i++) {
+                const posX = startX + (i * spacing);
+                const house = new BuildingToken(this.scene, posX, posY, 'house');
+                this.add(house);
+                this.buildings.push(house);
+            }
+        }
+    }
+    
+    public clearBuildings() {
+        this.buildings.forEach(b => b.destroy());
+        this.buildings = [];
+    }
 }
