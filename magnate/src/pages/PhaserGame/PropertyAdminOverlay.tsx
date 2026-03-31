@@ -49,6 +49,16 @@ export const PropertyAdminOverlay = () => {
         setIsMortgaged(!isMortgaged);
     };
 
+    const handleConfirm = () => {
+        EventBus.emit('execute-property-build', {
+            tileId: propData.id,
+            level: constructionLevel,
+            isMortgaged: isMortgaged
+        });
+        setPropData(null); 
+        EventBus.emit('dark-mode', false);
+    };
+
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm p-4">
             <div className="flex flex-col items-center gap-8">
@@ -66,7 +76,8 @@ export const PropertyAdminOverlay = () => {
                     />
                 </div>
                 <div className='flex gap-4'>
-                    <Button onClick={() => { setPropData(null); EventBus.emit('dark-mode', false);}}
+                    <Button 
+                        onClick={handleConfirm}   
                         className={`px-9 py-8 bg-[var(--color-primary)] select-none text-white font-black uppercase rounded-full shadow-2xl 
                                 ${bouncyAnimation} transition-all`}>
                         <div className="flex flex-col items-center">

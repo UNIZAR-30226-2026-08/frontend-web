@@ -25,12 +25,22 @@ import { SoundId } from '@/context/AudioContext';
 import { CameraController } from '../utils/CameraController';
 import { BoardEffects } from '../utils/BoardEffects';
 
+import { CoinToken } from '../objects/CoinToken';
+import { BillToken } from '../objects/BillToken';
+
 const CORNER_VISUALS: Map<Function, CornerTileContent> = new Map ([
 	[GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar', sound: 'jail_door'}],
 	[JailTile, { image: 'images/secretary.png', tileText: 'Secretaría', buttonText: 'Comenzar turno', sound: 'jail_turn_in'}],
 	[ParkingTile, { image: 'images/caravan.png', tileText: 'Parking Gratuito', buttonText: 'Recoger dinero', sound: 'parking'}],
 	[TramTile, { image: 'icons/tram.svg', tileText: 'Tranvía', buttonText: 'Gestionar desplazamiento', sound: 'tram_bell'}],
 ]);
+
+const HUD_POSITIONS: Record<string, { x: number, y: number }> = {
+    "0001": { x: 1660, y: 250 },
+    "0002": { x: 1660, y: 450 },
+    "0003": { x: 1660, y: 650 },
+    "0004": { x: 1660, y: 850 },
+};
 
 export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
@@ -45,6 +55,10 @@ export class Board extends Phaser.Scene {
     private selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
 	private hasTramTicket: boolean = true; // TODO afinaresto tb por player(?) ig es en vdd
 
+    // Para animaciones
+    private pendingParkingData: { tile: Tile, playerId: string } | null = null;
+    private pendingBillData: { playerId: string, bills: number , amount: string } | null = null;
+
     constructor() {
         super({ key: 'BoardScene' });
     }
@@ -58,7 +72,6 @@ export class Board extends Phaser.Scene {
     }
 
     preload() { // precargar imagenes...
-        // this.load.image('background', 'images/background_ingame.png');
         this.load.video('background_video', 'videos/game_background.webm');
         this.load.json('board', 'data/board.json');
         this.load.json('fantasyCards', 'data/fantasyCard.json');
@@ -115,8 +128,6 @@ export class Board extends Phaser.Scene {
             resizeVideo(gameSize.width, gameSize.height);
         }, this);
 
-
-
         const rawColors = fullData.playerColors as string[];
         this.colorPalette = rawColors.map(c => parseInt(c.replace('#', '0x')));
 
@@ -169,11 +180,35 @@ export class Board extends Phaser.Scene {
         // Evento para marcar quien compra propiedad  ----------------------------
         EventBus.on('property-bought', this.handlePurchase, this);
         this.setupEventListeners();
-        
-        EventBus.on('close-overlay', () => { // Evento para que camara vuelva a la vista general
+
+        // Evento para que camara vuelva a la vista general ----------------------------
+        EventBus.on('close-overlay', () => {
             this.cameraController.resetView(2000);
             this.time.delayedCall(2000, () => {
                 this.showUI();
+
+                if (this.pendingBillData) {
+                    this.BillAnimation(this.pendingBillData.playerId, 15, this.pendingBillData.amount);
+                    this.pendingBillData = null;
+                }
+                if (this.pendingParkingData) {
+                    this.CoinAnimation(
+                        this.pendingParkingData.tile, 
+                        this.pendingParkingData.playerId
+                    );
+                    this.pendingParkingData = null; 
+                }
+            });
+        });
+
+
+        // DEUBUG: para animacion dinero  ----------------------------
+        const debugKeys = ['ONE', 'TWO', 'THREE', 'FOUR'];
+        debugKeys.forEach((key, index) => {
+            this.input.keyboard?.on(`keydown-${key}`, () => {
+                const id = `000${index + 1}`;
+                console.log(`[DEBUG] Test HUD Pos ${id}`);
+                this.BillAnimation(id, 6, "-1100M");
             });
         });
     }
@@ -203,7 +238,6 @@ export class Board extends Phaser.Scene {
         // TODO: Esto es solo para probar el movimiento
         token.on('pointerdown', () => {
             this.handlePlayerClick(id);
-            //this.handlePlayerClickDebug(id); // Para debugear si quiero enviarlo a una casilla en concreto
         });
 
         this.players.push({ model, token });
@@ -276,14 +310,14 @@ export class Board extends Phaser.Scene {
         const hopTile = this.tiles[hopIndex];
 
         // DEBUG: pasa por 'todas' las casillas
-        const nextIndex = (currentIndex + 3) % this.tiles.length;
-        const targetTile = this.tiles[nextIndex];
-        const nextTileId = targetTile.tileConfig.id;
+        // const nextIndex = (currentIndex + 3) % this.tiles.length;
+        // const targetTile = this.tiles[nextIndex];
+        // const nextTileId = targetTile.tileConfig.id;
 
         // DEBUG: va a la casilla dependiendo del tipo
-        // const targetIndex = this.tiles.findIndex(t => t instanceof TramTile);
-        // const targetTile = this.tiles[targetIndex];
-        // const nextTileId = targetTile.tileConfig.id;
+        const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile);
+        const targetTile = this.tiles[targetIndex];
+        const nextTileId = targetTile.tileConfig.id;
         
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
@@ -317,9 +351,7 @@ export class Board extends Phaser.Scene {
         //     this.checkTileLogic(p.model, targetTile);
         // });
 
-        const tileRotation = targetTile.tileConfig.rotation || 0; // TODO: revisar giro de la cámara dependiendo de la rotación de la ficha
-
-        this.cameraController.followToken(p.token, 2.2, tileRotation, () => {
+        this.cameraController.followToken(p.token, 2.2, () => {
             p.model.move(nextTileId);
             p.token.moveTo(path, () => {
                 this.time.delayedCall(800, () => {
@@ -330,26 +362,6 @@ export class Board extends Phaser.Scene {
 
         // this.showToast(`¡${p.model.name} ha comprado la casilla!`);
     }
-
-    // Método para debug, se envía a la primera casilla de un tipo específico
-    // public handlePlayerClickDebug(playerId: string) {
-    //     const p = this.players.find(pair => pair.model.id === playerId);
-    //     if (!p) return;
-
-    //     // Buscamos la primera casilla de tipo __
-	// 	const fantasyIndex = this.tiles.findIndex(t => t instanceof PropertyTile);
-    //     p.model.currentTileIndex = fantasyIndex;
-        
-    //     const targetTile = this.tiles[fantasyIndex];
-
-
-    //     p.token.moveTo(targetTile.x, targetTile.y);
-
-    //     // Ejecutamos la lógica de la casilla
-    //     this.time.delayedCall(500, () => {
-    //         this.checkTileLogic(p.model, targetTile);
-    //     });
-    // }
 
     public async sendToSecretary(playerId: string) {
         const p = this.players.find(pair => pair.model.id === playerId);
@@ -488,7 +500,7 @@ export class Board extends Phaser.Scene {
         }
 
 		else if (tile instanceof StartTile) {}
-
+        
 		else {
 			const cornerConfig = CORNER_VISUALS.get(tile.constructor);
 			if (tile instanceof TramTile) { 
@@ -500,7 +512,7 @@ export class Board extends Phaser.Scene {
 				else {
 					this.hasTramTicket = false;
 				}
-			}
+			}            
 			console.log("tengo ticket");
             EventBus.emit('show-corner-tile', {
 				image: cornerConfig.image,
@@ -666,11 +678,6 @@ export class Board extends Phaser.Scene {
             });
         });
 
-        // brillan las de un grupo
-        EventBus.on('highlight-group', (groupIds: string[]) => {
-            BoardEffects.setFocusByIds(this.tiles, groupIds, this, this.players);
-        });
-
         // Evento para mostrar casillas cuando se pulsa el boton de administrar
         EventBus.on('open-property-selection-mode', (propertyIds: string[]) => {
             BoardEffects.setFocusByIds(this.tiles, propertyIds, this, []);
@@ -700,6 +707,7 @@ export class Board extends Phaser.Scene {
             });
         });
         
+        // Evento para oscurecer tablero (active = true)
         EventBus.on('dark-mode', (active: boolean = true) => {
             if (active) {
                 // Oscurece todo el tablero
@@ -766,6 +774,128 @@ export class Board extends Phaser.Scene {
 
 			// Tell backend (about cost or tileId seguramente?)
 		});
+
+       
+        // Construir casas/hoteles
+        EventBus.on('execute-property-build', (data: { tileId: string, level: string, isMortgaged: boolean }) => {
+            const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
+            
+            if (tile && tile instanceof PropertyTile) {
+                // Mapeamos el string del Overlay a un número para el método setConstructionLevel
+                const levelMap: Record<string, number> = {
+                    'base': 0, 'house1': 1, 'house2': 2, 'house3': 3, 'house4': 4, 'hotel': 5
+                };
+                const numericLevel = levelMap[data.level] ?? 0;
+                tile.setConstructionLevel(numericLevel);
+            }
+        });
+
+        // Cuando se cae en parking, animacion dinero 
+        EventBus.on('collect-parking-money', (data: { currentTileId: string }) => {
+            const parkingTile = this.tiles.find(t => t.tileConfig.id === data.currentTileId);
+            const currentPlayer = this.getLocalPlayer();
+
+            if (parkingTile && currentPlayer) {
+                this.pendingParkingData = { 
+                tile: parkingTile, 
+                playerId: currentPlayer.model.id };
+            }
+        });
+
+        EventBus.on('animate-bill', (data: { playerId: string, amount?: string }) => {
+            this.BillAnimation(data.playerId, 15, data.amount);
+        });
     }
+
+    // Animación monedas (para parking)
+    public CoinAnimation(tile: Tile, playerId: string, count: number = 10) {
+        const playerPair = this.players.find(p => p.model.id === playerId);
+        if (!playerPair) return;
+
+        const { token } = playerPair;
+        const scene = this;
+
+        for (let i = 0; i < count; i++) {
+            this.time.delayedCall(i * 80, () => {
+                
+                const coin = new CoinToken(this, tile.x, tile.y, 15);
+                coin.setDepth(2000);
+
+                const targetX = token.x + Phaser.Math.Between(-20, 20);
+                const targetY = token.y + Phaser.Math.Between(-20, 20);
+                const midY = Math.min(tile.y, targetY) - 150;
+
+                scene.tweens.add({
+                    targets: coin,
+                    x: targetX,
+                    y: midY,
+                    scale: 1.2,
+                    duration: 600,
+                    ease: 'Cubic.easeOut',
+                    onComplete: () => {
+                         coin.destroy()
+                        
+                    }
+                });
+            });
+        }
+    }
+
+    public BillAnimation(playerId: string, count: number = 6, textAmount?: string) {
+
+        const hudPos = HUD_POSITIONS[playerId] || { x: this.scale.width - 100, y: this.scale.height / 2 };
+        const isNegative = textAmount?.startsWith('-');
+        const color = isNegative ? '#ff4d4d' : '#22c55e';
+
+        for (let i = 0; i < count; i++) {
+            this.time.delayedCall(i * 100, () => {
+                // Creamos el billete
+                const bill = new BillToken(this, hudPos.x, hudPos.y, 70, 40);
+                
+                bill.setScrollFactor(0);
+                bill.setDepth(6000);
+                bill.setAlpha(1);
+                bill.setScale(0.5);
+
+                this.tweens.add({
+                    targets: bill,
+                    x: bill.x - Phaser.Math.Between(150, 250),
+                    y: bill.y + Phaser.Math.Between(-100, 100),
+                    scale: 1.2,
+                    angle: Phaser.Math.Between(-20, 20),
+                    duration: 1000,
+                    ease: 'Cubic.easeOut',
+                    onComplete: () => {
+                        this.tweens.add({
+                            targets: bill,
+                            alpha: 0,
+                            y: bill.y + 50,
+                            duration: 500,
+                            onComplete: () => bill.destroy()
+                        });
+                    }
+                });
+            });
+        }
+        
+        if (textAmount) { // Cantidad de dinero que se muestra
+            const txt = this.add.text(hudPos.x - 120, hudPos.y, textAmount, {
+                fontSize: '40px',
+                fontStyle: 'bold',
+                color: color,
+                stroke: '#000',
+                strokeThickness: 5
+            }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(7000);
+
+            this.tweens.add({
+                targets: txt,
+                x: txt.x - 40,
+                alpha: 0,
+                duration: 2000,
+                onComplete: () => txt.destroy()
+            });
+        }
+    }
+
 }
 

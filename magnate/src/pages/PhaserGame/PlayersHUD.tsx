@@ -13,14 +13,13 @@ interface PlayerInitData {
 interface PlayersHUDProps {
     players: PlayerInitData[];
     dynamicScale: number;
-    isClickable?: boolean;
+    // isClickable?: boolean;
     onPlayerClick?: (playerId: string) => void;
 }
 
 export const PlayersHUD = ({ 
-    players, 
-    dynamicScale, 
-    //isClickable = false, 
+    players,  
+    dynamicScale, //isClickable = false, 
     onPlayerClick 
 }: PlayersHUDProps) => {
     const { playSound } = useAudio();
@@ -29,15 +28,11 @@ export const PlayersHUD = ({
     const [canClick, setCanClick] = useState(false);
 
     useEffect(() => {
+       
         const handleHide = () => setIsVisible(false);
-        const handleShow = () => setIsVisible(true);
-        const handleDarkMode = (active: boolean) => {
-            setIsDarkMode(active);
-        };
-
-        const handleSetClickable = (active: boolean) => {
-            setCanClick(active);
-        };
+        const handleShow = () => {setIsVisible(true);}
+        const handleDarkMode = (active: boolean) => { setIsDarkMode(active); };
+        const handleSetClickable = (active: boolean) => { setCanClick(active); };
 
         EventBus.on('hide-players-hud', handleHide);
         EventBus.on('show-players-hud', handleShow);
@@ -81,7 +76,8 @@ export const PlayersHUD = ({
             }}
         >
             {players?.map((player) => (
-                <div key={player.id} className={canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}>
+                <div key={player.id} 
+                    className={canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}>
                     <PlayerHUD 
                         playerId={player.id} 
                         initialName={player.name} 
