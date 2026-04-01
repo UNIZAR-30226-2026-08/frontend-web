@@ -1,13 +1,13 @@
-import { IPlayer } from '../interfaces/IPlayer';
 import { EventBus } from '@/EventBus';
 
-export class PlayerModel implements IPlayer {
+export class PlayerModel {
     public id: string;
     public name: string;
     public color: number;
-    public balance: number = 200;
+    public balance: number = 200; // TODO: No se yo lo de hardcodear este número
     public properties: string[] = [];
     public currentTileId: string = "000"; 
+    public jailTurnCount: number = 0;
 
     constructor(id: string, name: string, color: number) {
         this.id = id;
@@ -17,13 +17,15 @@ export class PlayerModel implements IPlayer {
 
     public move(targetTileId: string) {
         this.currentTileId = targetTileId;
+        this.emitUpdate(); // TODO: Todavía hay que ver si lo vamos a hacer así
     }
 
     private emitUpdate() {
         EventBus.emit('player-updated', {
             id: this.id,
             balance: this.balance,
-            properties: [...this.properties]
+            properties: [...this.properties],
+            jailTurnCount: this.jailTurnCount
         });
     }
 }
