@@ -17,8 +17,7 @@ import { PlayerModel } from '../models/PlayerModel';
 import { PlayerToken } from '../objects/PlayerToken';
 import { EventBus } from '@/EventBus'
 
-import { create3DDice } from '../objects/Dice3D';
-import { create3DDiceBus } from '../objects/DiceBus3D';
+import { DiceManager } from '../managers/DiceManager';
 
 import { SoundId } from '@/context/AudioContext';
 
@@ -41,7 +40,7 @@ export class Board extends Phaser.Scene {
     private colorPalette: number[] = [];
     private fantasyCards: any[] = []; // TODO: rellenar con data/fantasyCard.json o recibir de backend
     private cameraController!: CameraController; // TODO: para las cámaras
-    private isRolling: boolean = false;
+    private diceManager!: DiceManager;
     private localPlayerId: string | null = null;
 
     // kinda global (handlePlayerClick)
@@ -94,6 +93,7 @@ export class Board extends Phaser.Scene {
         const { width, height } = this.scale;
 
         this.animationManager = new AnimationManager(this);
+        this.diceManager = new DiceManager(this);
         
         const bgVideo = this.add.video(width / 2, height / 2, 'background_video');
         bgVideo.setOrigin(0.5, 0.5);
@@ -536,110 +536,12 @@ export class Board extends Phaser.Scene {
     }
 
     private handleDiceRoll() {
-        if (this.isRolling) return;
-
-        this.hideUI();
-
-        this.isRolling = true;
-
-        EventBus.emit('play-sfx', 'dice_shake');
-
-        BoardEffects.setFocusByIds(this.tiles, [], this, this.players);
-
-        const dice1 = create3DDice(960 - 220, 540, this, 1000);
-        const dice2 = create3DDice(960, 540, this, 1150); 
-        const dice3 = create3DDiceBus(960 + 220, 540, this, 1300);
-
-        dice1.mesh.setDepth(99999);
-        dice2.mesh.setDepth(99999);
-        dice3.mesh.setDepth(99999);
-
-        let completedRolls = 0;
-        let val1 = 0;
-        let val2 = 0;
-        let val3 = 0;
-
-        const checkDone = () => {
-            completedRolls++;
-
-            if (completedRolls === 3) {
-                this.time.delayedCall(1000, () => {
-                    const bgX = 40;
-                    const bgY = 40;
-                    const diceBg = this.add.graphics();
-                    diceBg.fillStyle(0x000000, 0.7);
-                    diceBg.fillRoundedRect(bgX, bgY, 300, 100, 16);
-                    diceBg.setDepth(99998);
-                    diceBg.setScrollFactor(0);
-                    diceBg.setAlpha(0);
-
-                    this.tweens.add({
-                        targets: diceBg,
-                        alpha: 1,
-                        duration: 400
-                    });
-
-                    const scaleFactor = 0.4;
-                    const moveDuration = 800;
-
-                    const moveDiceToCorner = (dieObj: any, targetX: number, targetY: number, onCompleteCallback?: () => void) => {
-                        this.tweens.add({
-                            targets: dieObj.mesh,
-                            x: targetX,
-                            y: targetY,
-                            scaleX: dieObj.mesh.scaleX * scaleFactor,
-                            scaleY: dieObj.mesh.scaleY * scaleFactor,
-                            scaleZ: dieObj.mesh.scaleZ * scaleFactor,
-                            duration: moveDuration,
-                            ease: 'Cubic.easeOut',
-                            onComplete: onCompleteCallback
-                        });
-                    };
-
-                    EventBus.emit('play-sfx', 'dice_throw');
-
-                    moveDiceToCorner(dice1, bgX + 60, bgY + 50);
-                    moveDiceToCorner(dice2, bgX + 150, bgY + 50);
-                    
-                    moveDiceToCorner(dice3, bgX + 240, bgY + 50, () => {
-                        try {
-                            const myPlayer = this.getLocalPlayer();
-                            if (myPlayer) {
-                                // DEBUG
-                                BoardEffects.setFocusByIds(this.tiles, ["003", "006", "009"], this, this.players);
-                            }
-                        } catch (error) {
-                            console.error(error);
-                        } finally {
-                            this.time.delayedCall(3000, () => {
-                                this.tweens.add({
-                                    targets: [diceBg, dice1.mesh, dice2.mesh, dice3.mesh],
-                                    alpha: 0,
-                                    duration: 500,
-                                    onComplete: () => {
-                                        diceBg.destroy();
-                                        dice1.mesh.destroy();
-                                        dice2.mesh.destroy();
-                                        dice3.mesh.destroy();
-                                        
-                                        BoardEffects.setFocusByIds(this.tiles, null, this);
-                                        this.isRolling = false; 
-
-                                        EventBus.emit('dice-roll-complete');
-
-                                        this.showUI();
-                                    }
-                                });
-                            });
-                        }
-                    });
-                });
-            }
-        };
-
-        dice1.roll((val) => { val1 = val; checkDone(); });
-        dice2.roll((val) => { val2 = val; checkDone(); });
-        dice3.roll((val) => { val3 = val; checkDone(); });
+        // Probamos a ver si desaparecen los dados tras 8 seg.
+        this.diceManager.handleDiceRoll(this.tiles, this.players, [1, 2, 6]);
+        // this.diceManager.handleJailDiceRoll(this.tiles, this.players, [1, 1]);
+        this.time.delayedCall(8000, () => {
+            EventBus.emit('clear-dice');
+        });
     }
 
     // Marcador para cada casilla que compra un player 
@@ -819,4 +721,3 @@ export class Board extends Phaser.Scene {
     }
 
 }
-

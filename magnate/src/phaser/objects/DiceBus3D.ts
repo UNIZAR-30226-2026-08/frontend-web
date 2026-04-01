@@ -15,10 +15,11 @@ export const create3DDiceBus = (x: number, y: number, scene: Phaser.Scene, durat
 
     return {
         mesh: dice,
-        roll: (callback?: (val: number) => void) => {
+        roll: (callback?: (val: number) => void, forcedValue?: number) => {
             if (!diceIsRolling) {
                 diceIsRolling = true;
-                const diceRoll = Phaser.Math.Between(1, 6);
+                // Forzamos a que salga el número que queremos
+                const diceRoll = forcedValue !== undefined ? forcedValue : Phaser.Math.Between(1, 6);
 
                 scene.add.tween({
                     targets: shadowFX,
