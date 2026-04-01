@@ -7,6 +7,7 @@ import { CornerOverlay } from "./CornerOverlay";
 import { ServiceOverlay } from "./ServiceOverlay";
 import { AuctionOverlay } from './AuctionOverlay';
 import { TradingOverlay  } from './TradingOverlay';
+import { TradeRequestOverlay } from './TradeRequestOverlay';
 import { TramOverlay  } from './TramOverlay';
 import { PlayersHUD } from './PlayersHUD';
 import { ControlsHUD } from './ControlsHUD';
@@ -109,6 +110,7 @@ export const PhaserGame = () => {
             <ServiceOverlay />
             <AuctionOverlay />
             <TradingOverlay />
+            <TradeRequestOverlay />
             <TramOverlay />
             <PropertyAdminOverlay />
             <GameOver />

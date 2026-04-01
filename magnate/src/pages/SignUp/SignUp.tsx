@@ -1,19 +1,10 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 
 export function SignUp() {
     // State to capture form data
     const [username, setUsername] = useState<string>('');
-    const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
     
@@ -26,7 +17,7 @@ export function SignUp() {
             alert("Las contraseñas no coinciden");
             return;
         }
-        console.log('Registro:', {username, email, password});
+        console.log('Registro:', {username, password});
     };
 
     return (
@@ -36,7 +27,7 @@ export function SignUp() {
                     <img 
                         src="/src/assets/images/logo.png" 
                         alt="Logo Magnate" 
-                        className="w-full h-full mb-32 object-contain" 
+                        className="w-full h-full mb-28 object-contain" 
                     />
                     <form onSubmit={handleSubmit} className="space-y-6">
                         
@@ -52,24 +43,6 @@ export function SignUp() {
                             </Input>
                             <img 
                                 src="/icons/single_player.svg" 
-                                alt="icon" 
-                                className="absolute right-4 w-10 h-10 pointer-events-none  top-1/2 -translate-y-7" 
-                            />
-                            
-                        </div>
-
-                        <div className="space-y-2 relative flex items-center ">
-                            
-                            <Input className='border-[5px] h-14 px-8 border-[var(--color-bordes)]
-                            w-full text-[22px] font-bold text-black'
-                                id="email"
-                                type="email"
-                                placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}>  
-                            </Input>
-                            <img 
-                                src="/icons/email.svg" 
                                 alt="icon" 
                                 className="absolute right-4 w-10 h-10 pointer-events-none  top-1/2 -translate-y-7" 
                             />
