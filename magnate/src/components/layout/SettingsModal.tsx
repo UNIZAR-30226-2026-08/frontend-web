@@ -76,7 +76,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     );
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-auto">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-auto">
             <div 
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
                 onClick={handleClose}

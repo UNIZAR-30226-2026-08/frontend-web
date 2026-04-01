@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { SettingsModal } from "@/components/layout/SettingsModal";
 
 const ModeContent = ({ mode, gridImageUrl }) => (
   <>
@@ -35,6 +36,7 @@ const ModeContent = ({ mode, gridImageUrl }) => (
 export function Home() {
   const navigate = useNavigate();
   const gridImageUrl = "src/assets/bg_city_white.jpg";
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const gridButtonEffect = `
         transition-all duration-300 ease-out
@@ -81,8 +83,10 @@ export function Home() {
             <img src="/icons/user-white.svg" className="w-9 h-9" alt="White" />
             Perfil
           </Button>
+          {/* Ajustes */}
           <Button
             size="icon"
+            onClick={() => setIsSettingsOpen(true)}
             className="bg-[var(--color-background)] hover:bg-zinc-900 rounded-full flex items-center justify-center w-14 h-14 shadow-xl 
                             hover:-translate-y-0.5
                             active:translate-y-0
@@ -115,7 +119,7 @@ export function Home() {
             ))}
           </div>
 
-          {/* Amigos y Tienda */}
+          {/* Tienda */}
           <div className="flex flex-col gap-8 justify-center items-start w-full h-full py-16 pr-8">
             {modes.slice(2, 3).map((mode, index) => (
               <Button
@@ -138,6 +142,11 @@ export function Home() {
 
         </div>
       </div>
+       <SettingsModal 
+          isOpen={isSettingsOpen} 
+          onClose={() => setIsSettingsOpen(false)} 
+        />
     </div>
+    
   );
 }

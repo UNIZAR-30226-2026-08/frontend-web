@@ -7,7 +7,7 @@ export function Login() {
     const navigate = useNavigate();
 
     // State to capture form data
-    const [email, setEmail] = useState<string>('');
+    const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
@@ -15,7 +15,7 @@ export function Login() {
     // Handle form submission
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Login:', {email, password });
+        console.log('Login:', {username, password });
         navigate('/home');
     };
 
@@ -26,21 +26,21 @@ export function Login() {
                     <img 
                         src="/src/assets/images/logo.png" 
                         alt="Logo Magnate" 
-                        className="w-full h-full mb-32 " 
+                        className="w-full h-full mb-28" 
                     />
                     <form onSubmit={handleSubmit} className="space-y-6">
                         
                         <div className="space-y-2 relative flex items-center ">
                             
                             <Input className='border-[5px] h-14 px-8 border-[var(--color-bordes)] w-full font-bold text-[22px] text-black'
-                                id="email"
-                                type="email"
-                                placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}>  
+                                id="username"
+                                type="text"
+                                placeholder="Nombre de usuario"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}>  
                             </Input>
                             <img 
-                                src="/icons/email.svg" 
+                                src="/icons/single_player.svg" 
                                 alt="icon" 
                                 className="absolute right-4 w-10 h-10 pointer-events-none  top-1/2 -translate-y-7" 
                             />
