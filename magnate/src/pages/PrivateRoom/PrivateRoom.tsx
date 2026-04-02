@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
@@ -26,9 +27,11 @@ const ModeContent = ({ mode }: { mode: any }) => (
   </>
 );
 
-
 export function PrivateRoom () {
     
+	const codeRef = useRef<HTMLInputElement>(null);
+	const navigate = useNavigate();
+
     const backgroundImageUrls = {
         join: "/src/assets/images/join.png", 
         host: "/src/assets/images/host.png",
@@ -52,11 +55,35 @@ export function PrivateRoom () {
         }
     }
 
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+
+		const cInput = codeRef.current;
+
+		// room does not exist
+		if (roomCode === "1234") {
+			cInput.setCustomValidity("No hay ninguna sala activa con ese código");
+			cInput.reportValidity();
+			return;
+		}
+
+		// full room
+		if (roomCode === "12345") {
+			cInput.setCustomValidity("No hay hueco para jugar en la sala con ese código");
+			cInput.reportValidity();
+			return;
+		}
+
+		console.log('correct room login:', {roomCode});
+		navigate('/lobby');
+	};
+
     return (
         <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none">
             <PageHeader title="Selecciona el modo" />
     
-            <div className="grid grid-cols-1 grid-rows-1 gap-10 py-10 px-10 flex justify-items-center "
+            <form onSubmit={handleSubmit} 
+			className="grid grid-cols-1 grid-rows-1 gap-10 py-10 px-10 flex justify-items-center "
                 style={{
                     height: "calc(100vh - var(--header-height))",
                     marginTop: "var(--header-height)",
@@ -104,9 +131,13 @@ export function PrivateRoom () {
                         <div className="animate-in slide-in-from-bottom-4 duration-500">
                             <Input                 
                                 id="room-code"
+								ref={codeRef}
                                 placeholder="1234567890" 
                                 value={roomCode}
-                                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                                onChange={(e) => {
+										setRoomCode(e.target.value);
+										if (codeRef.current) codeRef.current.setCustomValidity("");
+								}}
                                 className="w-[200px] h-16 text-center text-[22px] font-bold border-[5px] 
                                 border-[var(--color-bordes)] text-black select-text relative z-50"
                             />
@@ -126,7 +157,7 @@ export function PrivateRoom () {
                     </Button>
                 </div>
                 
-            </div>
+            </form>
         </div>
 
     );

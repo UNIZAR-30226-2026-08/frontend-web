@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +25,7 @@ const ModeContent = ({ mode, gridImageUrl }) => (
 export function Lobby() {
     const gridImageUrl = "src/assets/bg_city_white.jpg";
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+	const navigate = useNavigate();
 
     const players = [
         { title: "usuario1", pos: "0% 0%", isBot:false },
@@ -121,6 +123,7 @@ export function Lobby() {
                 </div>
             <div className='flex justify-center p-3 w-full'>
                 <Button type="submit" variant='magnate'
+						onClick={ () => {navigate('/phaser-game');}}
                         className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold w-[350px]
                         ${bouncyAnimation} `}> 
                     Comenzar juego

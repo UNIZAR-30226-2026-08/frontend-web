@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { EventBus } from '@/EventBus';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion'; // Para movimiento
@@ -13,6 +14,8 @@ export function GameOver() {
     const [players, setPlayers] = useState<any[]>([]);
     const [stepIndex, setStepIndex] = useState(-1);
     const [isVisible, setIsVisible] = useState(false);
+
+	const navigate = useNavigate();
 
     // --- LÓGICA DEBUG ---
     useEffect(() => {
@@ -129,7 +132,10 @@ export function GameOver() {
 
                 <div className="mt-12 flex justify-center">
                     <Button 
-                        onClick={() => window.location.reload()}
+                        onClick={() => {
+								// window.location.reload(); 
+								navigate('/home'); 
+						}}
                         className={`bg-[var(--color-primary)] text-white px-7 py-7 rounded-full font-black uppercase text-[20px] ${bouncyAnimation}`}>
                         Continuar
                     </Button>
