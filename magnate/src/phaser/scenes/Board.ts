@@ -45,7 +45,6 @@ export class Board extends Phaser.Scene {
 
     // kinda global (handlePlayerClick)
     private selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
-	private hasTramTicket: boolean = true; // TODO afinaresto tb por player(?) ig es en vdd
 
     // Para animaciones
     private animationManager!: AnimationManager;
@@ -326,7 +325,7 @@ export class Board extends Phaser.Scene {
         // const nextTileId = targetTile.tileConfig.id;
 
         // DEBUG: va a la casilla dependiendo del tipo
-        const targetIndex = this.tiles.findIndex(t => t instanceof ParkingTile);
+        const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile);
         const targetTile = this.tiles[targetIndex];
         const nextTileId = targetTile.tileConfig.id;
         
@@ -514,18 +513,7 @@ export class Board extends Phaser.Scene {
         
 		else {
 			const cornerConfig = CORNER_VISUALS.get(tile.constructor);
-			if (tile instanceof TramTile) { 
-				if(!this.hasTramTicket) {
-					console.log("no tengo ticket");
-					this.hasTramTicket = true;
-					return;
-				}
-				else {
-					this.hasTramTicket = false;
-				}
-			}            
-			console.log("tengo ticket");
-            EventBus.emit('show-corner-tile', {
+		        EventBus.emit('show-corner-tile', {
 				image: cornerConfig.image,
 				tileText: cornerConfig.tileText,
 				buttonText: cornerConfig.buttonText,
@@ -536,12 +524,19 @@ export class Board extends Phaser.Scene {
     }
 
     private handleDiceRoll() {
-        // Probamos a ver si desaparecen los dados tras 8 seg.
-        this.diceManager.handleDiceRoll(this.tiles, this.players, [1, 2, 6]);
-        // this.diceManager.handleJailDiceRoll(this.tiles, this.players, [1, 1]);
-        this.time.delayedCall(8000, () => {
-            EventBus.emit('clear-dice');
-        });
+		// if (debugInJail) {
+        this.diceManager.handleJailDiceRoll(this.tiles, this.players, [1, 1]);
+		this.time.delayedCall(1000, () => { // wait for dice to stop rolling
+			EventBus.emit('open-in-jail-overlay',{tileList:["104","107"]}); // could go
+			//EventBus.emit('open-in-jail-overlay',["104"]); // forced to leave jail
+		});
+		// else {
+        // this.diceManager.handleDiceRoll(this.tiles, this.players, [1, 2, 6]);
+
+		// not clicking anything
+        // this.time.delayedCall(8000, () => {
+        //     EventBus.emit('clear-dice');
+        // });
     }
 
     // Marcador para cada casilla que compra un player 
@@ -631,17 +626,13 @@ export class Board extends Phaser.Scene {
             }
         });
 
-        // brillan las de un grupo
-		EventBus.on('start-tram-selection', () => { // TODO DesGemificar
-			// 1. Identificamos todas las casillas que sean Tranvías
+        // light up trams and wait for clicks
+		EventBus.on('start-tram-selection', () => {
 			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
 			const tramTileIds = tramTiles.map(t => t.tileConfig.id);
             
-			// 2. Oscurecemos el mapa pero ILUMINAMOS los tranvías.
-			// OJO: Pasamos [] al final para NO iluminar a los jugadores/tokens
 			BoardEffects.setFocusByIds(this.tiles, tramTileIds, this, this.players);
 
-			// 3. Hacemos que solo esas casillas sean clickables
 			this.tiles.forEach(tile => {
 				if (tramTileIds.includes(tile.tileConfig.id)) {
 					tile.setInteractive({ useHandCursor: true });
@@ -650,13 +641,12 @@ export class Board extends Phaser.Scene {
 					tile.once('pointerdown', () => {
 						const tramConfig = tile.tileConfig as ITramTile;
 
-						// Emitimos de vuelta a React el Tranvía seleccionado
 						EventBus.emit('tram-tile-selected', {
 							id: tramConfig.id,
 							name: tramConfig.name
 						});
 
-						// Quitamos el foco inmediatamente tras el clic
+						// disable focus after click
 						BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
 					});
 				} else {
@@ -667,16 +657,13 @@ export class Board extends Phaser.Scene {
 
         EventBus.on('execute-tram-travel', (data: {targetId: string, cost: number}) => {
         	const p = this.selectedPlayer;
-			if (!p) console.log("no encontré el jugador seleccionado");
-			console.log("voy a buscar a la tile");
-			console.log(data.targetId);
 			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
-			if (!targetTile) console.log("no encontré target tile");
+
 			const path = [{ x: targetTile.x, y: targetTile.y }];
 			p.token.moveTo(path, () => {
-				this.time.delayedCall(800, () => {
-					this.checkTileLogic(p.model, targetTile);
-				});
+				// this.time.delayedCall(800, () => {
+				// 	  this.checkTileLogic(p.model, targetTile); // INFINITE LOOP
+				// });
 			});
 
 			// unset interactiveness of tram tiles
@@ -684,11 +671,56 @@ export class Board extends Phaser.Scene {
 			tramTiles.forEach(tile => {
 				tile.disableInteractive();
 			});
-
-			// Tell backend (about cost or tileId seguramente?)
 		});
 
-       
+ 		EventBus.on('start-in-jail-selection', (data: { tileList: string[]} ) => { // List of tile IDs (string)
+			//const goableTiles = this.tiles.filter(t => data.tileList.includes(t.tileConfig.id));
+            
+			BoardEffects.setFocusByIds(this.tiles, data.tileList, this, this.players);
+
+			this.tiles.forEach(tile => {
+				if (data.tileList.includes(tile.tileConfig.id)) {
+					tile.setInteractive({ useHandCursor: true });
+					tile.removeAllListeners('pointerdown');
+
+					tile.once('pointerdown', () => {
+						const tileConfig = tile.tileConfig;
+
+						EventBus.emit('in-jail-tile-selected', {
+							id: tileConfig.id,
+							name: tileConfig.name
+						});
+
+						// disable focus after click
+						BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
+					});
+				} else {
+					tile.disableInteractive();
+				}
+			});
+		});
+
+        EventBus.on('execute-in-jail-travel', (data: {targetId: string }) => {
+        	const p = this.selectedPlayer;
+			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
+
+			const path = [{ x: targetTile.x, y: targetTile.y }];
+			p.token.moveTo(path, () => {
+				 this.time.delayedCall(800, () => {
+				 	this.checkTileLogic(p.model, targetTile);
+				 });
+			});
+		});
+
+        EventBus.on('make-tiles-unclickable', (data: { tileList: string[]}) => { // list of strings (tile IDs)
+			const setTiles = this.tiles.filter(t => data.tileList.includes(t.tileConfig.id));
+			setTiles.forEach(tile => {
+				tile.disableInteractive();
+			});
+        	EventBus.emit('clear-dice');
+		});
+
+      
         // Construir casas/hoteles
         EventBus.on('execute-property-build', (data: { tileId: string, level: string, isMortgaged: boolean }) => {
             const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);

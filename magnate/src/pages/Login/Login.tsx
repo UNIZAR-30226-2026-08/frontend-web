@@ -16,6 +16,14 @@ export function Login() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Login:', {username, password });
+		if (password === "incorrecta") {
+			alert("La contraseña no es correcta");
+			return;
+		}
+		if (username === "noexisto") {
+			alert("El usuario introducido no está registrado");
+			return;
+		}
         navigate('/home');
     };
 

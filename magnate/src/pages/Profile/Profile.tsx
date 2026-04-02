@@ -28,17 +28,43 @@ const STATS = {
     "Monedas Totales": 1245 
 };
 
-const MISKIN = {
-	name: "TOKEN1",
-	img: "/gorro.jpg"
+const SKINS = {
+    1 : { name: "Token1", price: 0, img: "/gorro.jpg" },
+    2 : { name: "Token2", price: 10, img: "/emoji.png"},
+    3 : { name: "Token3", price: 50, img: "/pattern.svg"},
+    4 : { name: "Token4", price: 100, img: "/vite.svg"},
+    5 : { name: "Token5", price: 150, img: "/gorro.jpg" },
+    6 : { name: "Token6", price: 200, img: "/gorro.jpg"},
+};
+
+const stripedBackgroundStyle = { backgroundImage: `
+        linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
+        repeating-linear-gradient(
+            -45deg,
+            #ffffff,
+            #ffffff 20px,
+            #f3f4f6 20px,
+            #f3f4f6 40px )`,
+    backgroundSize: 'cover'
 };
 
 export function Profile() {
+	const [skinId, setSkinId] = useState(1); // default: miskin (look for current skin)
+	const [chooseSkin, setChooseSkin] = useState(false);
+
+	// for skin selection
+	const [selectedSkinId, setSelectedSkinId] = useState(skinId);
+
+	const handleConfirmSelection = () => {
+		setSkinId(selectedSkinId);
+		setChooseSkin(false);
+	};
+
     return (
-        <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none bg-slate-50">
+		<div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none bg-slate-50">
             <PageHeader title="Perfil" />
 
-            <div className="flex flex-col gap-12 py-12 px-20 overflow-y-auto"
+			<div className="flex flex-col gap-12 py-12 px-20 overflow-y-auto"
                 style={{
                     height: "calc(100vh - var(--header-height))",
                     marginTop: "var(--header-height)",
@@ -50,7 +76,8 @@ export function Profile() {
 				{/* icono + nombre usuario + botón cambiar skin */}
 				<div className="flex flex-row items-center justify-between w-full">
 					<div className="w-20 h-20 flex items-center justify-center bg-slate-100/90 rounded-full group-hover:bg-white transition-colors shrink-0">
-                       <img src={MISKIN.img} alt={MISKIN.name} 
+                       <img src={SKINS[skinId as keyof typeof SKINS].img} 
+					   		alt={SKINS[skinId as keyof typeof SKINS].name} 
                        className={`w-12 h-12 object-contain drop-shadow-sm transition-transform 'group-hover:scale-110' `} />
                    </div>
                    
@@ -61,33 +88,120 @@ export function Profile() {
                    </div>
 
                    <Button 
-                       onClick={() => changeSkin()}
-                       className={`h-8 font-black uppercase text-[10px] rounded-full transition-all text-[12px] bg-[var(--color-primary)] text-white ${bouncyAnimation}`}>
-                       Cambiar skin predeterminado
+                       onClick={() => {
+							setChooseSkin(!chooseSkin);
+					   		setSelectedSkinId(skinId);}
+					   }
+                       className={`h-8 font-black uppercase text-[10px] rounded-full transition-all text-[12px] ${
+							   chooseSkin
+							   ? "bg-red-500 text-white" 
+							   : "bg-[var(--color-primary)] text-white" }
+							   ${bouncyAnimation}`}>
+					   {chooseSkin ? "Cancelar selección" : "Cambiar skin predeterminado"}
                    </Button>
 
 				</div>
 
 
-                {/* SECCIÓN STATS */}
-                <StatsSection 
-                    title="Estadísticas de partidas" 
-                    stats={STATS} 
-                />
+				{chooseSkin ? ( 
+						<>
+					<ShopSection
+						title="Elige un skin"
+						skins={SKINS}
+						currentSkinId={skinId}
+						selectedSkinId={selectedSkinId}
+						onSelect={setSelectedSkinId}
+		  			/>			
+					<Button
+                    	onClick={() => {
+						 	setChooseSkin(!chooseSkin);
+							setSkinId(selectedSkinId);}
+						}
+						className={`h-8 self-center font-black uppercase text-[10px] rounded-full transition-all text-[12px] bg-[var(--color-primary)] text-white ${bouncyAnimation}`}>
+						Confirmar selección
+					</Button>
+						</> 
+				) : (
+						<>
+                	{/* SECCIÓN STATS */}
+                	<StatsSection 
+                	    title="Estadísticas de partidas" 
+                	    stats={STATS} 
+                	/>
 
-                {/* SECCIÓN HISTORIAL */}
-                <GameHistSection 
-                    title="Historial de partidas" 
-                    items={GAMES} 
-                />
+                	{/* SECCIÓN HISTORIAL */}
+                	<GameHistSection 
+                	    title="Historial de partidas" 
+                	    items={GAMES} 
+                	/>
+						</>
+				)}
             </div>
         </div>
     );
 }
 
-function changeSkin() {
-	return; //TODO levantar Carousel etc
+function ShopSection({ title, skins, currentSkinId, selectedSkinId, onSelect }: any) {
+    const navButton = "border-slate-200 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition-all";
+
+    return (
+        <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-2">
+                <h2 className="text-xl font-black italic uppercase text-slate-800">{title}</h2>
+                <div className="h-[2px] flex-1 bg-slate-200/50 rounded-full"/>
+            </div>
+
+            <Carousel className="w-full px-12">
+                <CarouselContent className="-ml-4">
+                    {Object.entries(skins).map(([id, item]: [string, any]) => {
+                        const numericId = parseInt(id);
+                        const isCurrentDefault = numericId === currentSkinId;
+                        const isSelected = numericId === selectedSkinId;
+
+                        return (
+                            <CarouselItem key={id} className="pl-4 md:basis-1/3 lg:basis-1/4">
+                                <Card className={`rounded-[30px] transition-all border-2 ${
+                                    isSelected
+                                    ? "border-[var(--color-primary)] bg-white"
+                                    : "border-slate-200 bg-white/50"
+                                }`}>
+                                    <CardContent className="flex flex-col items-center p-6 gap-4">
+                                        <div className="w-16 h-16 flex items-center justify-center bg-slate-50 rounded-full">
+                                            <img src={item.img} alt={item.name} className="w-10 h-10 object-contain" />
+                                        </div>
+
+                                        <div className="text-center">
+                                            <h3 className="font-black uppercase text-xs">{item.name}</h3>
+                                            <p className="text-[var(--color-primary)] font-black text-sm">
+                                                {item.name}
+                                            </p>
+                                        </div>
+
+                                        <Button
+                                            disabled={isCurrentDefault}
+                                            onClick={() => onSelect(numericId)}
+                                            className={`h-8 w-full rounded-full font-black text-[10px] uppercase transition-all ${
+                                                isCurrentDefault
+                                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed" // Estilo como si no estuviera disponible
+                                                    : isSelected
+                                                    ? "bg-[var(--color-primary)] text-white ring-2 ring-offset-2 ring-[var(--color-primary)]"
+                                                    : "bg-slate-800 text-white"
+                                            } ${bouncyAnimation}`}>
+                                            {isCurrentDefault ? 'En uso' : isSelected ? 'Seleccionado' : 'Seleccionar'}
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </CarouselItem>
+                        );
+                    })}
+                </CarouselContent>
+                <CarouselPrevious className={navButton} />
+                <CarouselNext className={navButton} />
+            </Carousel>
+        </div>
+    );
 }
+
 function StatsSection({ title, stats }: any) {
     return (
         <div className="flex flex-col gap-3 min-h-0">

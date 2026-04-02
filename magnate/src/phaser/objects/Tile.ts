@@ -14,6 +14,7 @@ export class Tile extends Phaser.GameObjects.Container {
 
         const width = config.width || 80;
         const height = config.height || 120;
+		this.setSize(width,height);
 
         if (config.rotation) {
             this.setAngle(config.rotation);
