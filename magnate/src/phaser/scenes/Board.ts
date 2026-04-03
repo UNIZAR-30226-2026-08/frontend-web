@@ -325,7 +325,8 @@ export class Board extends Phaser.Scene {
         // const nextTileId = targetTile.tileConfig.id;
 
         // DEBUG: va a la casilla dependiendo del tipo
-        const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile);
+        // const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile);
+        const targetIndex = this.tiles.findIndex(t => t instanceof TramTile);
         const targetTile = this.tiles[targetIndex];
         const nextTileId = targetTile.tileConfig.id;
         
@@ -525,18 +526,18 @@ export class Board extends Phaser.Scene {
 
     private handleDiceRoll() {
 		// if (debugInJail) {
-        this.diceManager.handleJailDiceRoll(this.tiles, this.players, [1, 1]);
-		this.time.delayedCall(1000, () => { // wait for dice to stop rolling
-			EventBus.emit('open-in-jail-overlay',{tileList:["104","107"]}); // could go
-			//EventBus.emit('open-in-jail-overlay',["104"]); // forced to leave jail
-		});
+        // this.diceManager.handleJailDiceRoll(this.tiles, this.players, [1, 1]);
+		// this.time.delayedCall(1000, () => { // wait for dice to stop rolling
+		// 	EventBus.emit('open-in-jail-overlay',{tileList:["104","107"]}); // could go
+		// 	//EventBus.emit('open-in-jail-overlay',["104"]); // forced to leave jail
+		// });
 		// else {
-        // this.diceManager.handleDiceRoll(this.tiles, this.players, [1, 2, 6]);
+        this.diceManager.handleDiceRoll(this.tiles, this.players, [1, 2, 6]);
 
 		// not clicking anything
-        // this.time.delayedCall(8000, () => {
-        //     EventBus.emit('clear-dice');
-        // });
+        this.time.delayedCall(8000, () => {
+            EventBus.emit('clear-dice');
+        });
     }
 
     // Marcador para cada casilla que compra un player 
