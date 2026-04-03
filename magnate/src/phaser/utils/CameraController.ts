@@ -41,10 +41,16 @@ export class CameraController {
         });
     }
 
-    public focusOnTile(tile: Tile, zoom: number = 1) {
+    public focusOnTile(tile: Tile, zoom: number = 1, onComplete?: () => void) {
         this.mainCam.stopFollow();
         this.mainCam.pan(tile.x, tile.y, 1500,  "Cubic.easeInOut");
         this.mainCam.zoomTo(zoom, 1500, "Cubic.easeInOut");
+        
+        if (onComplete) {
+            this.mainCam.once('camerapancomplete', () => {
+                onComplete();
+            });
+        }
     }
 
     public resetView(duration: number = 1200) {

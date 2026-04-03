@@ -20,8 +20,9 @@ export class PropertyTile extends Tile {
         // this.input!.cursor = 'pointer';
 
         const colorBar = this.scene.add.rectangle(0, - (height / 2), width - 3, colorBarHeight, 
-            Phaser.Display.Color.HexStringToColor(config.color).color
-        ).setOrigin(0.5, 0); 
+            Phaser.Display.Color.HexStringToColor(config.color).color)
+            .setOrigin(0.5, 0)
+            .setStrokeStyle(2, 0x000000);
         
         this.add(colorBar);
 
@@ -31,7 +32,7 @@ export class PropertyTile extends Tile {
 
         this.add(this.nameText);
 
-        // TODO: falta precio de las property tiles, lo pasa el backend?
+        //TODO: falta precio de las property tiles, lo pasa el backend?
         // const priceText = this.scene.add.text(0, 40, `${config.price}€`, {
         //     fontSize: '12px',
         //     color: '#888888',

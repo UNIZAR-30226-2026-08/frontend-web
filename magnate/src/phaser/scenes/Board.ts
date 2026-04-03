@@ -11,8 +11,6 @@ import { JailTile } from '../objects/JailTile';
 import { ParkingTile } from '../objects/ParkingTile';
 import { TramTile } from '../objects/TramTile';
 
-import { CornerTileContent } from '@/components/layout/CornerLayout';
-
 import { PlayerModel } from '../models/PlayerModel';
 import { PlayerToken } from '../objects/PlayerToken';
 import { EventBus } from '@/EventBus'
@@ -24,14 +22,7 @@ import { SoundId } from '@/context/AudioContext';
 import { CameraController } from '../utils/CameraController';
 import { BoardEffects } from '../utils/BoardEffects';
 import { AnimationManager } from '../managers/AnimationManager';
-
-
-const CORNER_VISUALS: Map<Function, CornerTileContent> = new Map ([
-	[GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar', sound: 'jail_door'}],
-	[JailTile, { image: 'images/secretary.png', tileText: 'Secretaría', buttonText: 'Comenzar turno', sound: 'jail_turn_in'}],
-	[ParkingTile, { image: 'images/caravan.png', tileText: 'Parking Gratuito', buttonText: 'Recoger dinero', sound: 'parking'}],
-	[TramTile, { image: 'icons/tram.svg', tileText: 'Tranvía', buttonText: 'Gestionar desplazamiento', sound: 'tram_bell'}],
-]);
+import { TileLogicManager } from '../managers/TileLogicManager';
 
 
 export class Board extends Phaser.Scene {
@@ -41,6 +32,7 @@ export class Board extends Phaser.Scene {
     private fantasyCards: any[] = []; // TODO: rellenar con data/fantasyCard.json o recibir de backend
     private cameraController!: CameraController; // TODO: para las cámaras
     private diceManager!: DiceManager;
+     private tileLogicManager!:  TileLogicManager;
     private localPlayerId: string | null = null;
 
     // kinda global (handlePlayerClick)
@@ -93,6 +85,7 @@ export class Board extends Phaser.Scene {
 
         this.animationManager = new AnimationManager(this);
         this.diceManager = new DiceManager(this);
+        this.tileLogicManager = new TileLogicManager(this);
         
         const bgVideo = this.add.video(width / 2, height / 2, 'background_video');
         bgVideo.setOrigin(0.5, 0.5);
@@ -320,15 +313,14 @@ export class Board extends Phaser.Scene {
         const hopTile = this.tiles[hopIndex];
 
         // DEBUG: pasa por 'todas' las casillas
-        // const nextIndex = (currentIndex + 3) % this.tiles.length;
-        // const targetTile = this.tiles[nextIndex];
-        // const nextTileId = targetTile.tileConfig.id;
+        const nextIndex = (currentIndex + 3) % this.tiles.length;
+        const targetTile = this.tiles[nextIndex];
+        const nextTileId = targetTile.tileConfig.id;
 
         // DEBUG: va a la casilla dependiendo del tipo
-        // const targetIndex = this.tiles.findIndex(t => t instanceof GoToJailTile);
-        const targetIndex = this.tiles.findIndex(t => t instanceof TramTile);
-        const targetTile = this.tiles[targetIndex];
-        const nextTileId = targetTile.tileConfig.id;
+        // const targetIndex = this.tiles.findIndex(t => t instanceof TramTile);
+        // const targetTile = this.tiles[targetIndex];
+        // const nextTileId = targetTile.tileConfig.id;
         
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
@@ -356,17 +348,11 @@ export class Board extends Phaser.Scene {
         // await this.playSecretaryCutscene();
         await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
 
-        // p.model.move(nextTileId);
-
-        // p.token.moveTo(path, () => {
-        //     this.checkTileLogic(p.model, targetTile);
-        // });
-
         this.cameraController.followToken(p.token, 2.2, () => {
             p.model.move(nextTileId);
             p.token.moveTo(path, () => {
                 this.time.delayedCall(800, () => {
-                    this.checkTileLogic(p.model, targetTile);
+                    this.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
                 });
             });
         });
@@ -402,126 +388,19 @@ export class Board extends Phaser.Scene {
         
         p.token.setPosition(finalX, finalY - 600);
 
-        this.cameraController.focusOnTile(jailTile, 2.2);
+        this.cameraController.focusOnTile(jailTile, 2.2, () => {
 
-        this.tweens.add({
-            targets: p.token,
-            alpha: 1,
-            duration: 100, 
-        });
-     
-        this.tweens.add({
-            targets: p.token,
-            y: finalY,
-            ease: 'Bounce.easeOut',
-            duration: 600,
-            onComplete: () => {
-                // TODO: A ver si podemos poner algun sonidito
-                // this.checkTileLogic(p.model, jailTile); (NO HAGO LA LOGICA DE CAER EN NUEVA CASILLA)
-            }
-        });
-    }
-    
-    private checkTileLogic(player: PlayerModel, tile: Tile) {
-        
-        if (tile instanceof FantasyTile) {
-            // TODO: Vendrá del backend
-            const cartasFantasia = [
-                { title: "Concurso de Postales EINA", description: "Ganaste el concurso anual de postales navideñas de la EINA. Tu premio: 150€.", price: 130 }
-            ];
-            
-            const cartaAleatoria = Phaser.Utils.Array.GetRandom(cartasFantasia);
+            p.token.setPosition(finalX, finalY - 600);
+            p.token.setAlpha(1);
 
-            // Evento hacia react
-            EventBus.emit('show-fantasy-card', {
-                ...cartaAleatoria,
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0')
+            this.tweens.add({
+                targets: p.token,
+                y: finalY,
+                ease: 'Bounce.easeOut',
+                duration: 800,
+                onComplete: () => {}
             });
-        }
-        
-		else if (tile instanceof PropertyTile) {
-
-            const propConfig = tile.tileConfig as IPropertyTile;
-            // TODO: Vendrá del backend?
-            const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800};
-            const playersData = this.players.map(p => ({
-                id: p.model.id,
-                name: p.model.name,
-                color: '#' + p.model.color.toString(16).padStart(6, '0'),
-            }));
-
-            EventBus.emit('show-property-card', {
-                id: propConfig.id,
-                name: propConfig.name,
-                headerColor: propConfig.color || '#FFFFFF', 
-                price: 100,
-                rent: rentValues,
-                mortgage: 100,
-                housePrice: 20,
-                players: playersData, // Para los resultados de la subasta
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
-				isMortgaged: false, 		// Pruebecitas TODO JULIA
-				isAvailable: true, 		// Pruebecitas TODO JULIA
-				constructionLevel: 'house1',	// Pruebecitas TODO JULIA
-            });
-        }
-
-		else if (tile instanceof ServerTile) {
-			const rent = {one:50,all:100}
-			const tileConfig = tile.tileConfig as IServerTile;
-			EventBus.emit('show-service-card', {
-                id: tileConfig.id,
-				title: tileConfig.name,
-				typeName: 'Servidor',
-				image:'images/server.png', // TODO override tileConfig.icon
-				price: 80,
-				rent: rent,
-				mortgage: 100,
-				isMortgaged: false,	// Pruebecitas TODO JULIA
-				isAvailable: true,
-				hasAll: 'all',
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
-			});
-		}
-
-		else if (tile instanceof BridgeTile) {
-			const rent = {one:50,all:100}
-			const tileConfig = tile.tileConfig as IServerTile;
-			EventBus.emit('show-service-card', {
-                id: tileConfig.id,
-				title: tileConfig.name,
-				typeName: 'Puente',
-				image:'icons/bridge.svg', // TODO override tileConfig.icon
-				price: 80,
-				rent: rent,
-				mortgage: 100,
-				isMortgaged: false,	// Pruebecitas TODO JULIA
-				isAvailable: true,
-				hasAll: 'one',
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
-			});
-		}
-
-        else if (tile instanceof GoToJailTile) {
-            this.sendToSecretary(player.id);
-        }
-
-		else if (tile instanceof StartTile) {}
-        
-		else {
-			const cornerConfig = CORNER_VISUALS.get(tile.constructor);
-		        EventBus.emit('show-corner-tile', {
-				image: cornerConfig.image,
-				tileText: cornerConfig.tileText,
-				buttonText: cornerConfig.buttonText,
-				sound: cornerConfig.sound,
-				id: tile.tileConfig.id
-			});
-		}
+        });
     }
 
     private handleDiceRoll() {
@@ -644,7 +523,8 @@ export class Board extends Phaser.Scene {
 
 						EventBus.emit('tram-tile-selected', {
 							id: tramConfig.id,
-							name: tramConfig.name
+							name: tramConfig.name,
+                            subText: tramConfig.subText,
 						});
 
 						// disable focus after click
@@ -705,10 +585,10 @@ export class Board extends Phaser.Scene {
         	const p = this.selectedPlayer;
 			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
 
-			const path = [{ x: targetTile.x, y: targetTile.y }];
+			const path = [{ x: targetTile?.x, y: targetTile?.y }];
 			p.token.moveTo(path, () => {
 				 this.time.delayedCall(800, () => {
-				 	this.checkTileLogic(p.model, targetTile);
+				 	this.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
 				 });
 			});
 		});
@@ -752,5 +632,4 @@ export class Board extends Phaser.Scene {
             this.animationManager.BillAnimation(data.playerId, 15, data.amount);
         });
     }
-
 }

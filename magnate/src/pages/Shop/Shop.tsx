@@ -28,6 +28,18 @@ const EMOJIS = [
     { id: 105, name: "Risa5", price: 350, img: "/emoji.png", available: true },
 ];
 
+const stripedBackgroundStyle = { backgroundImage: `
+        linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
+        repeating-linear-gradient(
+            -45deg,
+            #ffffff,
+            #ffffff 20px,
+            #f3f4f6 20px,
+            #f3f4f6 40px )`,
+    backgroundSize: 'cover'
+};
+
+
 export function Shop() {
     const handleBuy = (id: number) => {
         // TODO: cuando se compra, guardar para el jugador
@@ -39,11 +51,9 @@ export function Shop() {
 
             <div className="flex flex-col gap-12 py-12 px-20 overflow-y-auto"
                 style={{
+                    ...stripedBackgroundStyle,
                     height: "calc(100vh - var(--header-height))",
                     marginTop: "var(--header-height)",
-                    backgroundImage: `url('/pattern.svg'), linear-gradient(rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.98))`,
-                    backgroundRepeat: "repeat",
-                    backgroundBlendMode: "overlay",
                 }}>
 
                 {/* SECCIÓN SKINS */}
