@@ -48,9 +48,70 @@ const stripedBackgroundStyle = { backgroundImage: `
     backgroundSize: 'cover'
 };
 
+const Confirm = ({ isOpen, onConfirm, onCancel }: any) => {
+    const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onCancel} />
+
+            <div className="relative rounded-[40px] p-8 w-full max-w-[400px] flex flex-col items-center text-center border-4 border-gray-200"
+                style={stripedBackgroundStyle}>
+                
+                <h3 className="text-slate-800 text-[20px] font-black uppercase italic leading-tight mb-2">
+                    ¿Quieres cerrar sesión?
+                </h3>
+
+                <p className="text-slate-500 text-[14px] font-medium mb-2">
+                    Estás saliendo del juego y finalizando tu sesión actual.
+                </p>
+
+                <div className="flex flex-col gap-2 mt-4">
+                    <Button onClick={onConfirm}
+                        className={`w-[130px] py-5 text-[16px] bg-[var(--color-primary)] text-white font-black uppercase rounded-full ${bouncyAnimation}`}>
+                        Continuar
+                    </Button>
+                    
+                    <Button onClick={onCancel}
+                        className="w-full text-slate-400 font-bold uppercase text-[12px] tracking-widest hover:text-red-400">
+                        Cancelar
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+function Coin({ size = 24 }: { size?: number }) {
+    const primaryColor = "#008a5c";
+    const secondaryColor = "#185f48";
+    const textColor = "#ffc971";
+
+    return (
+        <div className="relative flex items-center justify-center rounded-full shrink-0 shadow-md"
+            style={{ 
+                width: size, 
+                height: size, 
+                backgroundColor: primaryColor,
+                border: `${size * 0.08}px solid ${secondaryColor}`,
+            }} >
+            <span className="font-black leading-none select-none"
+                style={{ 
+                    color: textColor, 
+                    fontSize: `${size * 0.6}px`,
+                    textShadow: "1px 1px 0px rgba(255,255,255,0.3)" 
+                }} >
+                M
+            </span>
+        </div>
+    );
+}
+
 export function Profile() {
 	const [skinId, setSkinId] = useState(1); // default: miskin (look for current skin)
 	const [chooseSkin, setChooseSkin] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
 	// for skin selection
 	const [selectedSkinId, setSelectedSkinId] = useState(skinId);
@@ -59,6 +120,18 @@ export function Profile() {
 		setSkinId(selectedSkinId);
 		setChooseSkin(false);
 	};
+    
+    const handleLogoutClick = () => {
+        setShowConfirm(true);
+    };
+    
+    const confirmLogout = () => {
+        setShowConfirm(false);
+    };
+
+    const cancelLogout = () => {
+        setShowConfirm(false);
+    };
 
     return (
 		<div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none bg-slate-50">
@@ -66,38 +139,49 @@ export function Profile() {
 
 			<div className="flex flex-col gap-12 py-12 px-20 overflow-y-auto"
                 style={{
+                    ...stripedBackgroundStyle,
                     height: "calc(100vh - var(--header-height))",
                     marginTop: "var(--header-height)",
-                    backgroundImage: `url('/pattern.svg'), linear-gradient(rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.98))`,
-                    backgroundRepeat: "repeat",
-                    backgroundBlendMode: "overlay",
                 }}>
 
 				{/* icono + nombre usuario + botón cambiar skin */}
-				<div className="flex flex-row items-center justify-between w-full">
-					<div className="w-20 h-20 flex items-center justify-center bg-slate-100/90 rounded-full group-hover:bg-white transition-colors shrink-0">
-                       <img src={SKINS[skinId as keyof typeof SKINS].img} 
-					   		alt={SKINS[skinId as keyof typeof SKINS].name} 
-                       className={`w-12 h-12 object-contain drop-shadow-sm transition-transform 'group-hover:scale-110' `} />
-                   </div>
-                   
-                   <div className="text-center">
-                       <h3 className="font-black text-[15px] text-black tracking-tight leading-none mb-1">
-                           Juls
-                       </h3>
-                   </div>
+				<div className="flex flex-row items-center justify-between w-full gap-4 p-2">
+                    <div className="flex items-center justify-center gap-4">
+                        <div className="w-20 h-20 flex items-center justify-center bg-slate-100/90 rounded-full group-hover:bg-white transition-colors shrink-0">
+                            <img 
+                                src={SKINS[skinId as keyof typeof SKINS].img} 
+                                alt={SKINS[skinId as keyof typeof SKINS].name} 
+                                className="w-10 h-10 object-contain drop-shadow-sm transition-transform group-hover:scale-110" />
+                        </div>
+                        
+                        <div className="flex flex-col items-center">
+                            <h3 className="font-black text-[22px] text-black tracking-tight leading-none">
+                                Juls
+                            </h3>
+                        
+                            <Button
+                                onClick={handleLogoutClick}
+                                className="font-black text-[14px] text-red-500 tracking-tight leading-none uppercase italic
+                                        hover:text-red-700 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer">
+                                Cerrar sesión
+                            </Button>
+                            <Confirm 
+                                isOpen={showConfirm}
+                                onConfirm={confirmLogout} // TODO: cerrar sesión
+                                onCancel={cancelLogout}/> 
+                        </div>
+                    </div>
 
                    <Button 
                        onClick={() => {
 							setChooseSkin(!chooseSkin);
-					   		setSelectedSkinId(skinId);}
-					   }
-                       className={`h-8 font-black uppercase text-[10px] rounded-full transition-all text-[12px] ${
+					   		setSelectedSkinId(skinId);} }
+                       className={`h-8 font-black uppercase rounded-full transition-all text-[16px] ${
 							   chooseSkin
-							   ? "bg-red-500 text-white" 
+							   ? "bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 transition-all " 
 							   : "bg-[var(--color-primary)] text-white" }
 							   ${bouncyAnimation}`}>
-					   {chooseSkin ? "Cancelar selección" : "Cambiar skin predeterminado"}
+					   {chooseSkin ? "Cancelar selección" : "Cambiar skin"}
                    </Button>
 
 				</div>
@@ -117,7 +201,7 @@ export function Profile() {
 						 	setChooseSkin(!chooseSkin);
 							setSkinId(selectedSkinId);}
 						}
-						className={`h-8 self-center font-black uppercase text-[10px] rounded-full transition-all text-[12px] bg-[var(--color-primary)] text-white ${bouncyAnimation}`}>
+						className={`h-8 self-center font-black uppercase text-[12px] rounded-full transition-all text-[12px] bg-[var(--color-primary)] text-white ${bouncyAnimation}`}>
 						Confirmar selección
 					</Button>
 						</> 
@@ -172,21 +256,22 @@ function ShopSection({ title, skins, currentSkinId, selectedSkinId, onSelect }: 
 
                                         <div className="text-center">
                                             <h3 className="font-black uppercase text-xs">{item.name}</h3>
-                                            <p className="text-[var(--color-primary)] font-black text-sm">
+                                            <p className="text-[var(--color-background)] font-black text-sm">
                                                 {item.name}
                                             </p>
                                         </div>
 
-                                        <Button
+                                       <Button
                                             disabled={isCurrentDefault}
                                             onClick={() => onSelect(numericId)}
-                                            className={`h-8 w-full rounded-full font-black text-[10px] uppercase transition-all ${
+                                            className={`h-9 px-6 rounded-full font-black text-[12px] uppercase transition-all duration-200 ${
                                                 isCurrentDefault
-                                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed" // Estilo como si no estuviera disponible
+                                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-50" 
                                                     : isSelected
-                                                    ? "bg-[var(--color-primary)] text-white ring-2 ring-offset-2 ring-[var(--color-primary)]"
-                                                    : "bg-slate-800 text-white"
-                                            } ${bouncyAnimation}`}>
+                                                    ? "bg-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/40 scale-105"
+                                                    : "bg-[var(--color-primary)]/20 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white"
+                                            } ${bouncyAnimation}`}
+                                        >
                                             {isCurrentDefault ? 'En uso' : isSelected ? 'Seleccionado' : 'Seleccionar'}
                                         </Button>
                                     </CardContent>
@@ -218,10 +303,10 @@ function StatsSection({ title, stats }: any) {
                         <CarouselItem key={index} className="pl-2 md:basis-1/3 lg:basis-1/3">
                             <Card className="bg-white border-2 border-slate-300 rounded-[30px] overflow-hidden shadow-sm">
                                 <CardContent className="flex flex-col items-center p-8">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                                    <span className="text-[12px] font-black uppercase tracking-widest text-slate-400 mb-1">
                                         {key}
                                     </span>
-                                    <span className="text-[25px] font-black italic text-[var(--color-primary)]">
+                                    <span className="text-[26px] font-black italic text-[var(--color-primary)]">
                                         {value}
                                     </span>
                                 </CardContent>
@@ -291,14 +376,16 @@ function GameHistSection({ title, items }: any) {
                                     </div>
 
                                     {/* Recompensa */}
-                                    <div className="flex items-center justify-between mt-auto pt-2">
-                                        <div className="flex items-center gap-1">
-                                            <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                                                <Coins size={14} className="text-white" />
-                                            </div>
-                                            <span className="font-black text-slate-800 text-lg">{game.monedas}</span>
+                                   <div className="flex items-center justify-between mt-auto pt-2">
+                                        <div className="flex items-center gap-2">
+                                            <Coin size={20} /> 
+                                            <span className="font-black text-slate-800 text-lg tracking-tighter">
+                                                {game.monedas}
+                                            </span>
                                         </div>
-                                        <span className="text-[10px] font-black uppercase text-slate-300 italic">Fin: {game.fin}</span>
+                                        <span className="text-[10px] font-black uppercase text-slate-300 italic">
+                                            Fin: {game.fin}
+                                        </span>
                                     </div>
 
                                 </CardContent>

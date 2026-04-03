@@ -3,7 +3,7 @@ import { ITramTile } from '../types/TileTypes';
 
 export class TramTile extends Tile {
     private icon: Phaser.GameObjects.Image;
-    // private subText: Phaser.GameObjects.Text;
+    private subText: Phaser.GameObjects.Text;
 
     constructor(scene: Phaser.Scene, config: ITramTile) {
         super(scene, config);
@@ -14,11 +14,11 @@ export class TramTile extends Tile {
 		this.setSize(w,h);
         
         this.nameText.setStyle({ 
-            fontSize: `${Math.floor(w * 0.2)}px`,
+            fontSize: `${Math.floor(w * 0.18)}px`,
             align: 'center',
             wordWrap: { width: w * 0.4 }
         })
-            .setOrigin(0.6, 1.4)
+            .setOrigin(0.6, 1.8)
             .setAngle(-45)
             .setPosition(1, -(h * 0.1));
         
@@ -31,19 +31,17 @@ export class TramTile extends Tile {
                 
         this.add(this.icon);
 
-        // TODO: subText para añadir paradas del tranvía, ajustar posición y tamaño
-        // this.subText = this.scene.add.text(0, 0, config.subText, {
-        //     fontSize: `${Math.floor(w * 0.10)}px`,
-        //     fontFamily: 'LTSuperior',
-        //     color: '#242424',
-        //     fontStyle: 'bold',
-        //     align: 'center',
-        //     wordWrap: { width: w * 0.7 }
-        // }).setOrigin(0.4, -1)
-        //   .setAngle(45)
-        //   .setPosition(0.4, 0.4);
+        this.subText = this.scene.add.text(0, 0, config.subText, {
+            fontSize: `${Math.floor(w * 0.12)}px`,
+            fontFamily: 'LTSuperior',
+            color: '#242424',
+            align: 'center',
+            wordWrap: { width: w * 1.2 }
+        }).setOrigin(0.6, 0.8)
+          .setAngle(-45)
+          .setPosition(1, -(h * 0.1));
         
-        // this.add(this.subText);
+        this.add(this.subText);
         
 
     }

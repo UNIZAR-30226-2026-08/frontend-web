@@ -1,9 +1,10 @@
 import { SoundId } from '@/context/AudioContext';
 
-interface CornerData {
+export interface CornerData {
     image: string;
 	tileText: string;  // Es responsabilidad del main que esto cuadre, creo
-	sound : SoundId;
+    buttonText?: string;
+	sound? : SoundId;
 }
 
 export const CornerTileContent = ({ image, tileText, sound }:  CornerData ) => {
