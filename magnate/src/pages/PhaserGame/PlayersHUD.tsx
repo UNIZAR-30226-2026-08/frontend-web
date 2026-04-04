@@ -49,7 +49,7 @@ export const PlayersHUD = ({
 
     const handlePlayerClick = (playerId: string) => {
         if (canClick) {
-            playSound('player_token_hop');
+            playSound('player_choose');
             
             const targetPlayer = players.find(p => p.id === playerId);
             const me = players[0]; 

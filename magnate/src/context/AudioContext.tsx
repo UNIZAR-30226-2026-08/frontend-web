@@ -5,11 +5,13 @@ export type AudioChannel = 'bg' | 'ui' | 'sfx';
 export type SoundId = 'bg_menu' | 'bg_game' | 'button_back' | 'button_main' | 'button_ok' | 
 		'slidebar_up' | 'slidebar_down' | 'toggle_settings' | 
 		'bankrupt' | 'boat_horn' | 'message_send' | 'tram_bell' |
-		'bookmark' | 'bookmark2' | 'card_place_1' | 'card_place_2' | 'card_slide' | 
+		'bookmark' | 'card_place_1' | 'card_slide' | 
 		'dice_grab' | 'dice_shake' | 'dice_throw' | 'end_of_game' | 'fantasy' | 
 		'house_build' | 'house_down' | 'jail_door' | 'jail_turn_in' | 'message_incoming' | 
 		'money_lose' | 'money_win' | 'parking' | 'player_token_hop' | 
-		'trade_shift' | 'trade_turned_down' | 'trade_accepted' | 'turn_banner_in' | 'turn_banner_out';
+		'player_choose' | 'tile_choose' | 'trade_shift' |
+		'mortgage' | 'toast' | 'timeout' | 'auction_end' |
+		'trade_turned_down' | 'trade_accepted' | 'turn_banner_in' | 'turn_banner_out';
 
 interface AudioRegistryItem {
 	howl: Howl;
@@ -43,13 +45,13 @@ const audioRegistry: Record<SoundId, AudioRegistryItem> = {
 			]}),
 		channel: 'ui'
 	},
-	slidebar_up: {
+	slidebar_down: {
 		howl: new Howl({src: [
 			'/sounds/sfx/slidebar_down.ogg'
 			]}),
 		channel: 'ui'
 	},
-	slidebar_down: {
+	slidebar_up: {
 		howl: new Howl({src: [
 			'/sounds/sfx/slidebar_up.ogg'
 			]}),
@@ -67,7 +69,7 @@ const audioRegistry: Record<SoundId, AudioRegistryItem> = {
 		]}),
 		channel: 'sfx'
 	},
-	boat_horn: {
+	boat_horn: { // TODO over bridge
 		howl: new Howl({src: [
 			'/sounds/sfx/boat_horn.mp3',
 		]}),
@@ -79,21 +81,9 @@ const audioRegistry: Record<SoundId, AudioRegistryItem> = {
 		]}),
 		channel: 'sfx'
 	},
-	bookmark2: {
-		howl: new Howl({src: [
-			'/sounds/sfx/bookmark_card-slide-7.ogg',
-		]}),
-		channel: 'sfx'
-	},
 	card_place_1: {
 		howl: new Howl({src: [
 			'/sounds/sfx/card_place_1.ogg',
-		]}),
-		channel: 'sfx'
-	},
-	card_place_2: {
-		howl: new Howl({src: [
-			'/sounds/sfx/card_place_2.ogg',
 		]}),
 		channel: 'sfx'
 	},
@@ -157,13 +147,13 @@ const audioRegistry: Record<SoundId, AudioRegistryItem> = {
 		]}),
 		channel: 'sfx'
 	},
-	message_incoming: {
+	message_incoming: { // TODO
 		howl: new Howl({src: [
 			'/sounds/sfx/message_incoming.ogg',
 		]}),
 		channel: 'sfx'
 	},
-	message_send: {
+	message_send: { // TODO
 		howl: new Howl({src: [
 			'/sounds/sfx/message_send.ogg',
 		]}),
@@ -193,12 +183,6 @@ const audioRegistry: Record<SoundId, AudioRegistryItem> = {
 		]}),
 		channel: 'sfx'
 	},
-	trade_shift: {
-		howl: new Howl({src: [
-			'/sounds/sfx/trade_shift.ogg',
-		]}),
-		channel: 'sfx'
-	},
 	trade_turned_down: {
 		howl: new Howl({src: [
 			'/sounds/sfx/trade_turned_down.ogg',
@@ -211,6 +195,30 @@ const audioRegistry: Record<SoundId, AudioRegistryItem> = {
 		]}),
 		channel: 'sfx'
 	},
+	timeout: {
+		howl: new Howl({src: [
+			'/sounds/sfx/timeout_boop.mp3',
+		]}),
+		channel: 'sfx'
+	},
+	auction_end: {
+		howl: new Howl({src: [
+			'/sounds/sfx/auction_end.mp3',
+		]}),
+		channel: 'sfx'
+	},
+	player_choose: {
+		howl: new Howl({src: [
+			'/sounds/sfx/chips-handle-4.ogg',
+		]}),
+		channel: 'sfx'
+	},
+	trade_shift: { 
+		howl: new Howl({src: [
+			'/sounds/sfx/trade_shift.ogg',
+		]}),
+		channel: 'sfx'
+	},
 	turn_banner_in: {
 		howl: new Howl({src: [
 			'/sounds/sfx/turn_banner_in.mp3',
@@ -220,6 +228,18 @@ const audioRegistry: Record<SoundId, AudioRegistryItem> = {
 	turn_banner_out: {
 		howl: new Howl({src: [
 			'/sounds/sfx/turn_banner_out.mp3',
+		]}),
+		channel: 'sfx'
+	},
+	mortgage: {
+		howl: new Howl({src: [
+			'/sounds/sfx/mortgage_klink.mp3',
+		]}),
+		channel: 'sfx'
+	},
+	toast: {
+		howl: new Howl({src: [
+			'/sounds/sfx/toast.mp3',
 		]}),
 		channel: 'sfx'
 	},

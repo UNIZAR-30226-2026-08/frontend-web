@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { EventBus } from "@/EventBus";
+import { useAudio } from '@/context/AudioContext';
 
 interface ToastState {
   visible: boolean;
@@ -14,6 +15,8 @@ export function ToastMessage() {
     exiting: false,
   });
 
+  const { playSound } = useAudio();
+
   useEffect(() => {
     let hideTimeoutId: NodeJS.Timeout;
     let removeTimeoutId: NodeJS.Timeout;
@@ -27,6 +30,8 @@ export function ToastMessage() {
         message: data.message,
         exiting: false,
       });
+
+	  playSound('toast');
 
       hideTimeoutId = setTimeout(() => {
         setToast((prev) => ({ ...prev, exiting: true }));
@@ -43,7 +48,7 @@ export function ToastMessage() {
       clearTimeout(hideTimeoutId);
       clearTimeout(removeTimeoutId);
     };
-  }, []);
+  }, [playSound]);
 
   if (!toast.visible) return null;
 

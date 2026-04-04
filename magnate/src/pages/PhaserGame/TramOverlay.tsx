@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { EventBus } from '@/EventBus';
 import { Button } from '@/components/ui/button';
+import { useAudio } from '@/context/AudioContext';
 
 export const TramOverlay = () => {
     // ESTADOS DEL OVERLAY
@@ -20,6 +21,7 @@ export const TramOverlay = () => {
         backgroundSize: 'cover'
     };
 
+	const { playSound } = useAudio();
 
     useEffect(() => {
         // From CornerOverlay if click on "Gestionar Desplazamiento"
@@ -33,6 +35,7 @@ export const TramOverlay = () => {
         };
 
         const handleTramSelected = (tileData: any) => {
+			playSound('tram_bell');
 			console.log("entré a handleTramSelected");
             if (!isOpen) {
 				console.log("no está open");
@@ -48,7 +51,7 @@ export const TramOverlay = () => {
             EventBus.off('open-tram-overlay', handleOpen);
             EventBus.off('tram-tile-selected', handleTramSelected);
         };
-    }, [isOpen]);
+    }, [isOpen, playSound]);
 
     // Restart tile selection
     const reOpenOverlay = () => {

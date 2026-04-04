@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { EventBus } from '@/EventBus';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useAudio } from '@/context/AudioContext';
 
 // --- HEADER ---
 const TradeHeader = ({ player, isSender }: { player: any, isSender: boolean }) => (
@@ -31,6 +32,8 @@ const TradeHeader = ({ player, isSender }: { player: any, isSender: boolean }) =
 );
 
 export const TradingOverlay = () => {
+	const { playSound } = useAudio();
+
     const [allPlayers, setAllPlayers] = useState<any[]>([]);
     const [sender, setSender] = useState<any>(null);
     const [receiver, setReceiver] = useState<any>(null);
@@ -55,6 +58,7 @@ export const TradingOverlay = () => {
     const [showProperties, setShowProperties] = useState(false);
 
     useEffect(() => {
+
         const handleOpenTrade = (data: any) => {
             setAllPlayers(data.allPlayers || []);
             setSender(data.sender);
@@ -92,6 +96,7 @@ export const TradingOverlay = () => {
                     return { ...prev, properties: [...prev.properties, tile] };
                 });
             }
+			playSound('trade_shift');
             setIsMinimised(false);
             setSelectingFor(null);
             setShowProperties(true);
@@ -106,7 +111,7 @@ export const TradingOverlay = () => {
             EventBus.off('open-trading-mode', handleOpenTrade); 
             EventBus.off('tile-added-to-trade', handleTileSelected); 
         };
-    }, [selectingFor]);
+    }, [selectingFor, playSound]);
 
     const closeTrading = () => {
         setSender(null);
@@ -199,6 +204,7 @@ export const TradingOverlay = () => {
                         </div>
                         <div className="flex justify-center items-center p-8">
                             <Button onClick={closeTrading} 
+								sound="trade_turned_down"
                                 className={`w-[200px] h-[60px] bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black uppercase text-[14px] 
                                         rounded-full border border-red-500/20 transition-all ${bouncyAnimation}`}>
                                 Cancelar negociación
@@ -225,6 +231,7 @@ export const TradingOverlay = () => {
                         </div>
                         <div className="flex justify-center items-center p-8">
                             <Button onClick={closeTrading}
+							sound="trade_accepted"
                             className={`w-[150px] h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[14px] 
                                             rounded-full ${bouncyAnimation}`}>
                                 Proponer Trato

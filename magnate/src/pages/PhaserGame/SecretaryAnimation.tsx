@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useAudio } from '@/context/AudioContext';
 import { EventBus } from '@/EventBus';
 
 export const SecretaryAnimation = () => {
+	const { playSound } = useAudio();
     const [isActive, setIsActive] = useState(false);
     const [windowClosed, setWindowClosed] = useState(false);
 
@@ -9,6 +11,7 @@ export const SecretaryAnimation = () => {
         const handlePlayAnimation = () => {
             setIsActive(true);
             setWindowClosed(false);
+			playSound('jail_door');
 
             setTimeout(() => {
                 setWindowClosed(true);
@@ -26,7 +29,7 @@ export const SecretaryAnimation = () => {
         return () => {
             EventBus.off('play-secretary-animation', handlePlayAnimation);
         };
-    }, []);
+    }, [playSound]);
 
     if (!isActive) return null;
 

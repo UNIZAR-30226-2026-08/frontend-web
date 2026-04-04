@@ -112,6 +112,7 @@ export const TradeRequestOverlay = () => {
 
                     <div className="p-10 flex gap-4 justify-center">
                         <Button onClick={() => setIsOpen(false)}
+								sound="trade_turned_down"
                                 className={`w-[160px] h-[60px] bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black uppercase text-[16px] 
                                         rounded-full border border-red-500/20 transition-all ${bouncyAnimation}`}>
                                 Rechazar
@@ -120,6 +121,7 @@ export const TradeRequestOverlay = () => {
                                 // TODO: actualizar propiedades
                                 setIsOpen(false);
                             }}
+							sound="trade_accepted"
                             className={`w-[160px] h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[16px] 
                                             rounded-full ${bouncyAnimation}`}>
                                 Aceptar
