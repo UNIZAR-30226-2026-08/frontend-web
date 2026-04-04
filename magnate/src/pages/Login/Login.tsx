@@ -97,7 +97,7 @@ export function Login() {
                     
                     <div className='flex justify-center p-3 w-full'>
                         <Button type="submit" variant='magnate'
-                                className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[28px] uppercase font-bold h-[0px] w-[250px]
+                                className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[28px] uppercase font-bold h-[0px] w-[190px]
                                 ${bouncyAnimation}
                                 `}> 
                             Entrar

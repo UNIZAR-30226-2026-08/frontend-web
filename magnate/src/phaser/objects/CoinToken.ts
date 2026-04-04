@@ -14,6 +14,7 @@ export class CoinToken extends Phaser.GameObjects.Container {
             .setStrokeStyle(4, secondaryColor);
         
         const mText = scene.add.text(0, 0, 'M', {
+            fontFamily: 'LTSuperior',
             fontSize: `${radius * 1.8}px`,
             color: '#ffc971',
             fontStyle: 'bold',

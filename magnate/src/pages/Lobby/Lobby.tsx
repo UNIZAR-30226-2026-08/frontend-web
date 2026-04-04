@@ -118,7 +118,7 @@ export function Lobby() {
                         Código de la sala
                     </span>
                     <h1 className="text-5xl font-black tracking-tighter text-[var(--color-primary)] drop-shadow-sm">
-                        1234567890
+                        123456
                     </h1>
                 </div>
             <div className='flex justify-center p-3 w-full'>
