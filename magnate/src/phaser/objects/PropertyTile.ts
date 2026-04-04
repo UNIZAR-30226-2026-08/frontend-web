@@ -32,14 +32,15 @@ export class PropertyTile extends Tile {
 
         this.add(this.nameText);
 
-        //TODO: falta precio de las property tiles, lo pasa el backend?
-        // const priceText = this.scene.add.text(0, 40, `${config.price}€`, {
-        //     fontSize: '12px',
-        //     color: '#888888',
-        //     align: 'center',
-        // }).setOrigin(0.5);
+        //TODO: falta precio de las property tiles
+        const priceText = this.scene.add.text(0, 45, `200M`, {
+            fontFamily: 'LTSuperior',
+            fontSize: '14px',
+            color: '#222222',
+            align: 'center',
+        }).setOrigin(0.5);
         
-        // this.add(priceText);
+        this.add(priceText);
     }
 
     public setOwnerMarker(playerColor: number) {

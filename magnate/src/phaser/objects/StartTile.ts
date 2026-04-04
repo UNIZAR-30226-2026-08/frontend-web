@@ -24,7 +24,7 @@ export class StartTile extends Tile {
         
         this.add(arrow);
 
-        const subText = this.scene.add.text(0, 0, "Cobra 200€ al pasar", {
+        const subText = this.scene.add.text(0, 0, "Cobra 200M al pasar", {
             fontFamily: 'LTSuperior',
             fontSize: '14px',
             color: '#242424',
