@@ -12,14 +12,14 @@ export class BillToken extends Phaser.GameObjects.Container {
         const body = scene.add.rectangle(0, 0, width, height, primaryColor)
             .setStrokeStyle(3, secondaryColor)
             .setInteractive();
-        
-        // borde del billete
+
         const innerFrame = scene.add.rectangle(0, 0, width - 8, height - 8)
             .setStrokeStyle(1, detailColor, 0.5);
 
         const centerCircle = scene.add.ellipse(0, 0, height * 0.8, height * 0.8, secondaryColor, 0.4);
 
         const mText = scene.add.text(0, 0, 'M', {
+            fontFamily: 'LTSuperior',
             fontSize: `${height * 0.6}px`,
             color: '#ffc971',
             fontStyle: 'bold',

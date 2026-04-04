@@ -41,8 +41,12 @@ const stripedBackgroundStyle = { backgroundImage: `
 
 
 export function Shop() {
+    const [ownedIds, setOwnedIds] = useState<number[]>([1]);
     const handleBuy = (id: number) => {
         // TODO: cuando se compra, guardar para el jugador
+        if (!ownedIds.includes(id)) {
+            setOwnedIds((prev) => [...prev, id]);
+        }
     };
 
     return (
@@ -61,6 +65,7 @@ export function Shop() {
                     title="Skins de Ficha" 
                     items={SKINS} 
                     onBuy={handleBuy} 
+                    ownedIds={ownedIds}
                 />
 
                 {/* SECCIÓN EMOJIS */}
@@ -68,13 +73,14 @@ export function Shop() {
                     title="Emoticonos" 
                     items={EMOJIS} 
                     onBuy={handleBuy} 
+                    ownedIds={ownedIds}
                 />
             </div>
         </div>
     );
 }
 
-function ShopSection({ title, items, onBuy }: any) {
+function ShopSection({ title, items, onBuy, ownedIds = [] }: any) {
     const [pendingItem, setPendingItem] = useState<any>(null);
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     const navButton = `
@@ -103,10 +109,14 @@ function ShopSection({ title, items, onBuy }: any) {
             <Carousel className="w-full">
                 <CarouselContent className="-ml-2">
                     {items.map((item: any) => {
-                        const isAvailable = item.available !== false;
+                        const isOwned = ownedIds.includes(item.id);
+                        const isAvailable = item.available !== false || isOwned;
                         return (
                             <CarouselItem key={item.id} className="pl-2 md:basis-1/4 lg:basis-1/4">
                                 <Card className={`bg-white backdrop-blur-md rounded-[30px] overflow-hidden group border-2 border-slate-300 transition-all
+                                    ${isOwned 
+                                        ? 'bg-white border-[var(--color-primary)] shadow-[0_0_15px_rgba(0,138,92,0.1)]' 
+                                        : 'bg-white/50 border-slate-200 shadow-sm'}
                                     ${!isAvailable ? 'opacity-60 grayscale' : ''}`}>
                                     <CardContent className="flex flex-col items-center p-6 gap-2"> 
                                         
@@ -125,13 +135,17 @@ function ShopSection({ title, items, onBuy }: any) {
                                         </div>
 
                                         <Button 
-                                            disabled={!isAvailable}
-                                            onClick={() => isAvailable && setPendingItem(item)}
-                                            className={`h-8 font-black uppercase text-[10px] rounded-full transition-all text-[12px]
-                                                ${isAvailable 
-                                                    ? `bg-[var(--color-primary)] text-white w-[100px] ${bouncyAnimation}` 
-                                                    : 'bg-slate-200 text-slate-400 cursor-not-allowed w-[120px]'}`}>
-                                            {isAvailable ? 'Adquirir' : 'No disponible'}
+                                            disabled={!isAvailable || isOwned}
+                                            onClick={() => isAvailable && !isOwned && setPendingItem(item)}
+                                            className={`
+                                                h-8 font-black uppercase text-[11px] rounded-full transition-all w-22
+                                                ${isOwned 
+                                                    ? 'bg-slate-200 text-slate-500 border-none cursor-default' 
+                                                    : isAvailable 
+                                                        ? `bg-[var(--color-primary)] text-white ${bouncyAnimation}` 
+                                                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'}
+                                            `}>
+                                            {isOwned ? 'Comprado' : isAvailable ? 'Adquirir' : 'No disponible'}
                                         </Button>
                                     </CardContent>
                                 </Card>

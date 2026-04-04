@@ -104,6 +104,7 @@ export function PrivateRoom () {
                                 ${bouncyAnimation}
                             `}>
                             <Button 
+                                type="button"
                                 onClick={() => handleButtonClick(mode.id)}
                                 className={`
                                     w-full h-full p-0 
@@ -132,7 +133,7 @@ export function PrivateRoom () {
                             <Input                 
                                 id="room-code"
 								ref={codeRef}
-                                placeholder="1234567890" 
+                                placeholder="123456789" 
                                 value={roomCode}
                                 onChange={(e) => {
 										setRoomCode(e.target.value);
