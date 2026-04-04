@@ -202,14 +202,34 @@ export class Board extends Phaser.Scene {
 
         // DEBUG: para propuesta de tradeo ----------------------------
         this.input.keyboard?.on('keydown-T', () => {
+            const player = this.players[0];
+            const player2 = this.players[1];
             console.log("simulando propuesta...");
+            const offIds = ["006", "031"];
+            const askIds = ["026", "023", "024", "103", "032", "039", "101"];
             
-            const mockProposal = { // TODO: pasar propiedades bien 
-                offeringPlayer: this.players[0],
+            const mapProps = (ids: string[]) => ids.map(id => {
+                const tile = this.tiles.find(t => t.tileConfig.id === id);
+                return {
+                    id: id,
+                    name: tile?.tileConfig.name || `Propiedad ${id}`,
+                    color: (tile as any).tileConfig.color || '#cbd5e1' 
+                };
+            });
+
+            const mockProposal = {
+                offeringPlayer: {
+                    name: player.model.name,
+                    color: '#' + player.model.color.toString(16).padStart(6, '0')
+                },
+                askedPlayer: {
+                    name: player2.model.name,
+                    color: '#' + player2.model.color.toString(16).padStart(6, '0')
+                },
                 offeredMoney: 500,
-                askedMoney: 0,
-                offeredProperties: ["005", "007"],
-                askedProperties: ["012"],
+                askedMoney: 20,
+                offeredProperties: mapProps(offIds),
+                askedProperties: mapProps(askIds),
             };
 
             EventBus.emit('show-trade-request', mockProposal);
@@ -227,14 +247,22 @@ export class Board extends Phaser.Scene {
     }
 
     createPlayer(id: string, name: string) {
-        // const startTile = this.tiles[0];
-        const startTile = this.tiles[this.players.length % this.colorPalette.length];
+        const startTile = this.tiles[0];
+        //const startTile = this.tiles[this.players.length % this.colorPalette.length];
         
         const colorIndex = this.players.length % this.colorPalette.length;
         const assignedColor = this.colorPalette[colorIndex];
 
+        const offset = 22;
+
+        const offsetX = (this.players.length % 2 === 0) ? -offset : offset;
+        const offsetY = (this.players.length < 2) ? -offset : offset;
+
+        const finalX = startTile.x + offsetX;
+        const finalY = startTile.y + offsetY;
+
         const model = new PlayerModel(id, name, assignedColor);
-        const token = new PlayerToken(this, startTile.x, startTile.y, assignedColor);
+        const token = new PlayerToken(this, finalX, finalY, assignedColor);
 
         token.setDepth(200 + this.players.length);
 
