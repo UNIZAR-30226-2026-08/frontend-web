@@ -30,12 +30,12 @@ const STATS = {
 };
 
 const SKINS = {
-    1 : { name: "Token1", price: 0, img: "/gorro.jpg" },
-    2 : { name: "Token2", price: 10, img: "/emoji.png"},
-    3 : { name: "Token3", price: 50, img: "/pattern.svg"},
-    4 : { name: "Token4", price: 100, img: "/vite.svg"},
-    5 : { name: "Token5", price: 150, img: "/gorro.jpg" },
-    6 : { name: "Token6", price: 200, img: "/gorro.jpg"},
+    1 : { name: "Sombrero", price: 0,   img: "/skins/sombrero_closeup.png" },
+    2 : { name: "Barco", price: 10,  img: "/skins/barco_closeup.png"},
+    3 : { name: "Burguer", price: 50,  img: "/skins/burguer_closeup.png"},
+    4 : { name: "Coche f1", price: 100, img: "/skins/f1_closeup.png"},
+    5 : { name: "Sombrero", price: 150, img: "/skins/sombrero_closeup.png" },
+    6 : { name: "Sombrero", price: 200, img: "/skins/sombrero_closeup.png"},
 };
 
 const stripedBackgroundStyle = { backgroundImage: `

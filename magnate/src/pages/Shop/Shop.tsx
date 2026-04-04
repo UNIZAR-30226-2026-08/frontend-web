@@ -12,20 +12,20 @@ import { Card, CardContent } from "@/components/ui/card";
 
 // TODO: ejemplos
 const SKINS = [
-    { id: 1, name: "Token1", price: 0, img: "/gorro.jpg", available: true },
-    { id: 2, name: "Token2", price: 10, img: "/gorro.jpg", available: true },
-    { id: 3, name: "Token3", price: 50, img: "/gorro.jpg", available: false },
-    { id: 4, name: "Token4", price: 100, img: "/gorro.jpg", available: true },
-    { id: 5, name: "Token5", price: 150, img: "/gorro.jpg", available: false },
-    { id: 6, name: "Token6", price: 200, img: "/gorro.jpg", available: true },
+    { id: 1, name: "Barco", price: 0, img: "/skins/barco_closeup.png", available: true },
+    { id: 2, name: "Burguer", price: 10, img: "/skins/burguer_closeup.png", available: true },
+    { id: 3, name: "Coche f1", price: 50, img: "/skins/f1_closeup.png", available: false },
+    { id: 4, name: "Sombrero", price: 100, img: "/skins/sombrero_closeup.png", available: true },
+    { id: 5, name: "Barco", price: 150, img: "/skins/barco_closeup.png", available: false },
+    { id: 6, name: "Barco", price: 200, img: "/skins/barco_closeup.png", available: true },
 ];
 
 const EMOJIS = [
-    { id: 101, name: "Risa", price: 100, img: "/emoji.png", available: true },
-    { id: 102, name: "Risa2", price: 250, img: "/emoji.png", available: false },
-    { id: 103, name: "Risa3", price: 100, img: "/emoji.png", available: false },
-    { id: 104, name: "Risa4", price: 300, img: "/emoji.png", available: true },
-    { id: 105, name: "Risa5", price: 350, img: "/emoji.png", available: true },
+    { id: 101, name: "Enfado", price: 100, img: "/emojis/emote_anger.png", available: true },
+    { id: 102, name: "Gota", price: 250, img: "/emojis/emote_drop.png", available: false },
+    { id: 103, name: "Exclamación", price: 100, img: "/emojis/emote_exclamation.png", available: false },
+    { id: 104, name: "Cara Triste", price: 300, img: "/emojis/emote_faceSad.png", available: true },
+    { id: 105, name: "Corazón", price: 350, img: "/emojis/emote_heart.png", available: true },
 ];
 
 const stripedBackgroundStyle = { backgroundImage: `
