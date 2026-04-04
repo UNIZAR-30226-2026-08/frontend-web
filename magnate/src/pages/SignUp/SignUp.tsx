@@ -1,8 +1,11 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export function SignUp() {
+    const navigate = useNavigate();
+
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
@@ -38,6 +41,7 @@ export function SignUp() {
         }
 
         console.log('Registro exitoso:', { username, password });
+        navigate('/home');
     };
 
     return (

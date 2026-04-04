@@ -9,7 +9,7 @@ export type SoundId = 'bg_menu' | 'bg_game' | 'button_back' | 'button_main' | 'b
 		'dice_grab' | 'dice_shake' | 'dice_throw' | 'end_of_game' | 'fantasy' | 
 		'house_build' | 'house_down' | 'jail_door' | 'jail_turn_in' | 'message_incoming' | 
 		'money_lose' | 'money_win' | 'parking' | 'player_token_hop' | 
-		'trade_shift' | 'trade_turned_down' | 'trade_accepted';
+		'trade_shift' | 'trade_turned_down' | 'trade_accepted' | 'turn_banner_in' | 'turn_banner_out';
 
 interface AudioRegistryItem {
 	howl: Howl;
@@ -208,6 +208,18 @@ const audioRegistry: Record<SoundId, AudioRegistryItem> = {
 	trade_accepted: {
 		howl: new Howl({src: [
 			'/sounds/sfx/trade_accepted.mp3',
+		]}),
+		channel: 'sfx'
+	},
+	turn_banner_in: {
+		howl: new Howl({src: [
+			'/sounds/sfx/turn_banner_in.mp3',
+		]}),
+		channel: 'sfx'
+	},
+	turn_banner_out: {
+		howl: new Howl({src: [
+			'/sounds/sfx/turn_banner_out.mp3',
 		]}),
 		channel: 'sfx'
 	},
