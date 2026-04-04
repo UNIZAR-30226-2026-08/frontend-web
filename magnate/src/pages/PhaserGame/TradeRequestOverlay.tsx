@@ -3,19 +3,19 @@ import { Button } from "@/components/ui/button";
 import { EventBus } from '@/EventBus';
 
 
-const TradeHeader = ({ player, isSender }: { player: any, isSender: boolean }) => (
+const TradeHeader = ({ player, isSender, isMe }: { player: any, isSender: boolean, isMe?: boolean }) => (
     <div className={`py-6 pb-2 flex flex-col ${isSender ? 'items-start' : 'items-end'}`}>
         <div className={`flex items-center gap-4 ${isSender ? 'flex-row' : 'flex-row-reverse'}`}>
             <div 
                 className="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-black shadow-lg border-4 border-white shrink-0" 
-                style={{ backgroundColor: player?.color || '#cbd5e1', color: '#fff' }}>
+                style={{ backgroundColor: player?.color, color: '#fff' }}>
             </div>
             <div className={`flex flex-col ${isSender ? 'items-start text-left' : 'items-end text-right'}`}>
                 <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-800 leading-[0.9]">
-                    {player?.name}
+                    {isMe ? 'Tú' : player?.name}
                 </h3>
                 <span className="text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase opacity-90 mt-1">
-                    {isSender ? 'Lo que recibes' : 'Lo que entregas'}
+                    {isSender ? 'Lo que entregas' : 'Lo que recibes'}
                 </span>
             </div>
         </div>
@@ -91,21 +91,21 @@ export const TradeRequestOverlay = () => {
 
                     <div className="flex justify-between px-12 gap-12 items-start">
                         <div className="flex-1 flex flex-col">
-                            <TradeHeader player={proposal.offeringPlayer}
-                                        isSender={true} />
-                            <SummaryZone 
-                                money={proposal.offeredMoney} 
-                                properties={proposal.offeredProperties || []} 
-                                isPositive={true}
-                            />
-                        </div>
-
-                        <div className="flex-1 flex flex-col">
-                            <TradeHeader player={proposal.askedPlayer} isSender={false} />
+                            <TradeHeader player={proposal.askedPlayer} isSender={true} isMe={true} />
                             <SummaryZone 
                                 money={proposal.askedMoney} 
                                 properties={proposal.askedProperties || []} 
                                 isPositive={false}
+                            />
+
+                        </div>
+
+                        <div className="flex-1 flex flex-col">
+                            <TradeHeader player={proposal.offeringPlayer} isSender={false}  isMe={false} />
+                            <SummaryZone 
+                                money={proposal.offeredMoney} 
+                                properties={proposal.offeredProperties || []} 
+                                isPositive={true}
                             />
                         </div>
                     </div>
@@ -122,7 +122,7 @@ export const TradeRequestOverlay = () => {
                             }}
                             className={`w-[160px] h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[16px] 
                                             rounded-full ${bouncyAnimation}`}>
-                                Aceptar Trato
+                                Aceptar
                         </Button>
                     </div>
                 </div>
