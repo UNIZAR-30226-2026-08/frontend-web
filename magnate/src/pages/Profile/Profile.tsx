@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PageHeader } from "@/components/layout/PageHeader";
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import {
     Carousel,
@@ -116,6 +117,8 @@ export function Profile() {
 	// for skin selection
 	const [selectedSkinId, setSelectedSkinId] = useState(skinId);
 
+	const navigate = useNavigate();
+
 	const handleConfirmSelection = () => {
 		setSkinId(selectedSkinId);
 		setChooseSkin(false);
@@ -127,6 +130,7 @@ export function Profile() {
     
     const confirmLogout = () => {
         setShowConfirm(false);
+		navigate('/');
     };
 
     const cancelLogout = () => {
