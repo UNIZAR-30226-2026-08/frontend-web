@@ -9,7 +9,6 @@ import { AuctionOverlay } from './AuctionOverlay';
 import { TradingOverlay  } from './TradingOverlay';
 import { TradeRequestOverlay } from './TradeRequestOverlay';
 import { TramOverlay  } from './TramOverlay';
-import { TurnInJailOverlay  } from './TurnInJailOverlay';
 import { PlayersHUD } from './PlayersHUD';
 import { ControlsHUD } from './ControlsHUD';
 import { ChatHUD } from './ChatHUD';
@@ -22,6 +21,7 @@ import { BannerMessage } from '@/components/layout/BannerMessage';
 import { ToastMessage } from '@/components/layout/ToastMessage';
 
 import { SecretaryAnimation } from './SecretaryAnimation';
+import { JailOverlay } from './JailOverlay';
 
 interface PlayerInitData {
     id: string;
@@ -113,9 +113,9 @@ export const PhaserGame = () => {
             <TradingOverlay />
             <TradeRequestOverlay />
             <TramOverlay />
-            <TurnInJailOverlay />
             <PropertyAdminOverlay />
             <GameOver />
+            <JailOverlay/>
         </div>
     );
 };

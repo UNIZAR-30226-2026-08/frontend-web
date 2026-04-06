@@ -24,6 +24,7 @@ const CORNER_VISUALS = new Map<Function, CornerData>([
 
 interface IBoardScene extends Phaser.Scene {
     sendToSecretary(playerId: string): Promise<void>;
+    showToast(message: string, duration?: number): void;
 }
 
 export class TileLogicManager {
@@ -38,7 +39,8 @@ export class TileLogicManager {
         if (tile instanceof FantasyTile) {
             // TODO: Vendrá del backend
             const cartasFantasia = [
-                { title: "Concurso de Postales EINA", description: "Ganaste el concurso anual de postales navideñas de la EINA. Tu premio: 150€.", price: 130 }
+                { title: "Concurso de Postales EINA", description: "Ganaste el concurso anual de postales navideñas de la EINA. Tu premio: 150€.", price: 130 },
+                { title: "Destino EINA", description: "Ya eres un matemático que solo tiene que ir a la EINA. Avanza a la casilla de salida.", price: 100 }
             ];
             
             const cartaAleatoria = Phaser.Utils.Array.GetRandom(cartasFantasia);
@@ -52,7 +54,6 @@ export class TileLogicManager {
         }
         
 		else if (tile instanceof PropertyTile) {
-
             const propConfig = tile.tileConfig as IPropertyTile;
             // TODO: Vendrá del backend?
             const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800};
@@ -61,7 +62,8 @@ export class TileLogicManager {
                 name: p.model.name,
                 color: '#' + p.model.color.toString(16).padStart(6, '0'),
             }));
-
+            console.log("EL dueño es;", propConfig.ownerId);
+            console.log("Soy el jugador con id:", player.id);
             EventBus.emit('show-property-card', {
                 id: propConfig.id,
                 name: propConfig.name,
@@ -74,8 +76,9 @@ export class TileLogicManager {
                 playerName: player.name,
                 playerColor: '#' + player.color.toString(16).padStart(6, '0'),
 				isMortgaged: false, 		// Pruebecitas TODO JULIA
-				isAvailable: true, 		// Pruebecitas TODO JULIA
 				constructionLevel: 'house1',	// Pruebecitas TODO JULIA
+                ownerId: propConfig.ownerId,
+                playerId: player.id
             });
         }
 
@@ -118,10 +121,23 @@ export class TileLogicManager {
 		}
 
         else if (tile instanceof GoToJailTile) {
+            player.jailTurnCount = 1;
+            player.emitUpdate();
             this.scene.sendToSecretary(player.id);
         }
 
-		else if (tile instanceof StartTile) {}
+		else if (tile instanceof StartTile) {
+            player.balance += 200;
+            player.emitUpdate(); // TODO: si pasan también se cobra
+        }
+
+        else if (tile instanceof JailTile) {
+            EventBus.emit('open-jail-overlay', { 
+                tileId: tile.tileConfig.id,
+                turnCount: player.jailTurnCount,
+                isPrisoner: player.jailTurnCount >= 1 
+            });
+        }
         
 		else {
 			const cornerConfig = CORNER_VISUALS.get(tile.constructor);

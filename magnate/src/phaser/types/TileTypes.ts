@@ -25,6 +25,7 @@ export interface ITile {
     rotation? : number;
     width?: number;
     height?: number;
+    ownerId?: string | null;
 }
 
 // Interface for a property tile
@@ -33,7 +34,7 @@ export interface IPropertyTile extends ITile {
     price: number;
     color: string;
     rent?: number; 
-    ownerId?: string | null; // Puntero al jugador
+    //ownerId?: string | null; // Puntero al jugador
 }
 
 // Interface for a fantasy tile
@@ -46,7 +47,7 @@ export interface IBridgeTile extends ITile {
     type: TileType.BRIDGE;
     icon?: string;
 	rent?: number;	// TODO preguntar backend
-	ownerId?: string | null;
+	//ownerId?: string | null;
 	price: number;
 }
 
@@ -54,7 +55,7 @@ export interface IServerTile extends ITile {
     type: TileType.SERVER;
     icon?: string;
 	rent?: number;	// TODO preguntar backend
-	ownerId?: string | null;
+	//ownerId?: string | null;
 	price: number;
 }
 
