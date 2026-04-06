@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { EventBus } from "@/EventBus";
+import { useAudio } from '@/context/AudioContext';
 
 interface BannerState {
   visible: boolean;
@@ -9,6 +10,8 @@ interface BannerState {
 }
 
 export function BannerMessage() {
+  const { playSound } = useAudio();
+
   const [banner, setBanner] = useState<BannerState>({
     visible: false,
     message: "",
@@ -20,6 +23,7 @@ export function BannerMessage() {
     let timeoutId: NodeJS.Timeout;
 
     const handleShowBanner = (data: { message: string; color?: string }) => {
+	  playSound('turn_banner_in');
       clearTimeout(timeoutId);
       setBanner({
         visible: true,
@@ -30,6 +34,7 @@ export function BannerMessage() {
     };
 
     const handleHideBanner = () => {
+	  playSound('turn_banner_out');
       setBanner((prev) => ({ ...prev, exiting: true }));
       timeoutId = setTimeout(() => {
         setBanner((prev) => ({ ...prev, visible: false, exiting: false }));
@@ -44,7 +49,7 @@ export function BannerMessage() {
       EventBus.off("hide-banner", handleHideBanner);
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [playSound]);
 
   if (!banner.visible) return null;
 

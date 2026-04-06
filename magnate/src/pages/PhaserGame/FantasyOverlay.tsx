@@ -44,7 +44,11 @@ export const FantasyOverlay = () => {
                 
                     {/* CARTA FRONT -> TODO: si ha pulsado la oculta, ya no puede volver a pulsar esta */} 
                     <div className={`transition-all duration-300 ${isRevealed ? 'grayscale blur-[2px] scale-95' : 'hover:scale-110'}`}
-                        onClick={() => closeOverlay()}>
+                        onClick={() => {
+								playSound('card_place_1');
+								closeOverlay();
+						}
+						}>
                         <GameCard 
                             isFlipped={true}
                             front={<FantasyCardContent data={cardData} />}

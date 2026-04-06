@@ -4,8 +4,10 @@ import { GameCard } from '@/components/ui/gameCard';
 import { PropertyCardContent } from '@/components/layout/PropertyLayout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button'
+import { useAudio } from '@/context/AudioContext';
 
 export const AuctionOverlay = () => {
+	const { playSound } = useAudio();
     
     const [auctionData, setAuctionData] = useState<any>(null);
     const [currentBid, setCurrentBid] = useState(0);
@@ -53,9 +55,13 @@ export const AuctionOverlay = () => {
             if (timeLeft === 0 && !showResults) handleGoToResults();
             return;
         }
+		if (timeLeft <= 5){
+			playSound('timeout');
+		}
+
         const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
         return () => clearInterval(timer);
-    }, [timeLeft, auctionData, showResults]);
+    }, [timeLeft, auctionData, showResults, playSound]);
 
     const handleBid = (amount: number) => {
         setCurrentBid(prev => prev + amount);
@@ -71,6 +77,7 @@ export const AuctionOverlay = () => {
     };
     
     const handleGoToResults = () => {
+		playSound('auction_end');
         setShowResults(true);
         // EventBus.emit('auction-finished', { winner: 'Player 1', amount: currentBid }); // TODO: avisar phaser quien ha ganado
     };

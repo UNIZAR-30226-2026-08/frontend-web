@@ -35,6 +35,7 @@ export const BankruptModal = ({ isOpen, onClose, onConfirm }: BankruptModalProps
                         <Button
                             onClick={onConfirm}
                             className="w-full h-full p-0 bg-transparent hover:bg-red-700 relative flex flex-col items-center justify-center"
+							sound="bankrupt"
                         >
                             <span className="text-4xl font-black uppercase italic tracking-tighter text-white">
                                 SÍ, RENDIRME

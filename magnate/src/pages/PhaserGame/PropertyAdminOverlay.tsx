@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useAudio } from '@/context/AudioContext';
 import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
 import { PropertyAdminCardContent } from '@/components/layout/PropertyAdmin';
 import { Button } from '@/components/ui/button';
 
 export const PropertyAdminOverlay = () => {
+	const { playSound } = useAudio();
     const [propData, setPropData] = useState<any>(null);
     const [constructionLevel, setConstructionLevel] = useState<string>('base');
     const [isMortgaged, setIsMortgaged] = useState<boolean>(false);
@@ -13,6 +15,7 @@ export const PropertyAdminOverlay = () => {
 
     useEffect(() => {
         const handleShowProp = ({data}: any) => {
+			playSound('card_place_1');
             setPropData(data);
             setConstructionLevel(data.constructionLevel || 'base'); // TODO: vendra del backend
             setIsMortgaged(data.isMortgaged || false); // TODO: vendra del backend
@@ -20,7 +23,7 @@ export const PropertyAdminOverlay = () => {
 
         EventBus.on('open-property-management', handleShowProp);
         return () => { EventBus.off('open-property-management', handleShowProp); EventBus.emit('dark-mode', false); };
-    }, []);
+    }, [playSound]);
 
     if (!propData) return null;
 
@@ -32,6 +35,7 @@ export const PropertyAdminOverlay = () => {
     const handleAddHouse = () => {
         if (isMortgaged) return; // TODO: revisar qué hacer si está hipotecada
         if (currentIndex < levels.length - 1) {
+			playSound('house_build');
             setConstructionLevel(levels[currentIndex + 1]);
         }
     };
@@ -40,12 +44,14 @@ export const PropertyAdminOverlay = () => {
     const handleRemoveHouse = () => {
         if (isMortgaged) return; // TODO: revisar qué hacer si está hipotecada
         if (currentIndex > 0) {
+			playSound('house_down');
             setConstructionLevel(levels[currentIndex - 1]);
         }
     };
 
     // Lógica de Hipoteca
     const handleToggleMortgage = () => {
+		playSound('mortgage');
         setIsMortgaged(!isMortgaged);
     };
 
