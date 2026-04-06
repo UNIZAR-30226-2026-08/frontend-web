@@ -6,10 +6,12 @@ export class PropertyModel {
     // ver de quién es una propiedad, no podemos estar iterando sobre todos
     // los jugadores y todas sus propiedades
     public ownerId: string | null;
+    public isMortgaged: boolean;
 
     constructor(id: string) {
         this.id = id;
         this.houseCount = 0;
         this.ownerId = null; 
+        this.isMortgaged = false;
     }
 }

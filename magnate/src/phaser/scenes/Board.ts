@@ -23,6 +23,7 @@ import { CameraController } from '../utils/CameraController';
 import { BoardEffects } from '../utils/BoardEffects';
 import { AnimationManager } from '../managers/AnimationManager';
 import { TileLogicManager } from '../managers/TileLogicManager';
+import { EventManager } from '../managers/EventManager';
 
 
 export class Board extends Phaser.Scene {
@@ -30,16 +31,17 @@ export class Board extends Phaser.Scene {
     private players: { model: PlayerModel, token: PlayerToken }[] = [];
     private colorPalette: number[] = [];
     private fantasyCards: any[] = []; // TODO: rellenar con data/fantasyCard.json o recibir de backend
-    private cameraController!: CameraController; // TODO: para las cámaras
-    private diceManager!: DiceManager;
-     private tileLogicManager!:  TileLogicManager;
+    public diceManager!: DiceManager;
+    public tileLogicManager!:  TileLogicManager;
+    private eventManager!: EventManager;
     private localPlayerId: string | null = null;
+    public cameraController!: CameraController; // TODO: para las cámaras
 
     // kinda global (handlePlayerClick)
-    private selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
+    public selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
 
     // Para animaciones
-    private animationManager!: AnimationManager;
+    public animationManager!: AnimationManager;
     private pendingParkingData: { tile: Tile, playerId: string } | null = null;
     private pendingBillData: { playerId: string, bills: number , amount: string } | null = null;
 
@@ -164,9 +166,10 @@ export class Board extends Phaser.Scene {
         this.events.on('shutdown', () => {
             EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
         });
-
         // Evento para marcar quien compra propiedad  ----------------------------
         EventBus.on('property-bought', this.handlePurchase, this);
+        
+        this.eventManager = new EventManager(this, this.tiles, this.players);
         this.setupEventListeners();
 
         // Evento para que camara vuelva a la vista general ----------------------------
@@ -174,7 +177,6 @@ export class Board extends Phaser.Scene {
             this.cameraController.resetView(2000);
             this.time.delayedCall(2000, () => {
                 this.showUI();
-
                 if (this.pendingBillData) {
                     this.animationManager.BillAnimation(this.pendingBillData.playerId, 15, this.pendingBillData.amount);
                     this.pendingBillData = null;
@@ -196,7 +198,7 @@ export class Board extends Phaser.Scene {
             this.input.keyboard?.on(`keydown-${key}`, () => {
                 const id = `000${index + 1}`;
                 console.log(`[DEBUG] Test HUD Pos ${id}`);
-                this.animationManager.BillAnimation(id, 6, "-1100M");
+                this.animationManager.BillAnimation(id, 6, "+200M");
             });
         });
 
@@ -205,8 +207,8 @@ export class Board extends Phaser.Scene {
             const player = this.players[0];
             const player2 = this.players[1];
             console.log("simulando propuesta...");
-            const offIds = ["006", "031"];
-            const askIds = ["026", "023", "024", "103", "032", "039", "101"];
+            const offIds: string[] = [];
+            const askIds = ["013", "021", "023"];
             
             const mapProps = (ids: string[]) => ids.map(id => {
                 const tile = this.tiles.find(t => t.tileConfig.id === id);
@@ -227,7 +229,7 @@ export class Board extends Phaser.Scene {
                     color: '#' + player2.model.color.toString(16).padStart(6, '0')
                 },
                 offeredMoney: 500,
-                askedMoney: 20,
+                askedMoney: 50,
                 offeredProperties: mapProps(offIds),
                 askedProperties: mapProps(askIds),
             };
@@ -346,7 +348,7 @@ export class Board extends Phaser.Scene {
         const nextTileId = targetTile.tileConfig.id;
 
         // DEBUG: va a la casilla dependiendo del tipo
-        // const targetIndex = this.tiles.findIndex(t => t instanceof TramTile);
+        // const targetIndex = this.tiles.findIndex(t => t instanceof JailTile);
         // const targetTile = this.tiles[targetIndex];
         // const nextTileId = targetTile.tileConfig.id;
         
@@ -384,8 +386,6 @@ export class Board extends Phaser.Scene {
                 });
             });
         });
-
-        // this.showToast(`¡${p.model.name} ha comprado la casilla!`);
     }
 
     public async sendToSecretary(playerId: string) {
@@ -411,11 +411,8 @@ export class Board extends Phaser.Scene {
         }
      
         p.model.currentTileId = jailTile.tileConfig.id; 
-
         p.token.setAlpha(0);
-        
         p.token.setPosition(finalX, finalY - 600);
-
         this.cameraController.focusOnTile(jailTile, 2.2, () => {
 
             p.token.setPosition(finalX, finalY - 600);
@@ -428,6 +425,7 @@ export class Board extends Phaser.Scene {
                 duration: 800,
                 onComplete: () => {}
             });
+            this.showToast(`${p.model.name} ha sido enviado a Secretaría`);
         });
     }
 
@@ -448,18 +446,13 @@ export class Board extends Phaser.Scene {
     }
 
     // Marcador para cada casilla que compra un player 
-    private handlePurchase (data: { tileId: string, playerColor: string }) {
-        console.log("Recibida compra:", data);
+    private handlePurchase (data: { tileId: string, playerColor: string, playerId: string }) {
         const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
         if (tile) {
+            tile.tileConfig.ownerId = data.playerId;
             const colorNum = parseInt(data.playerColor.startsWith('#')  ? data.playerColor.replace('#', '0x') : data.playerColor);
-                    
-            if (tile instanceof PropertyTile) {
-                tile.setOwnerMarker(colorNum);
-            } else if (tile instanceof ServerTile) {
-                console.log("Entro");
-                tile.setOwnerMarker(colorNum);
-            } else if (tile instanceof BridgeTile) {
+            
+            if (tile instanceof PropertyTile || tile instanceof ServerTile || tile instanceof BridgeTile) {
                 tile.setOwnerMarker(colorNum);
             }
         } else {
@@ -468,105 +461,19 @@ export class Board extends Phaser.Scene {
     }
 
     private setupEventListeners() {
-
-        // Trading overlay
-        EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[]}) => {
-            
-            BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this, this.players);
-
-            this.tiles.forEach(tile => {
-                if (data.propertyIds.includes(tile.tileConfig.id)) {
-                    tile.setInteractive({ useHandCursor: true });
-                    tile.removeAllListeners('pointerdown');
-
-                    tile.once('pointerdown', () => {
-                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
-                        const propConfig = tile.tileConfig as IPropertyTile;
-                        EventBus.emit('tile-added-to-trade', {
-                            id: propConfig.id,
-                            name: propConfig.name,
-                            color: propConfig.color || '#cbd5e1'
-                        });
-                    });
-                } else {
-                    tile.disableInteractive();
-                }
-            });
-        });
-
-        // Evento para mostrar casillas cuando se pulsa el boton de administrar
-        EventBus.on('open-property-selection-mode', (propertyIds: string[]) => {
-            BoardEffects.setFocusByIds(this.tiles, propertyIds, this, []);
-            this.tiles.forEach(tile => {
-
-                if (propertyIds.includes(tile.tileConfig.id)) {
-                    tile.removeAllListeners('pointerdown');
-
-                    tile.once('pointerdown', () => {
-                        BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
-                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
-                        const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
-                        const propConfig = tile.tileConfig as IPropertyTile;
-                        
-                        EventBus.emit('open-property-management', { 
-                            data: {
-                                ...tile.tileConfig,
-                                headerColor: propConfig.color || '#FFFFFF' ,
-                                rent: rentValues,
-                                housePrice: 20,
-                            }
-                        });
-                    });
-                } else {
-                    tile.disableInteractive();
-                }
-            });
-        });
-        
-        // Evento para oscurecer tablero (active = true)
         EventBus.on('dark-mode', (active: boolean = true) => {
-            if (active) {
-                // Oscurece todo el tablero
+            if (active) { // Oscurece todo el tablero
                 BoardEffects.setFocusByIds(this.tiles, [], this, this.players);
-            } else {
-                // Limpia oscurecimiento
+            } else { // Limpia oscurecimiento
                 BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
             }
         });
 
-        // light up trams and wait for clicks
-		EventBus.on('start-tram-selection', () => {
-			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
-			const tramTileIds = tramTiles.map(t => t.tileConfig.id);
-            
-			BoardEffects.setFocusByIds(this.tiles, tramTileIds, this, this.players);
-
-			this.tiles.forEach(tile => {
-				if (tramTileIds.includes(tile.tileConfig.id)) {
-					tile.setInteractive({ useHandCursor: true });
-					tile.removeAllListeners('pointerdown');
-
-					tile.once('pointerdown', () => {
-						const tramConfig = tile.tileConfig as ITramTile;
-
-						EventBus.emit('tram-tile-selected', {
-							id: tramConfig.id,
-							name: tramConfig.name,
-                            subText: tramConfig.subText,
-						});
-
-						// disable focus after click
-						BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
-					});
-				} else {
-					tile.disableInteractive();
-				}
-			});
-		});
-
         EventBus.on('execute-tram-travel', (data: {targetId: string, cost: number}) => {
         	const p = this.selectedPlayer;
+            if (!p) return;
 			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
+            if (!targetTile) return;
 
 			const path = [{ x: targetTile.x, y: targetTile.y }];
 			p.token.moveTo(path, () => {
@@ -574,90 +481,11 @@ export class Board extends Phaser.Scene {
 				// 	  this.checkTileLogic(p.model, targetTile); // INFINITE LOOP
 				// });
 			});
-
 			// unset interactiveness of tram tiles
 			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
 			tramTiles.forEach(tile => {
 				tile.disableInteractive();
 			});
 		});
-
- 		EventBus.on('start-in-jail-selection', (data: { tileList: string[]} ) => { // List of tile IDs (string)
-			//const goableTiles = this.tiles.filter(t => data.tileList.includes(t.tileConfig.id));
-            
-			BoardEffects.setFocusByIds(this.tiles, data.tileList, this, this.players);
-
-			this.tiles.forEach(tile => {
-				if (data.tileList.includes(tile.tileConfig.id)) {
-					tile.setInteractive({ useHandCursor: true });
-					tile.removeAllListeners('pointerdown');
-
-					tile.once('pointerdown', () => {
-						const tileConfig = tile.tileConfig;
-
-						EventBus.emit('in-jail-tile-selected', {
-							id: tileConfig.id,
-							name: tileConfig.name
-						});
-
-						// disable focus after click
-						BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
-					});
-				} else {
-					tile.disableInteractive();
-				}
-			});
-		});
-
-        EventBus.on('execute-in-jail-travel', (data: {targetId: string }) => {
-        	const p = this.selectedPlayer;
-			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
-
-			const path = [{ x: targetTile?.x, y: targetTile?.y }];
-			p.token.moveTo(path, () => {
-				 this.time.delayedCall(800, () => {
-				 	this.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
-				 });
-			});
-		});
-
-        EventBus.on('make-tiles-unclickable', (data: { tileList: string[]}) => { // list of strings (tile IDs)
-			const setTiles = this.tiles.filter(t => data.tileList.includes(t.tileConfig.id));
-			setTiles.forEach(tile => {
-				tile.disableInteractive();
-			});
-        	EventBus.emit('clear-dice');
-		});
-
-      
-        // Construir casas/hoteles
-        EventBus.on('execute-property-build', (data: { tileId: string, level: string, isMortgaged: boolean }) => {
-            const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
-            
-            if (tile && tile instanceof PropertyTile) {
-                // Mapeamos el string del Overlay a un número para el método setConstructionLevel
-                const levelMap: Record<string, number> = {
-                    'base': 0, 'house1': 1, 'house2': 2, 'house3': 3, 'house4': 4, 'hotel': 5
-                };
-                const numericLevel = levelMap[data.level] ?? 0;
-                tile.setConstructionLevel(numericLevel);
-            }
-        });
-
-        // Cuando se cae en parking, animacion dinero 
-        EventBus.on('collect-parking-money', (data: { currentTileId: string }) => {
-            const parkingTile = this.tiles.find(t => t.tileConfig.id === data.currentTileId);
-            const currentPlayer = this.getLocalPlayer();
-
-            if (parkingTile && currentPlayer) {
-                this.pendingParkingData = { 
-                tile: parkingTile, 
-                playerId: currentPlayer.model.id };
-            }
-        });
-
-        EventBus.on('animate-bill', (data: { playerId: string, amount?: string }) => {
-            this.animationManager.BillAnimation(data.playerId, 15, data.amount);
-        });
     }
 }

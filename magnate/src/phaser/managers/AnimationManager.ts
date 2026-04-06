@@ -29,9 +29,10 @@ export class AnimationManager {
                 const coin = new CoinToken(this.scene, tile.x, tile.y, 15);
                 coin.setDepth(2000);
 
-                const targetX = token.x + Phaser.Math.Between(-20, 20);
-                const targetY = token.y + Phaser.Math.Between(-20, 20);
-                const midY = Math.min(tile.y, targetY) - 150;
+                const jumpHeight = 150;
+                const midY = tile.y - jumpHeight;
+                const jumpSpread = Phaser.Math.Between(-40, 40); 
+                const targetX = tile.x + jumpSpread;
 
                 this.scene.tweens.add({
                     targets: coin,
@@ -41,8 +42,7 @@ export class AnimationManager {
                     duration: 600,
                     ease: 'Cubic.easeOut',
                     onComplete: () => {
-                            coin.destroy()
-                        
+                        coin.destroy()
                     }
                 });
             });

@@ -7,7 +7,7 @@ export class PlayerModel {
     public balance: number = 200; // TODO: No se yo lo de hardcodear este número
     public properties: string[] = [];
     public currentTileId: string = "000"; 
-    public jailTurnCount: number = 0;
+    public jailTurnCount: number = 1;
 
     constructor(id: string, name: string, color: number) {
         this.id = id;
@@ -20,7 +20,7 @@ export class PlayerModel {
         this.emitUpdate(); // TODO: Todavía hay que ver si lo vamos a hacer así
     }
 
-    private emitUpdate() {
+    public emitUpdate() {
         EventBus.emit('player-updated', {
             id: this.id,
             balance: this.balance,
@@ -28,4 +28,5 @@ export class PlayerModel {
             jailTurnCount: this.jailTurnCount
         });
     }
+
 }

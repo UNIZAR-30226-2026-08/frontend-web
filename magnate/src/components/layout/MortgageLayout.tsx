@@ -26,7 +26,7 @@ export const MortgageContentCard = ({ data }: { data?: any }) => {
                     <div className="flex flex-col items-center">
                         <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Hipotecado por</p>
                         <span className="text-5xl font-black text-black tracking-tighter">
-                            {Math.floor(data.mortgage * 1.1)}€
+                            {data.mortgage}€
                         </span>
                     </div>
                 </div>

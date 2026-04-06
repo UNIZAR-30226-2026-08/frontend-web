@@ -78,10 +78,9 @@ export const ControlsHUD = () => {
 
     const handleAdministerClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.blur();
-        const playerPropertyIds = ["001", "008", "013"]; // TODO: propertys del jugador que pulsa 
         EventBus.emit('dark-mode', true);
         EventBus.emit('show-players-hud', true);
-        EventBus.emit('open-property-selection-mode', playerPropertyIds);
+        EventBus.emit('open-property-selection-mode');
     };
 
     const handleTradeClick = (e: React.MouseEvent<HTMLButtonElement>) => {

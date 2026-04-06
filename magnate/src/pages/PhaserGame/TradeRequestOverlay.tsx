@@ -50,33 +50,39 @@ export const TradeRequestOverlay = () => {
 
     if (!isOpen || !proposal) return null;
 
-    const SummaryZone = ({ money, properties, isPositive }: any) => (
-        <div className="flex flex-col gap-5 py-4 w-full">
-            {/* Parte del dinero */}
-            <div className="bg-white border-2 border-slate-200 rounded-[30px] py-6 px-7 flex justify-between items-center shadow-sm">
-                <span className={`text-3xl font-black ${isPositive ? 'text-[var(--color-primary)]' : 'text-red-500'}`}>
-                    {money}
-                </span>
-                <span className="text-2xl font-black text-slate-300">M</span>
-            </div>
+    const SummaryZone = ({ money, properties, isPositive }: any) => {
+        const validProperties = properties?.filter((p: any) => p && p.name && p.name.trim() !== "") || [];
 
-            {/* Parte de las propiedades */}
-            <div className="h-[250px] border-2 border-slate-200 rounded-[32px] p-4 bg-white/50 flex flex-col gap-2 overflow-y-auto">
-                {properties.length > 0 ? (
-                    properties.map((prop: any, i: number) => (
-                        <div key={i} className="flex items-start gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm w-full">
-                            <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: prop.color}} />
-                            <p className="text-[11px] font-black uppercase text-slate-700 leading-tight break-words">
-                                {prop.name}
-                            </p>
+        return (
+            <div className="flex flex-col gap-5 py-4 w-full">
+                {/* Parte del dinero */}
+                <div className="bg-white border-2 border-slate-200 rounded-[30px] py-6 px-7 flex justify-between items-center shadow-sm">
+                    <span className={`text-3xl font-black ${isPositive ? 'text-[var(--color-primary)]' : 'text-red-500'}`}>
+                        {money}
+                    </span>
+                    <span className="text-2xl font-black text-slate-300">M</span>
+                </div>
+
+                {/* Parte de las propiedades */}
+                <div className="h-[250px] border-2 border-slate-200 rounded-[32px] p-4 bg-white/50 flex flex-col gap-2 overflow-y-auto">
+                    {validProperties.length > 0 ? (
+                        validProperties.map((prop: any, i: number) => (
+                            <div key={i} className="flex items-start gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm w-full animate-in fade-in slide-in-from-right-2 duration-200">
+                                <div className="w-3 h-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: prop.color || '#cbd5e1'}} />
+                                <p className="text-[11px] font-black uppercase text-slate-700 leading-tight break-words">
+                                    {prop.name}
+                                </p>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full opacity-30 italic uppercase text-[16px] text-slate-800">
+                            <span>Sin propiedades</span>
                         </div>
-                    ))
-                ) : (
-                    <div className="flex items-center justify-center h-full opacity-30 italic text-sm">Sin propiedades</div>
-                )}
+                    )}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <div className="fixed inset-0 z-[1000] bg-black/10 backdrop-blur-sm flex items-center justify-center p-6 select-none animate-in fade-in duration-300">

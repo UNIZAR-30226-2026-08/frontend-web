@@ -4,7 +4,7 @@ interface PropertyCardContentProps {
     data: PropertyData;
     isMortgaged?: boolean;
     isAvailable?: boolean; // True if it has already been bought, False otherwise (pay rent)
-	constructionLevel: keyof PropertyData['rent']; 
+	constructionLevel?: keyof PropertyData['rent']; 
 }
 
 export const PropertyCardContent = ({ data, isMortgaged, isAvailable, constructionLevel }:  PropertyCardContentProps ) => {
