@@ -11,10 +11,16 @@ import { PrivateRoom } from "@/pages/PrivateRoom/PrivateRoom";
 import { PhaserGame } from "@/pages/PhaserGame/PhaserGame";
 import { AudioProvider } from "@/context/AudioContext";
 import { Shop } from "@/pages/Shop/Shop";
+import { WSTest } from "@/pages/WSTest";
+import { WSClient } from "@/services/WSClient";
+import { GameService } from "@/services/GameService";
 
 function App() {
   return (
 	<AudioProvider>
+	<WSClient /> {/*Low level backend communication*/}
+	{ /* TODO tester ?? */ }
+	<GameService /> { /* Integration API */ }
    	 <Routes>
    	   <Route path="/" element={<LandingPage />} />
    	   <Route path="/login" element={<Login />} />
@@ -27,6 +33,7 @@ function App() {
    	   <Route path="/phaser-game" element={<PhaserGame />} />
 	   <Route path="/shop" element={<Shop />} />
 	   <Route path="/profile" element={<Profile />} />
+	   <Route path="/wstest" element={<WSTest />} />
    	 </Routes>
 	</AudioProvider>
   );
