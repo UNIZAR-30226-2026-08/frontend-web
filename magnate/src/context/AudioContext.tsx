@@ -9,7 +9,7 @@ export type SoundId = 'bg_menu' | 'bg_game' | 'button_back' | 'button_main' | 'b
 		'dice_grab' | 'dice_shake' | 'dice_throw' | 'end_of_game' | 'fantasy' | 
 		'house_build' | 'house_down' | 'jail_door' | 'jail_turn_in' | 'message_incoming' | 
 		'money_lose' | 'money_win' | 'parking' | 'player_token_hop' | 
-		'player_choose' | 'tile_choose' | 'trade_shift' |
+		'player_choose' | 'trade_shift' |
 		'mortgage' | 'toast' | 'timeout' | 'auction_end' |
 		'trade_turned_down' | 'trade_accepted' | 'turn_banner_in' | 'turn_banner_out';
 
@@ -345,7 +345,8 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 	};
 
 	const updateVolume = (channel: AudioChannel, value: number | string) => {
-		setVolumes(prev => ({ ...prev, [channel]: parseFloat(value) }));
+		const newVolume = parseFloat(String(value));
+		setVolumes(prev => ({ ...prev, [channel]: newVolume }));
 	};
 
 	const toggleMute = (channel: AudioChannel) => {

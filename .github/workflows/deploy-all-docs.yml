@@ -1,0 +1,56 @@
+name: Deploy Hybrid Documentation
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # 1. Generar Markdown y hacer commit al repo
+      - name: Generate & Push Markdown
+        run: |
+          pnpm docs:md
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "docs: sync markdown [skip ci]" && git push)
+
+      # 2. Generar HTML
+      - name: Generate HTML
+        run: pnpm docs:html
+
+      # 3. Desplegar HTML a GitHub Pages
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'public-docs' # Carpeta definida en typedoc.html.json
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

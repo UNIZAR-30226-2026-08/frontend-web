@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 
-const ModeContent = ({ mode, gridImageUrl }) => (
+const ModeContent = ( { mode, gridImageUrl: string} ) => (
   <>
     <div
       className="absolute inset-0 bg-no-repeat transition-transform duration-700 group-hover:scale-110 pointer-events-none"
@@ -22,6 +22,13 @@ const ModeContent = ({ mode, gridImageUrl }) => (
   </>
 );
 
+/**
+ * Private room lobby
+ * For room owner, handles number of users and bots (TODO bot difficulty level)
+ * For every player in the room, toggles ready state to begin game
+ * @module Pages/Lobby
+ * @return complete Lobby page
+ */
 export function Lobby() {
     const gridImageUrl = "src/assets/bg_city_white.jpg";
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";

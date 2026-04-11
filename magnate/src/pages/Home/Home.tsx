@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { SettingsModal } from "@/components/layout/SettingsModal";
 
-const ModeContent = ({ mode, gridImageUrl }) => (
+const ModeContent = ({ mode:string, gridImageUrl:string }) => (
   <>
     <div
       className="absolute inset-0 bg-no-repeat transition-transform duration-700 group-hover:scale-110 pointer-events-none"

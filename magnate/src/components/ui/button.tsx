@@ -37,6 +37,10 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * Properties for {@link Button} component
+ * Adds style and properties to the default HTMLButtonElement
+ */ 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
@@ -44,7 +48,10 @@ export interface ButtonProps
   sound?: SoundId | null
 }
 
-// By default, button_ok
+/**
+ * Magnate button element
+ * @returns button component with personalized style and sound
+ */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, sound='button_ok', onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"

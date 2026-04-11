@@ -253,7 +253,7 @@ export class EventManager {
             this.tiles.forEach(t => t.disableInteractive());
 
 			const path = [{ x: targetTile?.x, y: targetTile?.y }];
-			p.token.moveTo(path, () => {
+			p.token.moveToCoords(path, () => {
 				 this.scene.time.delayedCall(800, () => {
 				 	this.scene.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
 				 });

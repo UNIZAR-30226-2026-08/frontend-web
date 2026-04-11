@@ -1,0 +1,16 @@
+{
+  "entryPoints": ["src"],
+  "entryPointStrategy": "expand",
+  "out": "docs",
+  "plugin": ["typedoc-plugin-markdown"],
+  "name": "Documentación Técnica (Markdown)",
+  "tsconfig": "./tsconfig.json",
+  "exclude": ["**/*.test.ts", 
+		  "src/components/layout/GameBackground.tsx",
+		  "src/pages/Lobby/Lobby.tsx",
+		  "src/pages/LandingPage.tsx",
+		  "src/pages/Home/Home.tsx",
+		  "**/node_modules/**"],
+  "skipErrorChecking": true,
+  "excludeNotDocumented": false
+}

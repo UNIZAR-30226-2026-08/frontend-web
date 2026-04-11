@@ -21,13 +21,14 @@ const CameraSync = () => {
         };
 
         EventBus.on('sync-3d-camera', handleSync);
-        return () => EventBus.off('sync-3d-camera', handleSync);
+        return () => { EventBus.off('sync-3d-camera', handleSync); };
     }, [camera]);
 
     return null;
 };
 
 const AnimatedModel = () => {
+		/*
     const { scene, animations } = useGLTF('/models/fondo.glb'); 
     const { actions } = useAnimations(animations, scene);
 
@@ -39,6 +40,7 @@ const AnimatedModel = () => {
     }, [actions]);
 
     return <primitive object={scene} scale={1} position={[0, 0, 0]} />;
+   */
 };
 
 export const GameBackground = () => {

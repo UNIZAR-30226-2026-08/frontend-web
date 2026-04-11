@@ -380,7 +380,7 @@ export class Board extends Phaser.Scene {
 
         this.cameraController.followToken(p.token, 2.2, () => {
             p.model.move(nextTileId);
-            p.token.moveTo(path, () => {
+            p.token.moveToCoords(path, () => {
                 this.time.delayedCall(800, () => {
                     this.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
                 });
@@ -476,7 +476,7 @@ export class Board extends Phaser.Scene {
             if (!targetTile) return;
 
 			const path = [{ x: targetTile.x, y: targetTile.y }];
-			p.token.moveTo(path, () => {
+			p.token.moveToCoords(path, () => {
 				// this.time.delayedCall(800, () => {
 				// 	  this.checkTileLogic(p.model, targetTile); // INFINITE LOOP
 				// });

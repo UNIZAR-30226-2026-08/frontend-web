@@ -124,7 +124,7 @@ export const PropertyOverlay = () => {
                 <div className="flex gap-4">
                 
                     <Button onClick={handleBuy} 
-							sound="bookmark2"
+							sound="bookmark"
                             className={`px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
                                 Comprar {propData.price}€
                     </Button>

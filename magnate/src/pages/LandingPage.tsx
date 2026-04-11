@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAudio } from "@/context/AudioContext";
 import { useEffect } from "react";
 
-const AuthButtonContent = ({ title, sub }) => (
+const AuthButtonContent = ({ title:string, sub:string }) => (
   <>
     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white pointer-events-none">

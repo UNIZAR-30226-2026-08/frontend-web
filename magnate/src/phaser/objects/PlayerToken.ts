@@ -12,7 +12,7 @@ export class PlayerToken extends Phaser.GameObjects.Container {
         scene.add.existing(this);
     }
 
-    public moveTo(path: { x: number, y: number }[], onComplete?: () => void) {
+    public moveToCoords(path: { x: number, y: number }[], onComplete?: () => void) {
         if (!path || path.length === 0) {
             onComplete?.();
             return;
@@ -30,7 +30,7 @@ export class PlayerToken extends Phaser.GameObjects.Container {
             duration: 200,
             ease: 'Linear',
             onComplete: () => {
-                this.moveTo(path, onComplete);
+                this.moveToCoords(path, onComplete);
             }
         });
 
