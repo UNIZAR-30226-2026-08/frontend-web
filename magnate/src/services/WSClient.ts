@@ -4,17 +4,40 @@ import { GameAction } from "@/services/types/socket";
 
 const userId = "1";	// TODO
 
-// flags to show more or less output
+/**
+ * When true, informs of errors related to websocket connection
+ */
 const WS_ERROR = true;
+
+/**
+ * When true, informs of errors related to format which should have already
+ * been taken care of by superior classes (see {@link GameService})
+ */
 const SELF_PROTECTION = true;
+
+/**
+ * When true, outputs information useful for debugging.
+ */
 const VERBOSE = true;
 
+/**
+ * @module WebSocketService
+ * WebSocket client for backend communication. 
+ * There should not be any need to be used by any other front end developers.
+ * It handles matchmaking of both public and private rooms and of game lagic.
+ */
 export const WSClient = ( ) => { 
 
+	/** 
+	 * References socket object to handle every communication with backend API.
+	 * Persistent between renderizations (useRef).
+	 */
 	const socket = useRef<WebSocket | null>(null);
+
 	const gameIdRef = useRef("");
 	const userIdRef = useRef("");
 
+	// Meant to be a private function. Self-descriptive.
 	const closeExistingSocket = () => {
 	    if (socket.current) {
 	        // 1000 standard code for "Normal Closure"
@@ -23,6 +46,11 @@ export const WSClient = ( ) => {
 	    }
 	};
 
+	/**
+	 * Connect to public room and handle every communication related
+	 * Updates {@link gameIdRef}
+	 * @fires many many event buses TODO
+	 */
 	const handlePublicRoom = () => {
 		if (VERBOSE) {
 			console.log("DEBUG: entered handlePublicRoom");
@@ -55,6 +83,12 @@ export const WSClient = ( ) => {
 
 	};
 
+	/**
+	 * Connects to game with ID {@link gameIdRef}
+	 * @throws {Error} if {@link gameIdRef} is null
+	 * Handles all communication related to that game.
+	 * @fires many many event buses TODO
+	 */
 	const handleGame = () => {
 		if (VERBOSE) {
 			console.log("DEBUG: entered handleGame");
@@ -102,6 +136,12 @@ export const WSClient = ( ) => {
 
 	};
 
+	/**
+	 * Sends any kind of message to the current {@link socket}
+	 * @param msg - A dictionary with the desired format (see {@link GameService} for insights)
+	 * @throws {Error} if used when socket is closed on WS_ERROR flag set true
+	 * @fires many many event buses TODO
+	 */
 	const handleSendMessage = ( msg : GameAction ) => {
 		if (socket.current && socket.current.readyState === WebSocket.OPEN) {
 			socket.current.send(JSON.stringify(msg));

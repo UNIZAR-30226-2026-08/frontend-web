@@ -34,7 +34,7 @@ export const PlayerHUD = ({
         };
 
         EventBus.on('player-updated', handlePlayerUpdate);
-        return () => EventBus.off('player-updated', handlePlayerUpdate);
+        return () => { EventBus.off('player-updated', handlePlayerUpdate); };
     }, [playerId]);
 
     const interactionClasses = isClickable 

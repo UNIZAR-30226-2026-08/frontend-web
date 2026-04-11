@@ -61,14 +61,14 @@ export function PrivateRoom () {
 		const cInput = codeRef.current;
 
 		// room does not exist
-		if (roomCode === "1234") {
+		if (roomCode === "1234" && cInput) {
 			cInput.setCustomValidity("No hay ninguna sala activa con ese código");
 			cInput.reportValidity();
 			return;
 		}
 
 		// full room
-		if (roomCode === "12345") {
+		if (roomCode === "12345" && cInput) {
 			cInput.setCustomValidity("No hay hueco para jugar en la sala con ese código");
 			cInput.reportValidity();
 			return;
