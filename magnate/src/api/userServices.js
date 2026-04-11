@@ -15,6 +15,7 @@ export const fetchProfile = async (accessToken, updateProfile) => {
     }
 
     const data = await response.json();
+    console.log('profile',data);
     if (updateProfile) updateProfile(data);
   } catch(error) {
     console.error('Error fetching profile:', error);
@@ -37,6 +38,7 @@ export const changeUserPiece = async (accessToken, pieceId, onSuccess) => {
     }
 
     const data = await response.json();
+    console.log(data);
     if (onSuccess) onSuccess(data);
   } catch(error) {
     console.error('Error changing user piece:', error);
@@ -54,6 +56,7 @@ export const fetchUserNamePiece = async (pk, updateNamePiece) => {
     }
 
     const data = await response.json();
+    console.log(data);
     if (updateNamePiece) updateNamePiece(data);
   } catch(error) {
     console.error('Error fetching user name piece:', error);

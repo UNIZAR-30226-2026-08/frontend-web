@@ -15,6 +15,7 @@ export const fetchShopItems = async (accessToken, updateShopItems) => {
     }
 
     const data = await response.json();
+    console.log("shopitems", data);
     if (updateShopItems) updateShopItems(data);
   } catch(error) {
     console.error('Error fetching shop items:', error);
@@ -60,6 +61,7 @@ export const fetchUserPieces = async (accessToken, updateUserPieces) => {
     }
 
     const data = await response.json();
+    console.log("userpieces", data);
     if (updateUserPieces) updateUserPieces(data);
   } catch(error) {
     console.error('Error fetching user pieces:', error);
@@ -81,6 +83,7 @@ export const fetchUserEmojis = async (accessToken, updateUserEmojis) => {
     }
 
     const data = await response.json();
+    console.log("useremojis", data);
     if (updateUserEmojis) updateUserEmojis(data);
   } catch(error) {
     console.error('Error fetching user emojis:', error);

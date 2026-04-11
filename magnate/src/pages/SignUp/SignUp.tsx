@@ -1,10 +1,13 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { registerUser } from '@/api/authServices';
+import { useAuth } from '@/context/AuthContext';
 
 export function SignUp() {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -12,7 +15,7 @@ export function SignUp() {
 
     const usernameRef = useRef<HTMLInputElement>(null);
     const confirmPasswordRef = useRef<HTMLInputElement>(null); 
-    const usuariosRegistrados = ["yaexisto"];
+    const usuariosRegistrados = ["yaexisto"]; // Mantenido por si es para tests/ejemplos
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
@@ -22,7 +25,6 @@ export function SignUp() {
         const uInput = usernameRef.current;
         const cInput = confirmPasswordRef.current;
 
-        // already existent user
         if (usuariosRegistrados.includes(username.toLowerCase())) {
             if (uInput) {
                 uInput.setCustomValidity("Este nombre de usuario ya está en uso");
@@ -31,7 +33,6 @@ export function SignUp() {
             return;
         }
 
-        // passwd check
         if (password !== confirmPassword) {
             if (cInput) {
                 cInput.setCustomValidity("Las contraseñas no coinciden");
@@ -40,8 +41,20 @@ export function SignUp() {
             return;
         }
 
-        console.log('Registro exitoso:', { username, password });
-        navigate('/home');
+        const email = "estoesunplaceholder@gmail.com";
+
+        registerUser(
+            { username, email, password, password2: confirmPassword },
+            (data) => {
+                if (data && data.tokens) {
+                    login(data.tokens.access, data.tokens.refresh);
+                }
+                navigate('/home');
+            },
+            (error) => {
+                console.error(error);
+            }
+        );
     };
 
     return (
@@ -66,7 +79,7 @@ export function SignUp() {
                             value={username}
                             onChange={(e) => {
                                 setUsername(e.target.value);
-                                if (usernameRef.current) usernameRef.current.setCustomValidity(""); // Limpiar error
+                                if (usernameRef.current) usernameRef.current.setCustomValidity("");
                             }}
                         />
                         <img src="/icons/single_player.svg" alt="icon" className="absolute right-4 w-10 h-10 pointer-events-none top-1/2 -translate-y-7" />
@@ -96,7 +109,7 @@ export function SignUp() {
                             value={confirmPassword}
                             onChange={(e) => {
                                 setConfirmPassword(e.target.value);
-                                if (confirmPasswordRef.current) confirmPasswordRef.current.setCustomValidity(""); // Clean input
+                                if (confirmPasswordRef.current) confirmPasswordRef.current.setCustomValidity("");
                             }}
                         />
                         <img src="/icons/key.svg" alt="icon" className="absolute right-4 w-10 h-10 pointer-events-none top-1/2 -translate-y-7 " />
@@ -113,4 +126,3 @@ export function SignUp() {
         </div>
    );
 }
-

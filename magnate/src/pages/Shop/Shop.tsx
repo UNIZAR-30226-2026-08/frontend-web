@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,8 @@ import {
     CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from '@/context/AuthContext';
+import { fetchShopItems, buyItem, fetchUserPieces } from '@/api/shopServices';
 
 // TODO: ejemplos
 const SKINS = [
@@ -28,6 +30,29 @@ const EMOJIS = [
     { id: 105, name: "Corazón", price: 350, img: "/emojis/emote_heart.png", available: true },
 ];
 
+// TODO: Vamos a necesitar el fichero con mapeos (id-toda_la_info)
+const PIECE_VISUALS: Record<number, any> = {
+    1: { name: "Barco", img: "/skins/barco_closeup.png" },
+    2: { name: "Burguer", img: "/skins/burguer_closeup.png" },
+    3: { name: "Coche f1", img: "/skins/f1_closeup.png" },
+    4: { name: "Sombrero", img: "/skins/sombrero_closeup.png" },
+    5: { name: "Barco", img: "/skins/barco_closeup.png" },
+    6: { name: "Barco", img: "/skins/barco_closeup.png" },
+};
+
+const EMOJI_VISUALS: Record<number, any> = {
+    1: { name: "Enfado", img: "/emojis/emote_anger.png" },
+    2: { name: "Gota", img: "/emojis/emote_drop.png" },
+    3: { name: "Exclamación", img: "/emojis/emote_exclamation.png" },
+    4: { name: "Cara Triste", img: "/emojis/emote_faceSad.png" },
+    5: { name: "Corazón", img: "/emojis/emote_heart.png" },
+    101: { name: "Enfado", img: "/emojis/emote_anger.png" },
+    102: { name: "Gota", img: "/emojis/emote_drop.png" },
+    103: { name: "Exclamación", img: "/emojis/emote_exclamation.png" },
+    104: { name: "Cara Triste", img: "/emojis/emote_faceSad.png" },
+    105: { name: "Corazón", img: "/emojis/emote_heart.png" },
+};
+
 const stripedBackgroundStyle = { backgroundImage: `
         linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
         repeating-linear-gradient(
@@ -41,11 +66,70 @@ const stripedBackgroundStyle = { backgroundImage: `
 
 
 export function Shop() {
+    const [skinsList, setSkinsList] = useState<any[]>(SKINS);
+    const [emojisList, setEmojisList] = useState<any[]>(EMOJIS);
     const [ownedIds, setOwnedIds] = useState<number[]>([1]);
+    const { token } = useAuth();
+
+    useEffect(() => {
+        if (token) {
+            fetchShopItems(token, (data) => {
+                if (data && data.length > 0) {
+                    const mappedSkins: any[] = [];
+                    const mappedEmojis: any[] = [];
+                    const fetchedOwned: number[] = [];
+
+                    data.forEach((item: any) => {
+                        if (item.owned) fetchedOwned.push(item.custom_id);
+
+                        if (item.itemType === 'piece') {
+                            const visual = PIECE_VISUALS[item.custom_id] || { name: `Pieza ${item.custom_id}`, img: "/skins/sombrero_closeup.png" };
+                            mappedSkins.push({
+                                id: item.custom_id,
+                                name: visual.name,
+                                price: item.price,
+                                img: visual.img,
+                                available: true
+                            });
+                        } else if (item.itemType === 'emoji') {
+                            const visual = EMOJI_VISUALS[item.custom_id] || { name: `Emoji ${item.custom_id}`, img: "/emojis/emote_anger.png" };
+                            mappedEmojis.push({
+                                id: item.custom_id,
+                                name: visual.name,
+                                price: item.price,
+                                img: visual.img,
+                                available: true
+                            });
+                        }
+                    });
+
+                    if (mappedSkins.length > 0) setSkinsList(mappedSkins);
+                    if (mappedEmojis.length > 0) setEmojisList(mappedEmojis);
+                    setOwnedIds(prev => Array.from(new Set([...prev, ...fetchedOwned])));
+                }
+            });
+
+            fetchUserPieces(token, (data) => {
+                if (data && Object.keys(data).length > 0) {
+                    const pieceIds = Object.keys(data).map(Number);
+                    setOwnedIds(prev => Array.from(new Set([...prev, ...pieceIds])));
+                }
+            });
+        }
+    }, [token]);
+
     const handleBuy = (id: number) => {
         // TODO: cuando se compra, guardar para el jugador
-        if (!ownedIds.includes(id)) {
-            setOwnedIds((prev) => [...prev, id]);
+        if (token) {
+            buyItem(token, id, () => {
+                setOwnedIds((prev) => Array.from(new Set([...prev, id])));
+            }, (error) => {
+                console.error("Error al comprar", error);
+            });
+        } else {
+            if (!ownedIds.includes(id)) {
+                setOwnedIds((prev) => [...prev, id]);
+            }
         }
     };
 
@@ -60,18 +144,16 @@ export function Shop() {
                     marginTop: "var(--header-height)",
                 }}>
 
-                {/* SECCIÓN SKINS */}
                 <ShopSection 
                     title="Skins de Ficha" 
-                    items={SKINS} 
+                    items={skinsList} 
                     onBuy={handleBuy} 
                     ownedIds={ownedIds}
                 />
 
-                {/* SECCIÓN EMOJIS */}
                 <ShopSection 
                     title="Emoticonos" 
-                    items={EMOJIS} 
+                    items={emojisList} 
                     onBuy={handleBuy} 
                     ownedIds={ownedIds}
                 />
