@@ -1,10 +1,13 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { loginUser } from '@/api/authServices';
+import { useAuth } from '@/context/AuthContext';
 
 export function Login() {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -17,29 +20,23 @@ export function Login() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
-        const uInput = usernameRef.current;
         const pInput = passwordRef.current;
 
-        // user does not exist (example)
-        if (username === "noexisto") {
-            if (uInput) {
-                uInput.setCustomValidity("El usuario introducido no está registrado");
-                uInput.reportValidity();
+        loginUser(
+            { username, password },
+            (data) => {
+                if (data && data.tokens) {
+                    login(data.tokens.access, data.tokens.refresh);
+                }
+                navigate('/home');
+            },
+            (error) => {
+                if (pInput) {
+                    pInput.setCustomValidity("Usuario o contraseña incorrectos");
+                    pInput.reportValidity();
+                }
             }
-            return;
-        }
-
-        // wrong passwd (Example)
-        if (password === "incorrecta") {
-            if (pInput) {
-                pInput.setCustomValidity("La contraseña no es correcta");
-                pInput.reportValidity();
-            }
-            return;
-        }
-
-        console.log('Login exitoso:', { username, password });
-        navigate('/home');
+        );
     };
 
     return (
@@ -108,5 +105,3 @@ export function Login() {
         </div>
     );
 }
-
-

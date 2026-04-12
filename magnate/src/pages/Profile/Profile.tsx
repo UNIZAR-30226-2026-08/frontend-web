@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,10 @@ import {
     CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, Coins, Hash, Users, Calendar } from "lucide-react"; // Opcional: iconos para mejorar visualmente
+import { Trophy, Coins, Hash, Users, Calendar } from "lucide-react";
+import { useAuth } from '@/context/AuthContext';
+import { fetchUserPieces } from '@/api/shopServices';
+import { fetchProfile, changeUserPiece } from '@/api/userServices';
 
 const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
@@ -20,17 +23,12 @@ const GAMES = [
     { posicion: 2, monedas: 200, inicio: "15/03/2026 21:00", jugadores: ["Nic","Juls","Cris"], fin: "15/03/2026 22:05" },
     { posicion: 3, monedas: 90,  inicio: "14/03/2026 10:20", jugadores: ["Luc","Cris","Juls","mangel"], fin: "14/03/2026 11:15" },
     { posicion: 4, monedas: 0,   inicio: "13/03/2026 12:45", jugadores: ["Cris","Nic","Luc","Juls"], fin: "13/03/2026 13:24" },
-    { posicion: 2, monedas: 0, 	 inicio: "12/03/2026 19:00", jugadores: ["mangel","Juls","Nau"], fin: "L" },
+    { posicion: 2, monedas: 0,   inicio: "12/03/2026 19:00", jugadores: ["mangel","Juls","Nau"], fin: "L" },
 ];
 
-const STATS = { 
-    "Partidas Jugadas": 30, 
-    "Victorias": 17, 
-    "Monedas Totales": 1245 
-};
-
+// TODO: Vamos a necesitar el fichero con mapeos (id-toda_la_info)
 const SKINS = {
-    1 : { name: "Sombrero", price: 0,   img: "/skins/sombrero_closeup.png" },
+    1 : { name: "Sombrero", price: 0, img: "/skins/sombrero_closeup.png" },
     2 : { name: "Barco", price: 10,  img: "/skins/barco_closeup.png"},
     3 : { name: "Burguer", price: 50,  img: "/skins/burguer_closeup.png"},
     4 : { name: "Coche f1", price: 100, img: "/skins/f1_closeup.png"},
@@ -110,19 +108,52 @@ function Coin({ size = 24 }: { size?: number }) {
 }
 
 export function Profile() {
-	const [skinId, setSkinId] = useState(1); // default: miskin (look for current skin)
-	const [chooseSkin, setChooseSkin] = useState(false);
+    const [skinId, setSkinId] = useState(1);
+    const [chooseSkin, setChooseSkin] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [selectedSkinId, setSelectedSkinId] = useState(skinId);
+    
+    const [userSkins, setUserSkins] = useState<any>({});
+    const [profile, setProfile] = useState<any>(null);
 
-	// for skin selection
-	const [selectedSkinId, setSelectedSkinId] = useState(skinId);
+    const navigate = useNavigate();
+    const { logout, token } = useAuth();
 
-	const navigate = useNavigate();
+    useEffect(() => {
+        if (token) {
+            fetchProfile(token, (data) => {
+                setProfile(data);
+                if (data && data.user_piece) {
+                    setSkinId(data.user_piece);
+                    setSelectedSkinId(data.user_piece);
+                } else if (data && data.custom_id) {
+                    setSkinId(data.custom_id);
+                    setSelectedSkinId(data.custom_id);
+                }
+            });
+            
+            // Todavía no hay datos del backend
+            fetchUserPieces(token, (data) => {
+                if (!data || Object.keys(data).length === 0) {
+                    setUserSkins(SKINS);
+                } else {
+                    setUserSkins(data);
+                }
+            });
+        }
+    }, [token]);
 
-	const handleConfirmSelection = () => {
-		setSkinId(selectedSkinId);
-		setChooseSkin(false);
-	};
+    const handleConfirmSelection = () => {
+        if (token) {
+            changeUserPiece(token, selectedSkinId, () => {
+                setSkinId(selectedSkinId);
+                setChooseSkin(false);
+            });
+        } else {
+            setSkinId(selectedSkinId);
+            setChooseSkin(false);
+        }
+    };
     
     const handleLogoutClick = () => {
         setShowConfirm(true);
@@ -130,100 +161,101 @@ export function Profile() {
     
     const confirmLogout = () => {
         setShowConfirm(false);
-		navigate('/');
+        logout();
+        navigate('/');
     };
 
     const cancelLogout = () => {
         setShowConfirm(false);
     };
 
+    const currentStats = {
+        "Partidas Jugadas": profile?.num_played_games || 0,
+        "Victorias": profile?.num_won_games || 0,
+        "Puntos": profile?.points || 0,
+        "Experiencia": profile?.exp || 0,
+        "Elo": profile?.elo || 0
+    };
+
     return (
-		<div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none bg-slate-50">
+        <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none bg-slate-50">
             <PageHeader title="Perfil" />
 
-			<div className="flex flex-col gap-12 py-12 px-20 overflow-y-auto"
+            <div className="flex flex-col gap-12 py-12 px-20 overflow-y-auto"
                 style={{
                     ...stripedBackgroundStyle,
                     height: "calc(100vh - var(--header-height))",
                     marginTop: "var(--header-height)",
                 }}>
 
-				{/* icono + nombre usuario + botón cambiar skin */}
-				<div className="flex flex-row items-center justify-between w-full gap-4 p-2">
+                <div className="flex flex-row items-center justify-between w-full gap-4 p-2">
                     <div className="flex items-center justify-center gap-4">
                         <div className="w-20 h-20 flex items-center justify-center bg-slate-100/90 rounded-full group-hover:bg-white transition-colors shrink-0">
                             <img 
-                                src={SKINS[skinId as keyof typeof SKINS].img} 
-                                alt={SKINS[skinId as keyof typeof SKINS].name} 
+                                src={`/skins/${skinId || profile?.user_piece}.png`} 
+                                alt={`Skin ${skinId}`} 
                                 className="w-10 h-10 object-contain drop-shadow-sm transition-transform group-hover:scale-110" />
                         </div>
                         
                         <div className="flex flex-col items-center">
                             <h3 className="font-black text-[22px] text-black tracking-tight leading-none">
-                                Juls
+                                {profile?.username || "miguell"}
                             </h3>
                         
                             <Button
                                 onClick={handleLogoutClick}
-                                className="font-black text-[14px] text-red-500 tracking-tight leading-none uppercase italic
-                                        hover:text-red-700 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer">
+                                className="font-black text-[14px] text-red-500 tracking-tight leading-none uppercase italic hover:text-red-700 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer">
                                 Cerrar sesión
                             </Button>
                             <Confirm 
                                 isOpen={showConfirm}
-                                onConfirm={confirmLogout} // TODO: cerrar sesión
+                                onConfirm={confirmLogout}
                                 onCancel={cancelLogout}/> 
                         </div>
                     </div>
 
                    <Button 
                        onClick={() => {
-							setChooseSkin(!chooseSkin);
-					   		setSelectedSkinId(skinId);} }
+                            setChooseSkin(!chooseSkin);
+                            setSelectedSkinId(skinId);} }
                        className={`h-8 font-black uppercase rounded-full transition-all text-[16px] ${
-							   chooseSkin
-							   ? "bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 transition-all " 
-							   : "bg-[var(--color-primary)] text-white" }
-							   ${bouncyAnimation}`}>
-					   {chooseSkin ? "Cancelar selección" : "Cambiar skin"}
+                           chooseSkin
+                           ? "bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 transition-all " 
+                           : "bg-[var(--color-primary)] text-white" }
+                           ${bouncyAnimation}`}>
+                       {chooseSkin ? "Cancelar selección" : "Cambiar skin"}
                    </Button>
 
-				</div>
+                </div>
 
+                {chooseSkin ? ( 
+                        <>
+                    <ShopSection
+                        title="Elige un skin"
+                        skins={userSkins}
+                        currentSkinId={skinId}
+                        selectedSkinId={selectedSkinId}
+                        onSelect={setSelectedSkinId}
+                    />          
+                    <Button
+                        onClick={handleConfirmSelection}
+                        className={`h-8 self-center font-black uppercase text-[12px] rounded-full transition-all text-[12px] bg-[var(--color-primary)] text-white ${bouncyAnimation}`}>
+                        Confirmar selección
+                    </Button>
+                        </> 
+                ) : (
+                        <>
+                    <StatsSection 
+                        title="Estadísticas de perfil" 
+                        stats={currentStats} 
+                    />
 
-				{chooseSkin ? ( 
-						<>
-					<ShopSection
-						title="Elige un skin"
-						skins={SKINS}
-						currentSkinId={skinId}
-						selectedSkinId={selectedSkinId}
-						onSelect={setSelectedSkinId}
-		  			/>			
-					<Button
-                    	onClick={() => {
-						 	setChooseSkin(!chooseSkin);
-							setSkinId(selectedSkinId);}
-						}
-						className={`h-8 self-center font-black uppercase text-[12px] rounded-full transition-all text-[12px] bg-[var(--color-primary)] text-white ${bouncyAnimation}`}>
-						Confirmar selección
-					</Button>
-						</> 
-				) : (
-						<>
-                	{/* SECCIÓN STATS */}
-                	<StatsSection 
-                	    title="Estadísticas de partidas" 
-                	    stats={STATS} 
-                	/>
-
-                	{/* SECCIÓN HISTORIAL */}
-                	<GameHistSection 
-                	    title="Historial de partidas" 
-                	    items={GAMES} 
-                	/>
-						</>
-				)}
+                    <GameHistSection 
+                        title="Historial de partidas" 
+                        items={profile?.games || GAMES} 
+                    />
+                        </>
+                )}
             </div>
         </div>
     );
@@ -231,6 +263,10 @@ export function Profile() {
 
 function ShopSection({ title, skins, currentSkinId, selectedSkinId, onSelect }: any) {
     const navButton = "border-slate-200 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition-all";
+
+    if (!skins || Object.keys(skins).length === 0) {
+        return <div className="text-center font-bold text-slate-500">Cargando skins...</div>;
+    }
 
     return (
         <div className="flex flex-col gap-6">
@@ -307,7 +343,7 @@ function StatsSection({ title, stats }: any) {
                         <CarouselItem key={index} className="pl-2 md:basis-1/3 lg:basis-1/3">
                             <Card className="bg-white border-2 border-slate-300 rounded-[30px] overflow-hidden shadow-sm">
                                 <CardContent className="flex flex-col items-center p-8">
-                                    <span className="text-[12px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                                    <span className="text-[12px] font-black uppercase tracking-widest text-slate-400 mb-1 text-center h-8 flex items-center justify-center leading-tight">
                                         {key}
                                     </span>
                                     <span className="text-[26px] font-black italic text-[var(--color-primary)]">
@@ -353,7 +389,6 @@ function GameHistSection({ title, items }: any) {
                             <Card className="bg-white border-2 border-slate-300 rounded-[30px] overflow-hidden group hover:border-[var(--color-primary)]/50 transition-all">
                                 <CardContent className="flex flex-col p-6 gap-4">
                                     
-                                    {/* Cabecera de la Partida */}
                                     <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Fecha e Inicio</span>
@@ -364,7 +399,6 @@ function GameHistSection({ title, items }: any) {
                                         </div>
                                     </div>
 
-                                    {/* Players list */}
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[10px] font-black uppercase text-slate-400 mb-1 flex items-center gap-1">
                                             <Users size={12} /> Jugadores
@@ -379,7 +413,6 @@ function GameHistSection({ title, items }: any) {
                                         </div>
                                     </div>
 
-                                    {/* Recompensa */}
                                    <div className="flex items-center justify-between mt-auto pt-2">
                                         <div className="flex items-center gap-2">
                                             <Coin size={20} /> 
