@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { loginUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
 
-export function Login() {
+interface LoginProps {
+    onBack?: () => void;
+}
+
+export function Login({ onBack }: LoginProps) {
     const navigate = useNavigate();
     const { login } = useAuth();
 
@@ -19,20 +23,26 @@ export function Login() {
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        const pInput = passwordRef.current;
 
         loginUser(
             { username, password },
-            (data) => {
+            (data : any) => {
                 if (data && data.tokens) {
                     login(data.tokens.access, data.tokens.refresh);
                 }
                 navigate('/home');
             },
-            (error) => {
+            // (error : any) => {
+            //     const pInput = passwordRef.current;
+            //     if (pInput) {
+            //         pInput.setCustomValidity("Usuario o contraseña incorrectos");
+            //         pInput.reportValidity();
+            //     }
+            // }
+            (errorMessage : string) => {
+                const pInput = passwordRef.current;
                 if (pInput) {
-                    pInput.setCustomValidity("Usuario o contraseña incorrectos");
+                    pInput.setCustomValidity(errorMessage);
                     pInput.reportValidity();
                 }
             }
@@ -42,6 +52,21 @@ export function Login() {
     return (
         <div className='flex justify-center items-center min-h-screen bg-[url(src/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat '>
             <div className='absolute inset-0 bg-black/60 backdrop-blur-[8px]'></div>
+            <div className="absolute top-8 left-8 z-50"> 
+                    <Button
+                        variant="ghost"
+                        onClick={onBack || (() => navigate('/'))}
+                        aria-label="Go back"
+                        sound="button_back"
+                       className="z-60 bg-[var(--color-black)] hover:bg-[var(--color-black)] rounded-full flex items-center justify-center ml-2 w-20 h-20 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.25)] transform-gpu transition-transform duration-200 ease-in-out hover:scale-110"
+                    >
+                       <img
+                            src="/icons/back-arrow1.svg"
+                            className="w-12 h-12 sm:w-16 sm:h-16 block select-none"
+                            alt="Back"
+                         />
+                    </Button>
+            </div>
             <div className='relative w-full max-w-xl px-4 justify-center '>
                 <img 
                     src="/src/assets/images/logo.png" 
@@ -54,6 +79,12 @@ export function Login() {
                         <Input 
                             ref={usernameRef} // Conexión
                             required
+                            onInvalid={(e) => {
+                                const target = e.target as HTMLInputElement;
+                                if (target.validity.valueMissing) {
+                                    target.setCustomValidity("El nombre de usuario es obligatorio");
+                                }
+                            }}
                             className='border-[5px] h-14 px-8 border-[var(--color-bordes)] w-full font-bold text-[22px] text-black'
                             id="username"
                             type="text"
@@ -75,6 +106,12 @@ export function Login() {
                         <Input 
                             ref={passwordRef} // Conexión
                             required
+                            onInvalid={(e) => {
+                                const target = e.target as HTMLInputElement;
+                                if (target.validity.valueMissing) {
+                                    target.setCustomValidity("La contraseña es obligatoria");
+                                }
+                            }}
                             className='border-[5px] h-14 px-8 border-[var(--color-bordes)] w-full font-bold text-[22px] text-black'
                             id="password"
                             type="password"

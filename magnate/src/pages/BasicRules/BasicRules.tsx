@@ -17,6 +17,20 @@ export function BasicRules() {
         { title: "" , desc : "" },
         { title: "" , desc : "" }
     ];
+    const navButton = `
+        border-slate-200 
+        text-[var(--color-primary)] 
+        transition-all 
+        duration-150 
+        
+        hover:bg-[var(--color-primary)]
+        hover:border-[var(--color-primary)]/30 
+        
+        active:bg-[var(--color-primary)] 
+        active:border-[var(--color-primary)] 
+        active:text-white 
+        active:scale-95
+    `;
 
     return (
         <div className='flex justify-center items-start pt-40 min-h-screen bg-[var(--text-background)] px-4'
@@ -34,7 +48,7 @@ export function BasicRules() {
                         {RULES.map((rule, index) => (
                             <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3" >
                                 <div className="p-1">
-                                    <Card className="relative bg-[var(--color-primary)] w-full border-4 border-[var(--color-text)] rounded-[35px]">
+                                    <Card className="relative bg-[var(--color-primary)] w-full border-2 border-[var(--color-text)] rounded-[40px]">
                                         <CardContent className="flex flex-col aspect-square items-center justify-center p-8 gap-4">
                                             
                                             <div className="absolute top-10 text-6xl font-extrabold text-white/50 select-none">
@@ -54,9 +68,8 @@ export function BasicRules() {
                             </CarouselItem>
                         )) }
                     </CarouselContent>
-                    
-                    <CarouselPrevious className="border-black text-black hover:bg-black hover:text-white transition-colors h-12 w-12"/>
-                    <CarouselNext className="border-black text-black hover:bg-black hover:text-white transition-colors h-12 w-12" />
+                    <CarouselPrevious className={`-left-12 ${navButton}`} />
+                    <CarouselNext className={`-right-12 ${navButton}`} />
                 </Carousel>     
         </div>
     );

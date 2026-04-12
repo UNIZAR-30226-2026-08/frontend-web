@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { registerUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
 
-export function SignUp() {
+interface SignUpProps {
+    onBack?: () => void;
+}
+
+export function SignUp({ onBack }: SignUpProps) {
     const navigate = useNavigate();
     const { login } = useAuth();
 
@@ -14,8 +18,8 @@ export function SignUp() {
     const [confirmPassword, setConfirmPassword] = useState<string>('');
 
     const usernameRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
     const confirmPasswordRef = useRef<HTMLInputElement>(null); 
-    const usuariosRegistrados = ["yaexisto"]; // Mantenido por si es para tests/ejemplos
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
@@ -23,16 +27,25 @@ export function SignUp() {
         e.preventDefault();
 
         const uInput = usernameRef.current;
+        const pInput = passwordRef.current;
         const cInput = confirmPasswordRef.current;
-
-        if (usuariosRegistrados.includes(username.toLowerCase())) {
-            if (uInput) {
-                uInput.setCustomValidity("Este nombre de usuario ya está en uso");
-                uInput.reportValidity();
+        
+        // --- Contraseña Insegura ---
+        if (password.length < 8) { // Mínimo 8 caracteres
+            if (pInput) {
+                pInput.setCustomValidity("La contraseña debe tener al menos 8 caracteres.");
+                pInput.reportValidity();
             }
             return;
         }
-
+        if (/^\d+$/.test(password)) { // No pueden ser todo números
+            if (pInput) {
+                pInput.setCustomValidity("La contraseña no puede ser completamente numérica.");
+                pInput.reportValidity();
+            }
+            return;
+        }
+         // --- Contraseñas no coinciden ---
         if (password !== confirmPassword) {
             if (cInput) {
                 cInput.setCustomValidity("Las contraseñas no coinciden");
@@ -41,18 +54,21 @@ export function SignUp() {
             return;
         }
 
-        const email = "estoesunplaceholder@gmail.com";
+        const email = `${Math.random().toString(36).slice(2,10)}@example.com`; // TODO: el backend tiene que quitar lo del email
 
         registerUser(
             { username, email, password, password2: confirmPassword },
-            (data) => {
+            (data : any) => {
                 if (data && data.tokens) {
                     login(data.tokens.access, data.tokens.refresh);
                 }
                 navigate('/home');
             },
-            (error) => {
-                console.error(error);
+            (errorMessage : string) => {
+                if (uInput) {
+                    uInput.setCustomValidity(errorMessage);
+                    uInput.reportValidity();
+                }
             }
         );
     };
@@ -60,6 +76,21 @@ export function SignUp() {
     return (
         <div className='flex justify-center items-center min-h-screen bg-[url(src/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat '>
             <div className='absolute inset-0 bg-black/60 backdrop-blur-[8px]'></div>
+            <div className="absolute top-8 left-8 z-50"> 
+                    <Button
+                        variant="ghost"
+                        onClick={onBack || (() => navigate('/'))}
+                        aria-label="Go back"
+                        sound="button_back"
+                       className="z-60 bg-[var(--color-black)] hover:bg-[var(--color-black)] rounded-full flex items-center justify-center ml-2 w-20 h-20 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.25)] transform-gpu transition-transform duration-200 ease-in-out hover:scale-110"
+                    >
+                       <img
+                            src="/icons/back-arrow1.svg"
+                            className="w-12 h-12 sm:w-16 sm:h-16 block select-none"
+                            alt="Back"
+                         />
+                    </Button>
+            </div>
             <div className='relative w-full max-w-xl px-4 justify-center '>
                 <img 
                     src="/src/assets/images/logo.png" 
@@ -72,6 +103,12 @@ export function SignUp() {
                         <Input 
                             ref={usernameRef}
                             required
+                            onInvalid={(e) => {
+                                const target = e.target as HTMLInputElement;
+                                if (target.validity.valueMissing) {
+                                    target.setCustomValidity("El nombre de usuario es obligatorio");
+                                }
+                            }}
                             className='border-[5px] h-14 px-8 border-[var(--color-bordes)] w-full font-bold text-[22px] text-black'
                             id="username"
                             type="text"
@@ -87,13 +124,17 @@ export function SignUp() {
 
                     <div className="space-y-2 p-1 text-left relative flex items-center">
                         <Input 
+                            ref={passwordRef}
                             required
                             className='border-[5px] h-14 px-8 border-[var(--color-bordes)] w-full text-[22px] font-bold text-black'
                             id="password"
                             type="password"
                             placeholder="Contraseña"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                if (passwordRef.current) passwordRef.current.setCustomValidity(""); 
+                            }}
                         />
                         <img src="/icons/lock.svg" alt="icon" className="absolute right-4 w-10 h-10 pointer-events-none top-1/2 -translate-y-7 " />
                     </div>

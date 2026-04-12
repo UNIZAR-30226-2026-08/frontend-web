@@ -73,7 +73,7 @@ export function Shop() {
 
     useEffect(() => {
         if (token) {
-            fetchShopItems(token, (data) => {
+            fetchShopItems(token, (data : any) => {
                 if (data && data.length > 0) {
                     const mappedSkins: any[] = [];
                     const mappedEmojis: any[] = [];
@@ -109,7 +109,7 @@ export function Shop() {
                 }
             });
 
-            fetchUserPieces(token, (data) => {
+            fetchUserPieces(token, (data : any) => {
                 if (data && Object.keys(data).length > 0) {
                     const pieceIds = Object.keys(data).map(Number);
                     setOwnedIds(prev => Array.from(new Set([...prev, ...pieceIds])));
@@ -123,7 +123,7 @@ export function Shop() {
         if (token) {
             buyItem(token, id, () => {
                 setOwnedIds((prev) => Array.from(new Set([...prev, id])));
-            }, (error) => {
+            }, (error : any) => {
                 console.error("Error al comprar", error);
             });
         } else {

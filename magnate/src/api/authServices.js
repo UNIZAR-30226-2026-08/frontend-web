@@ -14,8 +14,12 @@ export const registerUser = async (userData, onSuccess, onError) => {
     const data = await response.json();
 
     if (!response.ok) {
-      if (onError) onError(data);
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      const errorMessage = data.error || data.detail || Object.values(data)[0]?.[0] || "Error al crear la cuenta";
+      
+      if (onError) onError(errorMessage);
+      return;
+      // if (onError) onError(data);
+      //throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     if (onSuccess) onSuccess(data);
@@ -38,8 +42,12 @@ export const loginUser = async (credentials, onSuccess, onError) => {
     const data = await response.json();
 
     if (!response.ok) {
-      if (onError) onError(data);
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      const errorText = data.error || data.detail || Object.values(data)[0]?.[0] || "Error al entrar";
+      const msg = errorText === 'bad credentials' ? "Usuario o contraseña incorrectos" : errorText;
+      if (onError) onError(msg);
+      // if (onError) onError(data);
+      //throw new Error(`HTTP error! Status: ${response.status}`);
+      return;
     }
 
     if (onSuccess) onSuccess(data);
