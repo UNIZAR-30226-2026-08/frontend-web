@@ -1,3 +1,5 @@
+import { PropertyInfo } from "@/services/types/socket"
+
 export class PropertyModel {
     public id: string;
     public houseCount: number;
@@ -14,4 +16,11 @@ export class PropertyModel {
         this.ownerId = null; 
         this.isMortgaged = false;
     }
+
+	constructor(prop : PropertyInfo) {
+		this.id = prop.square;
+		this.houseCount = prop.houses;
+		this.ownerId = prop.owner;
+		this.isMortgaged = prop.mortgage;
+	}
 }

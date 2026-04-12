@@ -1,12 +1,17 @@
 import { PlayerModel } from './PlayerModel';
 import { PropertyModel } from './PropertyModel';
+import { PropertyInfo, Phase, GameState } from "@/services/types/socket"
 
 export class GameModel {
     public gameId: string;
-    public currentTurnPlayerId: string;
-    public parkingMoney: number = 0;
-    public hasRolledDice: boolean = false;
-    public isPaused: boolean = false;
+	public active_phase_player: string;	// sup. ID
+	public active_turn_player: string;	// sup. ID
+	public phase: Phase;
+	public streak: number; //nº of doubles hits 3 -> go to jail
+	public parking_money : number;
+	public current_turn : number;	// round number
+
+    public isPaused: boolean = false; // otro para isFinished?
     public boardProperties: Record<string, PropertyModel> = {}; // Record es como un diccionario https://typescriptutorial.com/es/diccionarios/
     public players: Record<string, PlayerModel> = {};
 
