@@ -116,15 +116,33 @@ export const WSClient = ( ) => {
 						console.log(data.message);
 					}
 					break;
-				case "init_identity":
+				case "init_identity": // in the meantine, user id is hard coded
 					break;
-				case "chat_message":
+				case "chat_message": 
+					// TODO Safety check de abajo - no sería mejor player i.e. userid??
+					if (data.game === gameIdRef.current) {
+						const chatMessage : ChatMessageContent = {
+							"user": data.user,
+							"msg":  data.msg
+						};
+						EventBus.emit('new-chat-message',chatMessage);
+					} else if (VERBOSE) {
+						console.err("VERBOSE: Este mensaje no es para este chat".);
+					}
 					break;
-				case "game_state":
+				case "game_state": 	// reupload state TODO
 					break;
-				case "game_action":
+				case "game_action": 
+					// TODO safety check: data.data.player is among global state's players
+					if (data.data.game === gameIdRef.current) {// && data.data.player ... ) {
+						EventBus.emit('receive-action',data.data);
+					} else if (VERBOSE) {
+						//console.err("VERBOSE: game id or action sender do not align with current game.");
+						console.log("VERBOSE: No need to report my own actions");
+					}
 					break;
 				case "game_response":
+					EventBus.emit('receive-response',data.data);
 					break;
 				default:
 					if (SELF_PROTECTION) {
@@ -141,8 +159,9 @@ export const WSClient = ( ) => {
 	 * @param msg - A dictionary with the desired format (see {@link GameService} for insights)
 	 * @throws {Error} if used when socket is closed on WS_ERROR flag set true
 	 * @fires many many event buses TODO
+	 * @listens other many event buses TODO
 	 */
-	const handleSendMessage = ( msg : GameAction ) => {
+	const backendSendMessage = ( msg : GameAction ) => {
 		if (socket.current && socket.current.readyState === WebSocket.OPEN) {
 			socket.current.send(JSON.stringify(msg));
 		} else if (WS_ERROR) {
@@ -153,11 +172,11 @@ export const WSClient = ( ) => {
 	useEffect(() => {
 		EventBus.on('handle-public-connect', handlePublicRoom);
 		EventBus.on('handle-enter-game', handleGame);
-		EventBus.on('send-message', handleSendMessage);
+		EventBus.on('send-message', backendSendMessage);
 		return () => {
 			EventBus.off('handle-public-connect', handlePublicRoom);
 			EventBus.off('handle-enter-game', handleGame);
-			EventBus.off('send-message', handleSendMessage);
+			EventBus.off('send-message', backendSendMessage);
 			closeExistingSocket();
 		};
 	}, []);
