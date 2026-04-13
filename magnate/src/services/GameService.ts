@@ -389,7 +389,7 @@ export const GameService = ( ) => {
 		EventBus.on('action-next-phase', actionNextPhase);
 		EventBus.on('receive-response', routeResponse);
 		EventBus.on('receive-action', routeAction);
-		EventBus.on('send-chat-message' sendChatMessage);
+		EventBus.on('send-chat-message', sendChatMessage);
 		return () => {
 			EventBus.off('public-connect', handlePublicConnect);
 			EventBus.off('enter-game', handleEnterGame);
@@ -410,7 +410,7 @@ export const GameService = ( ) => {
 			EventBus.off('action-next-phase', actionNextPhase);
 			EventBus.off('receive-response', routeResponse);
 			EventBus.off('receive-action', routeAction);
-			EventBus.off('send-chat-message' sendChatMessage);
+			EventBus.off('send-chat-message', sendChatMessage);
 		};
 	}, []);
 

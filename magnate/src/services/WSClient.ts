@@ -127,7 +127,7 @@ export const WSClient = ( ) => {
 						};
 						EventBus.emit('new-chat-message',chatMessage);
 					} else if (VERBOSE) {
-						console.err("VERBOSE: Este mensaje no es para este chat".);
+						console.log("VERBOSE: Este mensaje no es para este chat");
 					}
 					break;
 				case "game_state": 	// reupload state TODO
