@@ -16,6 +16,7 @@ export const fetchProfile = async (accessToken, updateProfile) => {
 
     const data = await response.json();
     console.log('profile',data);
+    console.log('token',accessToken);
     if (updateProfile) updateProfile(data);
   } catch(error) {
     console.error('Error fetching profile:', error);
@@ -60,5 +61,50 @@ export const fetchUserNamePiece = async (pk, updateNamePiece) => {
     if (updateNamePiece) updateNamePiece(data);
   } catch(error) {
     console.error('Error fetching user name piece:', error);
+  }
+};
+
+export const fetchGamesPlayed = async (accessToken, updateGamesPlayed) => {
+  try {
+    const response = await fetch(API_ENDPOINTS.GAMES_PLAYED, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(data);
+    if (updateGamesPlayed) updateGamesPlayed(data);
+  } catch(error) {
+    console.error('Error fetching games played:', error);
+  }
+};
+
+export const fetchGameSummary = async (accessToken, gameId, updateSummary) => {
+  try {
+    const url = `${API_ENDPOINTS.GAME_SUMMARY}${gameId}/`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(data);
+    if (updateSummary) updateSummary(data);
+  } catch(error) {
+    console.error('Error fetching game summary:', error);
   }
 };
