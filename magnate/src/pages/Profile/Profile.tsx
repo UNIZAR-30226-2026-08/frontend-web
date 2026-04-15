@@ -13,10 +13,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Coins, Hash, Users, Calendar } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { fetchUserPieces } from '@/api/shopServices';
-import { fetchProfile, changeUserPiece } from '@/api/userServices';
+import { fetchProfile, changeUserPiece, fetchGamesPlayed, fetchGameSummary } from '@/api/userServices';
 
 const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
+/*
 const GAMES = [
     { posicion: 0, monedas: 380, inicio: "17/03/2026 14:30", jugadores: ["Juls", "Nic", "Cris", "mangel"], fin: "-" },
     { posicion: 1, monedas: 580, inicio: "16/03/2026 18:15", jugadores: ["Juls", "Luc", "Nau", "mangel"], fin: "16/03/2026 19:47" },
@@ -25,8 +26,8 @@ const GAMES = [
     { posicion: 4, monedas: 0,   inicio: "13/03/2026 12:45", jugadores: ["Cris","Nic","Luc","Juls"], fin: "13/03/2026 13:24" },
     { posicion: 2, monedas: 0,   inicio: "12/03/2026 19:00", jugadores: ["mangel","Juls","Nau"], fin: "L" },
 ];
+*/
 
-// TODO: Vamos a necesitar el fichero con mapeos (id-toda_la_info)
 const SKINS = {
     1 : { name: "Sombrero", price: 0, img: "/skins/sombrero_closeup.png" },
     2 : { name: "Barco", price: 10,  img: "/skins/barco_closeup.png"},
@@ -115,6 +116,7 @@ export function Profile() {
     
     const [userSkins, setUserSkins] = useState<any>({});
     const [profile, setProfile] = useState<any>(null);
+    const [gameHistory, setGameHistory] = useState<any[]>([]);
 
     const navigate = useNavigate();
     const { logout, token } = useAuth();
@@ -132,7 +134,6 @@ export function Profile() {
                 }
             });
             
-            // Todavía no hay datos del backend
             fetchUserPieces(token, (data) => {
                 if (!data || Object.keys(data).length === 0) {
                     setUserSkins(SKINS);
@@ -140,8 +141,29 @@ export function Profile() {
                     setUserSkins(data);
                 }
             });
+
+            fetchGamesPlayed(token, async (data) => {
+                if (data && data.games) {
+                    let fetchedGames: any[] = [];
+                    for (let id of data.games) {
+                        await fetchGameSummary(token, id, (summary) => {
+                            // TODO: A ver si lo conseguimos del backend
+                            const jugadores = [];
+                            
+                            fetchedGames.push({
+                                posicion: summary.position || 0,
+                                monedas: summary.final_money || 0,
+                                inicio: summary.start_date || "-",
+                                jugadores: jugadores.length > 0 ? jugadores : ["Desconocido"],
+                                fin: summary.end_date || "-"
+                            });
+                        });
+                    }
+                    setGameHistory(fetchedGames);
+                }
+            });
         }
-    }, [token]);
+    }, [token, profile?.username]);
 
     const handleConfirmSelection = () => {
         if (token) {
@@ -252,7 +274,7 @@ export function Profile() {
 
                     <GameHistSection 
                         title="Historial de partidas" 
-                        items={profile?.games || GAMES} 
+                        items={gameHistory} 
                     />
                         </>
                 )}
