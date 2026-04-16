@@ -40,6 +40,7 @@ export const loginUser = async (credentials, onSuccess, onError) => {
     });
 
     const data = await response.json();
+    console.log(data);
 
     if (!response.ok) {
       const errorText = data.error || data.detail || Object.values(data)[0]?.[0] || "Error al entrar";

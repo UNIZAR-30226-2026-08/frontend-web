@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 
-const ModeContent = ( { mode, gridImageUrl: string} ) => (
+const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, pos: string }, gridImageUrl: string }) => (
   <>
     <div
       className="absolute inset-0 bg-no-repeat transition-transform duration-700 group-hover:scale-110 pointer-events-none"
@@ -33,14 +33,16 @@ export function Lobby() {
     const gridImageUrl = "src/assets/bg_city_white.jpg";
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 	const navigate = useNavigate();
+    const [copied, setCopied] = useState(false); // para el icono de copiar código
+    const roomCode = "123456"; // TODO: cambiar cuando esté conectado
 
-    const players = [
-        { title: "usuario1", pos: "0% 0%", isBot:false },
-        // { title: "usuario2", pos: "100% 0%", isBot: false},
+    const players = [ // TODO: falta añadir icono de cada jugador
+        { title: "usuario1", pos: "0% 0%", isBot: false},
+        { title: "usuario2", pos: "100% 0%", isBot: false},
         // { title: "usuario3", pos: "0% 100%"},
         // { title: "usuario4", sub: "Amarillo", pos: "0% 100%"},
     ];
-
+    const [difficulty, setDifficulty] = useState<'Muy fácil' | 'Fácil' | 'Medio' | 'Difícil' | 'Muy difícil' | 'Experto'>('Medio');
     const [lobbyPlayers, setLobbyPlayers] = useState(players);
 
     const addBot = (index : number) => {
@@ -56,8 +58,14 @@ export function Lobby() {
         newPlayers[index] = null;
         setLobbyPlayers(newPlayers); 
     }
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(roomCode);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+    };
 
     const lobbySlots = Array.from({ length: 4 }, (_, i) => lobbyPlayers[i] || null);
+    const activePlayersCount = lobbyPlayers.filter(player => player !== null).length; 
 
   return (
     <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none">
@@ -71,8 +79,40 @@ export function Lobby() {
                 backgroundRepeat: "repeat",
                 backgroundBlendMode: "overlay",
             }}>
-    
-            <div className="grid grid-cols-4 gap-5 h-[300px] items-center mt-28">
+            <div className="flex justify-end w-full max-w-7xl mx-auto pr-4">
+                <div className="flex flex-col items-center gap-2">
+                    <span className="text-zinc-500 uppercase font-black tracking-widest text-[11px] flex items-center gap-2 mb-1">
+                        <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
+                        Nivel de los Bots
+                    </span>
+
+                    <div className="relative group">
+                        <select 
+                            value={difficulty}
+                            onChange={(e) => setDifficulty(e.target.value as any)}
+                            className="appearance-none bg-white border-4 border-zinc-200 rounded-full px-8 py-3 
+                                    font-black uppercase text-sm text-zinc-700 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.05)] 
+                                    transition-all cursor-pointer pr-14 
+                                    hover:border-[var(--color-primary)] focus:outline-none focus:ring-transparent"
+                            style={{
+                                backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e")`,
+                                backgroundRepeat: "no-repeat",
+                                backgroundPosition: "right 1.2rem center",
+                                backgroundSize: "1.2em"
+                            }}
+                        >
+                            {['Muy fácil', 'Fácil', 'Medio', 'Difícil', 'Muy difícil', 'Experto'].map((level) => (
+                                <option key={level} value={level} className="font-sans normal-case text-base text-zinc-900">
+                                    {level}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="absolute inset-0 rounded-full pointer-events-none group-hover:ring-2 group-hover:ring-[var(--color-primary)]/20 transition-all" />
+                    </div>
+                </div>
+            </div>
+                
+            <div className="grid grid-cols-4 gap-5 h-[300px] items-center mt-20">
                 {lobbySlots.map((slot, index) => (
                     <div
                         key={index}
@@ -120,19 +160,43 @@ export function Lobby() {
                     </div>
                 ))}
             </div>
-            <div className="flex flex-col items-center gap-2 my-8">
-                    <span className="text-zinc-500 uppercase font-bold tracking-widest text-sm">
+            <div className="flex flex-col items-center gap-6 mt-6 mb-14">
+    
+                <div className="flex flex-col items-center gap-1">
+                    <span className="text-zinc-500 uppercase font-bold tracking-widest text-xs">
                         Código de la sala
                     </span>
-                    <h1 className="text-5xl font-black tracking-tighter text-[var(--color-primary)] drop-shadow-sm">
-                        123456
-                    </h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-5xl font-black tracking-tighter text-[var(--color-primary)] drop-shadow-sm leading-none">
+                            {roomCode}
+                        </h1>
+                        
+                        <Button 
+                            onClick={copyToClipboard}
+                            className="group relative p-2 rounded-full transition-all flex items-center justify-center"
+                            title="Copiar código"
+                        >
+                            <span className={`transition-all duration-200 ${copied ? 'opacity-0 scale-50' : 'opacity-100 scale-100'}`}>
+                                <img src="/icons/copy-regular-full.svg" className="w-10 h-10 text-zinc-500" alt="Copiar" />
+                            </span>
+                            {copied && (
+                                <div className="absolute inset-0 flex items-center justify-center animate-in zoom-in duration-300">
+                                    <img src="/icons/copy-solid-full.svg" className="w-10 h-10 text-zinc-500" alt="Copiado" />
+                                </div>
+                            )}
+                        </Button>
+                    </div>
+                    <span className="text-zinc-400 uppercase font-bold tracking-widest text-[14px] mt-2">
+                        Jugadores en sala: {activePlayersCount} / 4
+                    </span>
                 </div>
-            <div className='flex justify-center p-3 w-full'>
-                <Button type="submit" variant='magnate'
-						onClick={ () => {navigate('/phaser-game');}}
-                        className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[32px] uppercase font-bold w-[350px]
-                        ${bouncyAnimation} `}> 
+                <Button  // TODO: Comenzar juego si eres el host o Confirmar asistencia si eres un invitado
+                    type="submit" 
+                    variant='magnate'
+                    onClick={() => navigate('/phaser-game')}
+                    className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[30px] uppercase font-bold w-[320px] h-14
+                    ${bouncyAnimation}`}
+                > 
                     Comenzar juego
                 </Button>
             </div>
