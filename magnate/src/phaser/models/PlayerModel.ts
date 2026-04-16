@@ -7,7 +7,7 @@ export class PlayerModel {
     public balance: number = 200; // TODO: No se yo lo de hardcodear este número
     public properties: string[] = [];
     public currentTileId: string = "000"; 
-    public jailTurnCount: number = 1;
+    public jailRemainingTurns: number = 0;
 
     constructor(id: string, name: string, color: number) {
         this.id = id;

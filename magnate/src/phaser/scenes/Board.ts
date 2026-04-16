@@ -23,12 +23,14 @@ import { CameraController } from '../utils/CameraController';
 import { BoardEffects } from '../utils/BoardEffects';
 import { AnimationManager } from '../managers/AnimationManager';
 import { TileLogicManager } from '../managers/TileLogicManager';
+import { GameLogicManager } from '../managers/GameLogicManager';
 import { EventManager } from '../managers/EventManager';
-
+import { useAuth } from '@/context/AuthContext';
 
 export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
-    private players: { model: PlayerModel, token: PlayerToken }[] = [];
+	private players : { model: PlayerModel, token: PlayerToken }[] = [];
+	//private playerTokens : Record<string, PlayerToken> = {};
     private colorPalette: number[] = [];
     private fantasyCards: any[] = []; // TODO: rellenar con data/fantasyCard.json o recibir de backend
     public diceManager!: DiceManager;
@@ -36,6 +38,8 @@ export class Board extends Phaser.Scene {
     private eventManager!: EventManager;
     private localPlayerId: string | null = null;
     public cameraController!: CameraController; // TODO: para las cámaras
+
+	private logicManager!: GameLogicManager;
 
     // kinda global (handlePlayerClick)
     public selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
@@ -47,6 +51,9 @@ export class Board extends Phaser.Scene {
 
     constructor() {
         super({ key: 'BoardScene' });
+		// que escuche el GameModel, PlayerModel, PropertyModel del Manager
+		// EventBus.on();
+		// Una vez obtenido asignarlo a los privates de arriba
     }
 
     init(data: { myPlayerId?: string }) {
@@ -55,6 +62,7 @@ export class Board extends Phaser.Scene {
         } else {
             this.localPlayerId = "0003"; 
         }
+		this.logicManager = GameLogicManager.getInstance();
     }
 
     preload() { // precargar imagenes...
@@ -76,6 +84,14 @@ export class Board extends Phaser.Scene {
     } 
 
     create() { // crear escena
+		const { token } = useAuth();
+		if (token) {
+			fetchProfile(token, (data) => {
+				this.localPlayerId = data.pk;
+			});
+		} else { // death
+		}
+
         const fullData = this.cache.json.get('board');
         const boardTiles = fullData.tiles as TileConfig[];
         const groups = fullData.groups as { group: number, color: string }[];
@@ -169,7 +185,7 @@ export class Board extends Phaser.Scene {
         // Evento para marcar quien compra propiedad  ----------------------------
         EventBus.on('property-bought', this.handlePurchase, this);
         
-        this.eventManager = new EventManager(this, this.tiles, this.players);
+        this.eventManager = new EventManager(this, this.tiles, this.players.tokens);
         this.setupEventListeners();
 
         // Evento para que camara vuelva a la vista general ----------------------------
@@ -463,9 +479,9 @@ export class Board extends Phaser.Scene {
     private setupEventListeners() {
         EventBus.on('dark-mode', (active: boolean = true) => {
             if (active) { // Oscurece todo el tablero
-                BoardEffects.setFocusByIds(this.tiles, [], this, this.players);
+                BoardEffects.setFocusByIds(this.tiles, [], this, this.players.map(p => p.token));
             } else { // Limpia oscurecimiento
-                BoardEffects.setFocusByIds(this.tiles, null, this, this.players);
+                BoardEffects.setFocusByIds(this.tiles, null, this, this.players.map(p => p.token));
             }
         });
 

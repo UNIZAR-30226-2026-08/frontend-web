@@ -10,17 +10,18 @@ export class PropertyModel {
     public ownerId: string | null;
     public isMortgaged: boolean;
 
-    constructor(id: string) {
-        this.id = id;
-        this.houseCount = 0;
-        this.ownerId = null; 
-        this.isMortgaged = false;
+    constructor(data: string | PropertyInfo) {
+		if (typeof data === 'string') {
+        	this.id = data;
+        	this.houseCount = 0;
+        	this.ownerId = null; 
+        	this.isMortgaged = false;
+		} else {
+			this.id = data.square;
+			this.houseCount = data.houses;
+			this.ownerId = data.owner;
+			this.isMortgaged = data.mortgage;
+		}
     }
 
-	constructor(prop : PropertyInfo) {
-		this.id = prop.square;
-		this.houseCount = prop.houses;
-		this.ownerId = prop.owner;
-		this.isMortgaged = prop.mortgage;
-	}
 }

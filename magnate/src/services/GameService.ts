@@ -14,11 +14,52 @@ export const GameService = ( ) => {
 		EventBus.emit('handle-public-connect');
 	};
 
+	const handlePublicCancel = () => {
+		EventBus.emit('handle-public-cancel');
+	};
+
+	/*
+	 * PRIVATE ROOM FUNCTIONS
+	 */
+	const handlePrivateConnect = (roomcode: string) => { 
+		EventBus.emit('handle-private-connect', roomcode);
+	};
+
+	const handlePrivateCancel = () => {
+		EventBus.emit('handle-private-cancel');
+	};
+
+	const handlePrivateStart = () => {
+		const msg : PrivateCommand = {"command": "start_game"};
+		EventBus.emit('private-send-message', msg);
+	};
+
+	const handlePrivateChangeSettings = (data : PrivateRoomHostSettings) => {
+		const msg : PrivateCommand = {
+			"command": "update_settings",
+			"bot_level": msg.bot_evel,
+			"target_players": msg.target_players
+		};	
+		EventBus.emit('private-send-message', msg);
+	};
+
+	const handlePrivateSetReady = (ready:boolean = true) => {
+		const msg : PrivateCommand = {
+			"command": "ready_status",
+			"is_ready": ready
+		};
+		EventBus.emit('private-send-message', msg);
+	};
+
 	/*
 	 * GAME FUNCTIONS
 	 */
 	const handleEnterGame = () => { // TODO privatize
 		EventBus.emit('handle-enter-game');
+	};
+
+	const handleLeaveGame = () => {
+		EventBus.emit('handle-leave-game');
 	};
 
 	const sendChatMessage = ( msg : string ) => {
@@ -154,7 +195,65 @@ export const GameService = ( ) => {
 		EventBus.emit('send-message', message);
 	};
 
+	// Do not use - already private
 	// RECEIVED MESSAGES
+	const routePrivate = ( data : PrivateAction ) => {
+		switch (data.action) {
+			case "joined":
+				const playersMsg : PrivateRoomPlayers = {
+					"user": data.user,
+					"players": data.players
+				};
+				EventBus.emit('private-room-player-joined',playersMsg);
+				const settingsMsg : PrivateRoomHostSettings = {
+					"bot_level": data.bot_level,
+					"target_players": data.target_players
+				};
+				EventBus.emit('private-room-settings',settingsMsg);
+				const ownerMsg : PrivateRoomOwner = {
+					"is_owner": data.is_owner
+				};
+				EventBus.emit('private-room-owner-toggle',ownerMsg);
+				break;
+			case "player_left":
+				const playerMsg : PrivateRoomPlayers = {
+					"user": data.user_left,
+					"players": data.players
+				};
+				EventBus.emit('private-room-player-left',playerMsg);
+				const owner : PrivateRoomOwner = {
+					"is_owner": data.is_owner
+				};
+				EventBus.emit('private-room-owner-toggle',owner);
+				break;
+			case "ready_status":
+				const msg : PrivateRoomReady = {
+					"user": data.user,
+					"is_ready": data.is_ready
+				};
+				EventBus.emit('private-room-ready',msg);
+				break;
+			case "settings_changed":
+				const settingsmsg : PrivateRoomHostSettings = {
+					"bot_level": data.bot_level,
+					"target_players": data.target_players
+				};
+				EventBus.emit('private-room-settings',settingsmsg);
+				break;
+			case "game_start":
+				EventBus.emit('handle-enter-game',data.game_id);
+				break;
+			case "error":
+				if (VERBOSE) {
+					console.log(data.message);
+				}
+				break;
+			default:
+				console.log("Fckng chat message or what ", data.action);
+		}
+		
+	};
+
 	const routeResponse = ( data : WSTypes.GameResponse ) => {
 		switch (data.type) {
 			case "ResponseMovement":
@@ -167,7 +266,6 @@ export const GameService = ( ) => {
 					"fantasy_event" : data.fantasy_event
 				};
 				EventBus.emit('report-response-movement',responseMovement);
-				break;
 			case "ResponseChooseSquare":
 				const responseChooseSquare : WSTypes.GameInfoMovement = {
 					"money" : data.money,
@@ -178,7 +276,6 @@ export const GameService = ( ) => {
 					"fantasy_event" : data.fantasy_event
 				};
 				EventBus.emit('report-response-choose-square',responseChooseSquare);
-				break;
 			case "ResponseThrowDices":
 				const responseThrowDices : WSTypes.GameInfoThrowDices = {
 					"money" : data.money,
@@ -195,7 +292,6 @@ export const GameService = ( ) => {
 					"streak" : data.streak
 				};
 				EventBus.emit('report-response-throw-dices',responseThrowDices);
-				break;
 			case "ResponseChooseFantasy":
 				const responseChooseFantasy : WSTypes.GameInfoFantasy = {
 					"money" : data.money,
@@ -206,7 +302,6 @@ export const GameService = ( ) => {
 					"positions": data.positions
 				};
 				EventBus.emit('report-response-choose-fantasy',responseChooseFantasy);
-				break;
 			case "ResponseAuction":
 				const responseAuction : WSTypes.GameInfoAuction = {
 					"money" : data.money,
@@ -217,8 +312,7 @@ export const GameService = ( ) => {
 					"bids": data.bids
 				};
 				EventBus.emit('report-response-auction',responseAuction);
-				break;
-			case "Response":
+			default: // + case "Response": // always send for state update
 				const responseBasic : WSTypes.GameInfoResponse = {
 					"money" : data.money,
 					"active_phase_player" : data.active_phase_player,
@@ -226,11 +320,6 @@ export const GameService = ( ) => {
 					"phase" : data.phase
 				};
 				EventBus.emit('report-response',responseBasic);
-				break;
-			default:	
-				if (SELF_PROTECTION) {
-					console.log("SELF PROTECTION: response desconocido",data);	
-				}
 		}
 	};
 	
@@ -364,13 +453,25 @@ export const GameService = ( ) => {
 				break;
 			default:
 				if (VERBOSE) {
-					console.log("VERBOSE: Irrelevant action report");
+					console.log("VERBOSE: It's literally impossible to get here as every branch has a break and all gameActionType's possible values have been covered");
 				}
 		}
 	};
 
+
 	useEffect(() => {
+		EventBus.on('receive-private', routePrivate);
+		EventBus.on('private-connect', handlePrivateConnect);
+		EventBus.on('private-cancel', handlePrivateCancel);
+		EventBus.on('private-start', handlePrivateStart);
+		EventBus.on('private-change-settings', handlePrivateChangeSettings);
+		EventBus.on('private-set-ready',handlePrivateSetReady);
+
+		// Public
 		EventBus.on('public-connect', handlePublicConnect);
+		EventBus.on('public-cancel', handlePublicCancel);
+
+		//Game
 		EventBus.on('enter-game', handleEnterGame);
 		EventBus.on('action-throw-dices', actionThrowDices);
 		EventBus.on('action-move-to', actionMoveTo);
@@ -387,11 +488,24 @@ export const GameService = ( ) => {
 		EventBus.on('action-mortgage-unset', actionMortgageUnset);
 		EventBus.on('action-pay-bail', actionPayBail);
 		EventBus.on('action-next-phase', actionNextPhase);
+
 		EventBus.on('receive-response', routeResponse);
 		EventBus.on('receive-action', routeAction);
-		EventBus.on('send-chat-message' sendChatMessage);
+
+		EventBus.on('send-chat-message', sendChatMessage);
 		return () => {
+			EventBus.off('receive-private', routePrivate);
+			EventBus.off('private-connect', handlePrivateConnect);
+			EventBus.off('private-cancel', handlePrivateCancel);
+			EventBus.off('private-start', handlePrivateStart);
+			EventBus.off('private-change-settings', handlePrivateChangeSettings);
+			EventBus.off('private-set-ready',handlePrivateSetReady);
+
+			// Public
 			EventBus.off('public-connect', handlePublicConnect);
+			EventBus.off('public-cancel', handlePublicCancel);
+
+			// Game
 			EventBus.off('enter-game', handleEnterGame);
 			EventBus.off('action-throw-dices', actionThrowDices);
 			EventBus.off('action-move-to', actionMoveTo);
@@ -408,9 +522,11 @@ export const GameService = ( ) => {
 			EventBus.off('action-mortgage-unset', actionMortgageUnset);
 			EventBus.off('action-pay-bail', actionPayBail);
 			EventBus.off('action-next-phase', actionNextPhase);
+
 			EventBus.off('receive-response', routeResponse);
 			EventBus.off('receive-action', routeAction);
-			EventBus.off('send-chat-message' sendChatMessage);
+
+			EventBus.off('send-chat-message', sendChatMessage);
 		};
 	}, []);
 

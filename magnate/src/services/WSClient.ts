@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { EventBus } from '@/EventBus';
 import { GameAction } from "@/services/types/socket";
-
-const userId = "1";	// TODO
+import { useAuth } from '@/context/AuthContext';
 
 /**
  * When true, informs of errors related to websocket connection
@@ -35,14 +34,25 @@ export const WSClient = ( ) => {
 	const socket = useRef<WebSocket | null>(null);
 
 	const gameIdRef = useRef("");
-	const userIdRef = useRef("");
+	const playersIdsRef = useRef([]);
+
+    const { token } = useAuth();
 
 	// Meant to be a private function. Self-descriptive.
-	const closeExistingSocket = () => {
+	// 4100 context change. 
+	// 4101 public cancel. 
+	// 4102 private cancel.
+	// 4103 game left.
+	const closeExistingSocket = (sockcode : number=4100) => {
 	    if (socket.current) {
-	        // 1000 standard code for "Normal Closure"
-	        socket.current.close(1000, "Cierre por cambio de contexto");
+			if (sockcode===4101 && socket.current.readyState === WebSocket.OPEN) {
+				socket.current.send(JSON.stringify({"action":"cancel"}));
+			}
+
+	        // 1000 standard code for "Normal Closure" TODO more generic msg
+	        socket.current.close(sockcode, "");
 	        socket.current = null;
+			playersIdsRef.current = null;
 	    }
 	};
 
@@ -58,9 +68,10 @@ export const WSClient = ( ) => {
 
 		closeExistingSocket();
 
-		// url for private room (param <roomid>)
-		//const url = `ws://localhost:8000/ws/queue/private/${roomid}`;
-		const url = `ws://localhost:8000/ws/queue/public/`;
+		if (!token && VERBOSE) {
+			console.log("NO COOKIE/TOKEN: login before entering room.");
+		}
+		const url = `ws://localhost:8000/ws/queue/public/?token=${token}`;
 		socket.current = new WebSocket(url);
 
 		socket.current.onmessage = (event) => {
@@ -70,14 +81,82 @@ export const WSClient = ( ) => {
 				console.log(data);
 			}
 			if (data.action === "match_found") {
-				console.log("Tomo game id:",data.game_id);
-				gameIdRef.current = data.game_id;
+				if (VERBOSE) { console.log("Tomo game id:",data.game_id); }
+				EventBus.emit('handle-enter-game',data.game_id);
 			}
 			else if (data.action === "error") {
 				console.log(data.message);
 			}
 			else {
 				console.log("No se corresponde con nada esperado. Mensaje: ",data);
+			}
+		};
+
+		socket.current.onclose = (event) => {
+			if (VERBOSE) {
+				switch(event.code) {
+					case "4001":
+						console.log("PUBLIC 4001 - Game started");
+						break;
+					case "4002":
+						console.log("PUBLIC 4002 - Unauthorized, user not authenticated");
+						break;
+					case "4000":
+						console.log("PUBLIC 4000 - User canceled the operation");
+						break;
+					default:
+						console.log("PUBLIC socket closed OK");
+				}
+			}
+		};
+
+	};
+
+	/**
+	 * Connect to private room and handle every communication related
+	 * Updates {@link gameIdRef}
+	 * @fires many many event buses TODO
+	 */
+	const handlePrivateRoom = (roomid: string) => {
+		if (VERBOSE) {
+			console.log("DEBUG: entered handlePrivateRoom");
+		}
+
+		closeExistingSocket();
+
+		if (!token && VERBOSE) {
+			console.log("NO COOKIE/TOKEN: login before entering room.");
+		}
+		const url = `ws://localhost:8000/ws/queue/private/${roomid}/?token=${token}`;
+		socket.current = new WebSocket(url);
+
+		socket.current.onmessage = (event) => {
+			const data = JSON.parse(event.data);
+			if (VERBOSE) {
+				console.log("SALA PRIVADA Mensaje recibido");
+				console.log(data);
+			}
+			EventBus.emit('receive-private',data);	
+		};
+
+		socket.current.onclose = (event) => {
+			if (VERBOSE) {
+				switch(event.code) {
+					case "4001":
+						console.log("PRIVATE 4001 - Game started");
+						EventBus.emit('private-connect-response', true);
+						break;
+					case "4002":
+						console.log("PRIVATE 4002 - Unauthorized");
+						EventBus.emit('private-connect-response', false);
+						break;
+					case "4003":
+						console.log("PRIVATE 4003 - Room not found, full or user already in room");
+						EventBus.emit('private-connect-response', false);
+						break;
+					default:
+						console.log("PRIVATE socket closed OK");
+				}
 			}
 		};
 
@@ -89,7 +168,8 @@ export const WSClient = ( ) => {
 	 * Handles all communication related to that game.
 	 * @fires many many event buses TODO
 	 */
-	const handleGame = () => {
+	const handleGame = (game_id: string) => {
+		gameIdRef.current = game_id;
 		if (VERBOSE) {
 			console.log("DEBUG: entered handleGame");
 		}
@@ -100,8 +180,10 @@ export const WSClient = ( ) => {
 
 		closeExistingSocket();
 
-		const gameId = gameIdRef.current;
-		const url = `ws://localhost:8000/ws/game/${gameId}/`
+		if (!token && VERBOSE) {
+			console.log("NO COOKIE/TOKEN: login before entering game.");
+		}
+		const url = `ws://localhost:8000/ws/game/${game_id}/?token=${token}`
 		socket.current = new WebSocket(url);
 
 		socket.current.onmessage = (event) => {
@@ -117,24 +199,31 @@ export const WSClient = ( ) => {
 					}
 					break;
 				case "init_identity": // in the meantine, user id is hard coded
+						// It'd b Better to use the API in fact, deprecated(?)
 					break;
 				case "chat_message": 
-					// TODO Safety check de abajo - no sería mejor player i.e. userid??
-					if (data.game === gameIdRef.current) {
+					if (data.game === gameIdRef.current && playersIdsRef.current.includes(data.user) ) {
 						const chatMessage : ChatMessageContent = {
 							"user": data.user,
 							"msg":  data.msg
 						};
 						EventBus.emit('new-chat-message',chatMessage);
 					} else if (VERBOSE) {
-						console.err("VERBOSE: Este mensaje no es para este chat".);
+						console.log("VERBOSE: Este mensaje no es para este chat.");
 					}
 					break;
-				case "game_state": 	// reupload state TODO
+				case "game_state": 
+					if (data.data.id === gameIdRef.current) {
+						if (playersIdsRef.current === null) {
+							playersIdsRef.current = data.data.players;
+						}
+						EventBus.emit('new-game-state', data.data);
+					} else if (VERBOSE) {
+						console.log("VERBOSE: This message is not for this game id");
+					}
 					break;
 				case "game_action": 
-					// TODO safety check: data.data.player is among global state's players
-					if (data.data.game === gameIdRef.current) {// && data.data.player ... ) {
+					if (data.data.game === gameIdRef.current && playersIdsRef.current.includes(data.data.player) ) {
 						EventBus.emit('receive-action',data.data);
 					} else if (VERBOSE) {
 						//console.err("VERBOSE: game id or action sender do not align with current game.");
@@ -152,6 +241,21 @@ export const WSClient = ( ) => {
 			}
 		};
 
+		socket.current.onclose = (event) => {
+			if (VERBOSE) {
+				switch(event.code) {
+					case "4002":
+						console.log("GAME 4002 - Unauthorized or missing kwargs");
+						break;
+					case "4003":
+						console.log("GAME 4003 - User is not a participant in this game");
+						break;
+					default:
+						console.log("GAME socket closed OK");
+				}
+			}
+		};
+
 	};
 
 	/**
@@ -161,7 +265,16 @@ export const WSClient = ( ) => {
 	 * @fires many many event buses TODO
 	 * @listens other many event buses TODO
 	 */
-	const backendSendMessage = ( msg : GameAction ) => {
+	const gameSendMessage = ( msg : GameAction ) => {
+		if (socket.current && socket.current.readyState === WebSocket.OPEN) {
+			socket.current.send(JSON.stringify(msg));
+		} else if (WS_ERROR) {
+			console.log("SELF PROTECTION: tried to send message through closed ws");
+		}
+	};
+
+	// Copied above function
+	const privateSendMessage = ( msg : PrivateCommand ) => {
 		if (socket.current && socket.current.readyState === WebSocket.OPEN) {
 			socket.current.send(JSON.stringify(msg));
 		} else if (WS_ERROR) {
@@ -171,12 +284,22 @@ export const WSClient = ( ) => {
 
 	useEffect(() => {
 		EventBus.on('handle-public-connect', handlePublicRoom);
+		EventBus.on('handle-public-cancel', () => { closeExistingSocket(4101);} );
+		EventBus.on('handle-private-cancel', () => { closeExistingSocket(4102);} );
+		EventBus.on('handle-leave-game', () => { closeExistingSocket(4103);} );
 		EventBus.on('handle-enter-game', handleGame);
-		EventBus.on('send-message', backendSendMessage);
+		EventBus.on('send-message', gameSendMessage);
+		EventBus.on('handle-private-connect', handlePrivateRoom);
+		EventBus.on('private-send-message', privateSendMessage);
 		return () => {
 			EventBus.off('handle-public-connect', handlePublicRoom);
+			EventBus.off('handle-public-cancel');
+			EventBus.off('handle-private-cancel');
+			EventBus.off('handle-leave-game');
 			EventBus.off('handle-enter-game', handleGame);
-			EventBus.off('send-message', backendSendMessage);
+			EventBus.off('send-message', gameSendMessage);
+			EventBus.off('handle-private-connect', handlePrivateRoom);
+			EventBus.off('private-send-message', privateSendMessage);
 			closeExistingSocket();
 		};
 	}, []);

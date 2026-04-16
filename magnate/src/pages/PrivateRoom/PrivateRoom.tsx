@@ -1,8 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
+import { EventBus } from "@/EventBus";
+import { useAuth } from "@/context/AuthContext";
+import { generatePrivateCode } from "@/api/lobbyServices";
 
 const ModeContent = ({ mode }: { mode: any }) => (
   <>
@@ -45,6 +48,26 @@ export function PrivateRoom () {
     const [displayedImage, setDisplayedImage] = useState<string | null>(null);
     const [roomCode, setRoomCode] = useState<string>('');
 
+	const { token } = useAuth();
+
+	useEffect (() => {
+		const handleConnectResponse =  (ok : boolean) => {
+			if (ok) {
+				navigate('/lobby');
+			} else {
+				if (codeRef.current) {
+					// full room
+					codeRef.current.setCustomValidity("No hay hueco para jugar en la sala con ese código");
+					codeRef.current.reportValidity();
+				}
+			}
+		};
+		EventBus.on('private-connect-response', handleConnectResponse);
+		return () => {
+			EventBus.off('private-connect-response', handleConnectResponse);
+		};
+	}, [navigate]);
+
     const handleButtonClick = (modeId : string) => {
         setActiveMode(modeId);
 
@@ -58,24 +81,31 @@ export function PrivateRoom () {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		const cInput = codeRef.current;
+		if (activeMode === 'host') {
+			// ask for code
+			if (token && codeRef.current) {
+				generatePrivateCode(token, (data:any) => {
+					setRoomCode(data.code);
+				});
+			}
+		} else if (activeMode === 'join') {
 
-		// room does not exist
-		if (roomCode === "1234" && cInput) {
-			cInput.setCustomValidity("No hay ninguna sala activa con ese código");
-			cInput.reportValidity();
-			return;
+			const cInput = codeRef.current;
+			if (!cInput) return;
+
+			// room does not exist
+			if (roomCode === "1234") { // /lobby/check-code// !data.exists
+				codeRef.current.setCustomValidity("No hay ninguna sala activa con ese código");
+				codeRef.current.reportValidity();
+				return;
+			}
+
 		}
 
-		// full room
-		if (roomCode === "12345" && cInput) {
-			cInput.setCustomValidity("No hay hueco para jugar en la sala con ese código");
-			cInput.reportValidity();
-			return;
-		}
+		console.log('correct room login:', roomCode);
+		EventBus.emit('private-connect', roomCode);
 
-		console.log('correct room login:', {roomCode});
-		navigate('/lobby');
+		return;
 	};
 
     return (

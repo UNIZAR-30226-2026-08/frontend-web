@@ -26,24 +26,62 @@ export interface FantasyCardDesc {
 	cost: number;
 }
 
-export type Phase = 'ROLL_THE_DICES'
-| 'CHOOSE_FANTASY'
-| 'MANAGEMENT'
-| 'BUSINESS'
-| 'LIQUIDATION'
-| 'AUCTION'
-| 'PROPOSAL_ACCEPTANCE'
-| 'END_GAME'
-| 'CHOOSE_SQUARE';
+export type Phase =  //GamePhase in backend doc
+		'roll_the_dices'
+| 'choose_square'
+| 'choose_fantasy'
+| 'management'
+| 'business'
+| 'liquidation'
+| 'auction'
+| 'proposal_acceptance'
+| 'end_game';
 
-export type BotLevel = 'VERY_EASY' | 'EASY' | 'MEDIUM' | 'HARD' | 'VERY_HARD' | 'EXPERT';
+export type gameActionType = 'Action'
+| 'ActionThrowDices'
+| 'ActionMoveTo'
+| 'ActionTakeTram'
+| 'ActionDropPurchase'
+| 'ActionBuySquare'
+| 'ActionBuild'
+| 'ActionDemolish' 
+| 'ActionChooseCard'
+| 'ActionSurrender'
+| 'ActionTradeProposal'
+| 'ActionTradeAnswer'
+| 'ActionMortgageSet'
+| 'ActionMortgageUnset'
+| 'ActionPayBail'
+| 'ActionNextPhase'
+| 'ActionBid';
+
+export type privateActionType = 'joined'
+| 'player_left'
+| 'ready_status'
+| 'settings_changed'
+| 'game_start'
+| 'error'; // chat_message 
+
+export type privateCommandType = 'ready_status'
+| 'start_game'
+| 'update_settings';
+
+export type gameResponseType = 'Response'
+| 'ResponseMovement' 
+| 'ResponseThrowDices'
+| 'ResponseChooseSquare'
+| 'ResponseChooseFantasy'
+| 'ResponseAuction';
+
+export type BotLevel = 'very_easy' | 'easy' | 'medium' | 'hard' | 'very_hard' 
+| 'expert';
 
 // TODO mejorar librería websocket
 // Nico: ConnState: internal state of the WS client (en vdd interesa para
 // permitir o no ciertas operaciones)
 
 export interface GameAction { 
-    type: string;
+    type: gameActionType;
 	msg?: string;	// for chat messages
     square?: string; 	// tileId
 	houses?: number; 	// nº of houses to build
@@ -64,7 +102,7 @@ export interface GameAction {
 export interface GameActionReport { 
 	player: string;	// user id of player who sent the action
 	game: string;	// game ID 
-    type: string;
+    type: gameActionType;
     square?: string; 	// tileId
 	houses?: number; 	// nº of houses to build
 	// only for choosing fantasy card
@@ -82,7 +120,7 @@ export interface GameActionReport {
 }
 
 export interface GameResponse {
-    type: string;
+    type: gameResponseType;
 	money : Record<string, number>; // Dict userid: number
 	active_phase_player: number;
 	active_turn_player: number;
@@ -107,9 +145,60 @@ export interface GameResponse {
 	bids?: Record<string, number>; // userid, money bidded
 }
 
+export interface PrivateCommand {
+	command: privateCommandType;
+	// toggle
+	is_ready?: boolean;
+	// settings
+	bot_level?: BotLevel;
+	target_players?: number;
+}
+
+export interface PrivateAction {
+	action: privateActionType;
+	game_id?: string;	// game start
+	message?: string;	// error
+	// host settings + player joined
+	bot_level?: BotLevel;
+	target_players?: number;
+	// common to the next ones
+	owner?: string;
+	is_owner?: boolean;
+	// ready status update
+	user?: string;
+	is_ready?: boolean;
+	// common to players actions
+	players?: Waiters[];
+	// player left only (instead of user...)
+	user_left? : string; 
+}
 /*
  * DATA TYPES FOR DEVELOPERS
  */
+export interface PrivateRoomHostSettings {
+	bot_level: BotLevel;
+	target_players: number;
+}
+
+export interface PrivateRoomOwner {
+	is_owner : boolean;
+}
+
+export interface PrivateRoomReady {
+	user: string;
+	is_ready: boolean;
+}
+
+export interface PrivateRoomPlayers {
+	user: string;
+	players: Waiters[];
+}
+
+export interface Waiters {
+	username: string;
+	ready_to_play: boolean;
+}
+
 export interface ChatMessageContent {
 	user: string;	// username... it would be better to have player ID to check
 	msg: string;

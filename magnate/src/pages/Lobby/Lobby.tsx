@@ -36,7 +36,7 @@ export function Lobby() {
 
     const players = [
         { title: "usuario1", pos: "0% 0%", isBot:false },
-        { title: "usuario2", pos: "100% 0%", isBot: false},
+        // { title: "usuario2", pos: "100% 0%", isBot: false},
         // { title: "usuario3", pos: "0% 100%"},
         // { title: "usuario4", sub: "Amarillo", pos: "0% 100%"},
     ];

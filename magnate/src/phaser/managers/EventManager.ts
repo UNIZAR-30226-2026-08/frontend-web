@@ -50,7 +50,7 @@ export class EventManager {
 
         // Lógica de inicio de tradeo
         EventBus.on('start-selection-mode', (data: { ownerId: string, propertyIds: string[]}) => {
-            BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this.scene, this.players);
+            BoardEffects.setFocusByIds(this.tiles, data.propertyIds, this.scene, this.players.map(p=>p.token));
 
             this.tiles.forEach(tile => {
                 if (data.propertyIds.includes(tile.tileConfig.id)) {
@@ -82,7 +82,7 @@ export class EventManager {
                     tile.removeAllListeners('pointerdown');
 
                     tile.once('pointerdown', () => {
-                        BoardEffects.setFocusByIds(this.tiles, null, this.scene, this.players);
+                        BoardEffects.setFocusByIds(this.tiles, null, this.scene, this.players.map(p=>p.token));
                         // TODO: esto viene del backend o tendremos que añadirlo a cada property
                         const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
                         const propConfig = tile.tileConfig as IPropertyTile;
@@ -126,7 +126,7 @@ export class EventManager {
 			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
 			const tramTileIds = tramTiles.map(t => t.tileConfig.id);
             
-			BoardEffects.setFocusByIds(this.tiles, tramTileIds, this.scene, this.players);
+			BoardEffects.setFocusByIds(this.tiles, tramTileIds, this.scene, this.players.map(p=>p.token));
 
 			this.tiles.forEach(tile => {
 				if (tramTileIds.includes(tile.tileConfig.id)) {
@@ -143,7 +143,7 @@ export class EventManager {
 						});
 
 						// disable focus after click
-						BoardEffects.setFocusByIds(this.tiles, null, this.scene, this.players);
+						BoardEffects.setFocusByIds(this.tiles, null, this.scene, this.players.map(p=>p.token));
 					});
 				} else {
 					tile.disableInteractive();
@@ -182,7 +182,7 @@ export class EventManager {
             const jailId = "104";
 
             if (isDouble) {
-                BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players);
+                BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p=>p.token));
                 this.scene.showToast('¡Dobles! Sales libre.');
                 p.model.jailTurnCount = 0;
                 p.model.emitUpdate();
@@ -195,11 +195,11 @@ export class EventManager {
                 
             } else {
                 if (p.model.jailTurnCount >= 3) {
-                    BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players);
+                    BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p=>p.token));
                     this.scene.showToast('¡Tercer turno! Debes pagar la fianza obligatoriamente');
                     this.setupJailClick(targetId, 'pay');
                 } else {
-                    BoardEffects.setFocusByIds(this.tiles, [jailId, targetId], this.scene, this.players);
+                    BoardEffects.setFocusByIds(this.tiles, [jailId, targetId], this.scene, this.players.map(p=>p.token));
                     this.setupJailClick(jailId, 'stay');
                     this.setupJailClick(targetId, 'pay');
                 }
@@ -208,10 +208,11 @@ export class EventManager {
             }
         });
 
-        // Pago de fianza
+        // Pago de fianza 
         EventBus.on('execute-jail-bail-payment', (pay: { amount: number }) => {
             this.tiles.forEach(t => t.disableInteractive());
             //const p = this.scene.getLocalPlayer();
+			//TODO quitar porque esto vendrá por una response
             const p = this.getActivePlayer();
             if (p && p.model.balance >= pay.amount) { // TODO: ajustar dinero players
                 p.model.balance -= pay.amount;
@@ -220,11 +221,12 @@ export class EventManager {
                 EventBus.emit('player-updated', p.model);
                 EventBus.emit('close-overlay');
             } else {
-                this.scene.showToast("Saldo insuficiente.");
+                this.scene.showToast("Saldo insuficiente."); // TODO: NO pasa esto, simplemente pasaría a fase de liquidación
             }
         });
 
         EventBus.on('jail-re-enable-selection', () => {
+			// TODO usar el modelo bueno 
             //const p = this.scene.getLocalPlayer();
             const p = this.getActivePlayer();
             console.log("Jugador actual in jail-re-enalble:", p?.model.id);
@@ -234,10 +236,10 @@ export class EventManager {
             const targetId = "108"; // ID de destino tras los dados
 
             if (p.model.jailTurnCount >= 3) {
-                BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players);
+                BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p => p.token));
                 this.setupJailClick(targetId, 'pay');
             } else {
-                BoardEffects.setFocusByIds(this.tiles, [jailId, targetId], this.scene, this.players);
+                BoardEffects.setFocusByIds(this.tiles, [jailId, targetId], this.scene, this.players.map(p=>p.token));
                 this.setupJailClick(jailId, 'stay'); 
                 this.setupJailClick(targetId, 'pay');
             }

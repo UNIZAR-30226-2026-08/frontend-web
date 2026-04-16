@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ShaderLoading from '@/components/ui/shader';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from "react-router-dom";
+import { EventBus } from '@/EventBus';
 
 interface LoadingProps {
     onBack?: () => void;
@@ -9,6 +10,15 @@ interface LoadingProps {
 
 export function Loading({ onBack }: LoadingProps) {
     const navigate = useNavigate();
+
+	useEffect(() => {
+		EventBus.emit('handle-public-connect');
+
+		return () => {
+			EventBus.emit('handle-public-cancel');
+		}
+	}, []);
+
     return (
         <div className='flex justify-center items-center min-h-screen bg-[url(@/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat relative'>
             <div className='absolute inset-0 bg-black/60 backdrop-blur-[8px]'></div>

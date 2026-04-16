@@ -37,12 +37,12 @@ export const BoardEffects = {
 
         activePlayers.forEach((p, index) => {
             if (isSelectionMode) {    
-                p.token.setDepth(1);
-                p.token.setAlpha(0.7);
+                p.setDepth(1);
+                p.setAlpha(0.7);
             } else {
                 // Volver al estado normal
-                p.token.setDepth(200 + index);
-                p.token.setAlpha(1);
+                p.setDepth(200 + index);
+                p.setAlpha(1);
             }
         });
     }

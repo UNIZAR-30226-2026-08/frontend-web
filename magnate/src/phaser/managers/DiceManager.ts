@@ -30,7 +30,7 @@ export class DiceManager {
         this.isRolling = true;
 
         EventBus.emit('play-sfx', 'dice_shake');
-        BoardEffects.setFocusByIds(tiles, [], this.board, players);
+        BoardEffects.setFocusByIds(tiles, [], this.board, players.map(p=>p.token));
 
         const dice1 = create3DDice(960 - 220, 540, this.board, 1000);
         const dice2 = create3DDice(960, 540, this.board, 1150); 
@@ -95,7 +95,7 @@ export class DiceManager {
                         try {
                             const myPlayer = this.board.getLocalPlayer();
                             if (myPlayer) {
-                                BoardEffects.setFocusByIds(tiles, ["003", "006", "009"], this.board, players);
+                                BoardEffects.setFocusByIds(tiles, ["003", "006", "009"], this.board, players.map(p=>p.token));
                             }
                         } catch (error) {
                             console.error(error);
@@ -123,7 +123,7 @@ export class DiceManager {
         this.isRolling = true;
         
         EventBus.emit('play-sfx', 'dice_shake');
-        BoardEffects.setFocusByIds(tiles, [], this.board, players);
+        BoardEffects.setFocusByIds(tiles, [], this.board, players.map(p=>p.token));
 
         const dice1 = create3DDice(960 - 110, 540, this.board, 1000);
         const dice2 = create3DDice(960 + 110, 540, this.board, 1150); 
