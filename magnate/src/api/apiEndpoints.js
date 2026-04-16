@@ -21,6 +21,7 @@ const API_ENDPOINTS = {
 
   // Lobby
   GET_PRIVATE_CODE: `${BASE_URL}/lobby/get-private-code`
+  CHECK_PRIVATE_CODE: `${BASE_URL}/lobby/check-code/`
 };
 
 export default API_ENDPOINTS;
