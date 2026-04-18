@@ -23,6 +23,9 @@ import { ToastMessage } from '@/components/layout/ToastMessage';
 import { SecretaryAnimation } from './SecretaryAnimation';
 import { JailOverlay } from './JailOverlay';
 
+import { useAuth } from "@/context/AuthContext";
+import { fetchProfile } from "@/api/userServices";
+
 interface PlayerInitData {
     id: string;
     name: string;
@@ -32,6 +35,7 @@ interface PlayerInitData {
 
 export const PhaserGame = () => {
     const gameRef = useRef<Phaser.Game | null>(null);
+	const { token } = useAuth();
     const [players, setPlayers] = useState<PlayerInitData[]>([]);
     const [windowSize, setWindowSize] = useState({ 
         width: typeof window !== 'undefined' ? window.innerWidth : 1920, 
@@ -39,12 +43,27 @@ export const PhaserGame = () => {
     });
 
     useEffect(() => {
+		const handleIdRequest = () => {
+			if (token) {
+				fetchProfile(token, (data:any) => {
+					console.log("React enviando ID a Phaser",data.pk);
+					EventBus.emit('receive-player-id',data.pk);
+				});
+			} else {
+				console.log("Emitting default player ID","0003");
+				EventBus.emit('receive-player-id',"0003");
+			}
+		};
+		EventBus.on('request-player-id', handleIdRequest);
         const handleResize = () => {
             setWindowSize({ width: window.innerWidth, height: window.innerHeight });
         };
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+        return () => {
+				EventBus.off('request-player-id', handleIdRequest);
+				window.removeEventListener('resize', handleResize);
+		};
+    }, [token]);
 
     const { changeMusic, playSound } = useAudio();
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { EventBus } from "@/EventBus";
 import { useAuth } from "@/context/AuthContext";
-import { generatePrivateCode } from "@/api/lobbyServices";
+import { generatePrivateCode, checkPrivateCode } from "@/api/lobbyServices";
 
 const ModeContent = ({ mode }: { mode: any }) => (
   <>
@@ -82,28 +82,33 @@ export function PrivateRoom () {
 		e.preventDefault();
 
 		if (activeMode === 'host') {
+			console.log("host");
 			// ask for code
-			if (token && codeRef.current) {
-				generatePrivateCode(token, (data:any) => {
-					setRoomCode(data.code);
+			if (token) {
+				generatePrivateCode(token, (newCode : string) => {
+					setRoomCode(newCode);	
+					EventBus.emit('private-connect', newCode);
+					console.log('correct new room login:', newCode);
 				});
 			}
-		} else if (activeMode === 'join') {
+		} else { if (activeMode === 'join') {
+			console.log("join");
 
 			const cInput = codeRef.current;
 			if (!cInput) return;
 
 			// room does not exist
-			if (roomCode === "1234") { // /lobby/check-code// !data.exists
+			if (!checkPrivateCode(token, roomCode)) { // /lobby/check-code// !data.exists
 				codeRef.current.setCustomValidity("No hay ninguna sala activa con ese código");
 				codeRef.current.reportValidity();
 				return;
+			} else {
+				EventBus.emit('private-connect', roomCode);
+				console.log('correct old room login:', roomCode);
+			}
 			}
 
 		}
-
-		console.log('correct room login:', roomCode);
-		EventBus.emit('private-connect', roomCode);
 
 		return;
 	};

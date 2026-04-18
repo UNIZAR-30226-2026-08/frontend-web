@@ -156,6 +156,7 @@ export interface PrivateCommand {
 
 export interface PrivateAction {
 	action: privateActionType;
+	room_code?: string; // after generate code API
 	game_id?: string;	// game start
 	message?: string;	// error
 	// host settings + player joined

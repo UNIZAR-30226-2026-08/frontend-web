@@ -15,7 +15,7 @@ export function Loading({ onBack }: LoadingProps) {
 		EventBus.emit('handle-public-connect');
 
 		return () => {
-			EventBus.emit('handle-public-cancel');
+			//EventBus.emit('handle-public-cancel');
 		}
 	}, []);
 

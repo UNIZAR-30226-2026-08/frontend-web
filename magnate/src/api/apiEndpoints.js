@@ -20,7 +20,7 @@ const API_ENDPOINTS = {
   USER_EMOJIS: `${BASE_URL}/shop/user-emojis/`,
 
   // Lobby
-  GET_PRIVATE_CODE: `${BASE_URL}/lobby/get-private-code`
+  GET_PRIVATE_CODE: `${BASE_URL}/lobby/get-private-code`,
   CHECK_PRIVATE_CODE: `${BASE_URL}/lobby/check-code/`
 };
 

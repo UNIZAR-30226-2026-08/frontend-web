@@ -65,11 +65,11 @@ export const WSClient = ( ) => {
 		if (VERBOSE) {
 			console.log("DEBUG: entered handlePublicRoom");
 		}
-
-		closeExistingSocket();
+		//closeExistingSocket();
 
 		if (!token && VERBOSE) {
 			console.log("NO COOKIE/TOKEN: login before entering room.");
+			console.log(token);
 		}
 		const url = `ws://localhost:8000/ws/queue/public/?token=${token}`;
 		socket.current = new WebSocket(url);
@@ -95,13 +95,13 @@ export const WSClient = ( ) => {
 		socket.current.onclose = (event) => {
 			if (VERBOSE) {
 				switch(event.code) {
-					case "4001":
+					case 4001:
 						console.log("PUBLIC 4001 - Game started");
 						break;
-					case "4002":
+					case 4002:
 						console.log("PUBLIC 4002 - Unauthorized, user not authenticated");
 						break;
-					case "4000":
+					case 4000:
 						console.log("PUBLIC 4000 - User canceled the operation");
 						break;
 					default:
@@ -121,14 +121,14 @@ export const WSClient = ( ) => {
 		if (VERBOSE) {
 			console.log("DEBUG: entered handlePrivateRoom");
 		}
-
-		closeExistingSocket();
+		//closeExistingSocket();
 
 		if (!token && VERBOSE) {
 			console.log("NO COOKIE/TOKEN: login before entering room.");
 		}
 		const url = `ws://localhost:8000/ws/queue/private/${roomid}/?token=${token}`;
 		socket.current = new WebSocket(url);
+		socket.current.onopen = (event) => { EventBus.emit('private-connect-response', true); };
 
 		socket.current.onmessage = (event) => {
 			const data = JSON.parse(event.data);
@@ -136,21 +136,25 @@ export const WSClient = ( ) => {
 				console.log("SALA PRIVADA Mensaje recibido");
 				console.log(data);
 			}
-			EventBus.emit('receive-private',data);	
+			if (data.action === "room_created") { // not even covered in docu. Kinda cheating
+				gameIdRef.current = data.room_code;
+			} else {
+				EventBus.emit('receive-private',data);	
+			}
 		};
 
 		socket.current.onclose = (event) => {
 			if (VERBOSE) {
 				switch(event.code) {
-					case "4001":
+					case 4001:
 						console.log("PRIVATE 4001 - Game started");
 						EventBus.emit('private-connect-response', true);
 						break;
-					case "4002":
+					case 4002:
 						console.log("PRIVATE 4002 - Unauthorized");
 						EventBus.emit('private-connect-response', false);
 						break;
-					case "4003":
+					case 4003:
 						console.log("PRIVATE 4003 - Room not found, full or user already in room");
 						EventBus.emit('private-connect-response', false);
 						break;
@@ -169,6 +173,7 @@ export const WSClient = ( ) => {
 	 * @fires many many event buses TODO
 	 */
 	const handleGame = (game_id: string) => {
+		//closeExistingSocket();
 		gameIdRef.current = game_id;
 		if (VERBOSE) {
 			console.log("DEBUG: entered handleGame");
@@ -177,8 +182,6 @@ export const WSClient = ( ) => {
 		if (!gameIdRef.current && SELF_PROTECTION) {
 			console.log("SELF PROTECTION: No available game id");	
 		}
-
-		closeExistingSocket();
 
 		if (!token && VERBOSE) {
 			console.log("NO COOKIE/TOKEN: login before entering game.");
@@ -244,10 +247,10 @@ export const WSClient = ( ) => {
 		socket.current.onclose = (event) => {
 			if (VERBOSE) {
 				switch(event.code) {
-					case "4002":
+					case 4002:
 						console.log("GAME 4002 - Unauthorized or missing kwargs");
 						break;
-					case "4003":
+					case 4003:
 						console.log("GAME 4003 - User is not a participant in this game");
 						break;
 					default:
@@ -300,7 +303,6 @@ export const WSClient = ( ) => {
 			EventBus.off('send-message', gameSendMessage);
 			EventBus.off('handle-private-connect', handlePrivateRoom);
 			EventBus.off('private-send-message', privateSendMessage);
-			closeExistingSocket();
 		};
 	}, []);
 

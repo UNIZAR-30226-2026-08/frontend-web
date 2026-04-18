@@ -25,7 +25,6 @@ import { AnimationManager } from '../managers/AnimationManager';
 import { TileLogicManager } from '../managers/TileLogicManager';
 import { GameLogicManager } from '../managers/GameLogicManager';
 import { EventManager } from '../managers/EventManager';
-import { useAuth } from '@/context/AuthContext';
 
 export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
@@ -84,13 +83,6 @@ export class Board extends Phaser.Scene {
     } 
 
     create() { // crear escena
-		const { token } = useAuth();
-		if (token) {
-			fetchProfile(token, (data) => {
-				this.localPlayerId = data.pk;
-			});
-		} else { // death
-		}
 
         const fullData = this.cache.json.get('board');
         const boardTiles = fullData.tiles as TileConfig[];

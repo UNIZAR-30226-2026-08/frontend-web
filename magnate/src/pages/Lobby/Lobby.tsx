@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
+import { EventBus } from "@/EventBus";
 
 const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, pos: string }, gridImageUrl: string }) => (
   <>
@@ -33,6 +34,9 @@ export function Lobby() {
     const gridImageUrl = "src/assets/bg_city_white.jpg";
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 	const navigate = useNavigate();
+	const [imOwner, setImOwner] = useState<boolean>(true); // TODO - check who is owner in logs
+	const [imReady, setImReady] = useState<boolean>(false);
+
     const [copied, setCopied] = useState(false); // para el icono de copiar código
     const roomCode = "123456"; // TODO: cambiar cuando esté conectado
 
@@ -66,6 +70,47 @@ export function Lobby() {
 
     const lobbySlots = Array.from({ length: 4 }, (_, i) => lobbyPlayers[i] || null);
     const activePlayersCount = lobbyPlayers.filter(player => player !== null).length; 
+
+	useEffect(() => { 
+        const handleOwnerToggle = (data: PrivateRoomOwner) => {
+            setImOwner(data.is_owner);
+			if (data.is_owner) {
+				setImReady(true);
+				EventBus.emit('private-set-ready', true);
+			}
+        };
+		const handlePlayerJoined = (data: PrivateRoomPlayers) => {};
+		const handlePlayerLeft = (data: PrivateRoomPlayers) => {};
+		const handleRoomSettings = (data: PrivateRoomHostSettings) => {};
+		const handleSomeoneReady = (data: PrivateRoomReady) => {};
+
+		EventBus.emit('private-set-ready',true); // TODO
+        EventBus.on('private-room-owner-toggle', handleOwnerToggle);
+        EventBus.on('private-room-player-joined', handlePlayerJoined);
+        EventBus.on('private-room-player-left', handlePlayerLeft);
+        EventBus.on('private-room-settings', handleRoomSettings);
+        EventBus.on('private-room-ready', handleSomeoneReady);
+        return () => {
+            EventBus.off('private-room-owner-toggle', handleOwnerToggle);
+        	EventBus.off('private-room-player-joined', handlePlayerJoined);
+        	EventBus.off('private-room-player-left', handlePlayerLeft);
+        	EventBus.off('private-room-settings', handleRoomSettings);
+        	EventBus.off('private-room-ready', handleSomeoneReady);
+			// Turn down private room listener
+			EventBus.emit('private-cancel');
+        };
+    }, []);
+
+	const handleButtonClick = () => {
+		if (imOwner) {
+			EventBus.emit('private-start');
+		}
+		else {
+			const nextReadyState = !imReady;
+			setImReady(nextReadyState);
+			EventBus.emit('private-set-ready', nextReadyState);
+		}
+	};
 
   return (
     <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none">
@@ -190,14 +235,14 @@ export function Lobby() {
                         Jugadores en sala: {activePlayersCount} / 4
                     </span>
                 </div>
-                <Button  // TODO: Comenzar juego si eres el host o Confirmar asistencia si eres un invitado
+                <Button  
                     type="submit" 
                     variant='magnate'
                     onClick={() => navigate('/phaser-game')}
                     className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[30px] uppercase font-bold w-[320px] h-14
                     ${bouncyAnimation}`}
                 > 
-                    Comenzar juego
+					{imOwner ? "Comenzar juego" : (imReady ? "Listo" : "No listo")}
                 </Button>
             </div>
         </div>
