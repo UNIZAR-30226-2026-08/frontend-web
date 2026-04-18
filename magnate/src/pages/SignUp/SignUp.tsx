@@ -54,10 +54,8 @@ export function SignUp({ onBack }: SignUpProps) {
             return;
         }
 
-        const email = `${Math.random().toString(36).slice(2,10)}@example.com`; // TODO: el backend tiene que quitar lo del email
-
         registerUser(
-            { username, email, password, password2: confirmPassword },
+            { username, password, password2: confirmPassword },
             (data : any) => {
                 if (data && data.tokens) {
                     login(data.tokens.access, data.tokens.refresh);

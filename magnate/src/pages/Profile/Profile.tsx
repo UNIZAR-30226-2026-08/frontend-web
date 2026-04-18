@@ -221,7 +221,7 @@ export function Profile() {
                         
                         <div className="flex flex-col items-center">
                             <h3 className="font-black text-[22px] text-black tracking-tight leading-none">
-                                {profile?.username || "miguell"}
+                                {profile?.username || "User"}
                             </h3>
                         
                             <Button
