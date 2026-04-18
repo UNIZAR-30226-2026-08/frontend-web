@@ -188,6 +188,7 @@ export const WSClient = ( ) => {
 		}
 		const url = `ws://localhost:8000/ws/game/${game_id}/?token=${token}`
 		socket.current = new WebSocket(url);
+		const inside : boolean = false;
 
 		socket.current.onmessage = (event) => {
 			const data = JSON.parse(event.data);
@@ -216,11 +217,15 @@ export const WSClient = ( ) => {
 					}
 					break;
 				case "game_state": 
-					if (data.data.id === gameIdRef.current) {
+					if (data.game_state.id === gameIdRef.current) {
 						if (playersIdsRef.current === null) {
 							playersIdsRef.current = data.data.players;
 						}
 						EventBus.emit('new-game-state', data.data);
+						if (!inside) {
+							EventBus.emit('you-may-now-enter-the-game');
+							inside = true;
+						}
 					} else if (VERBOSE) {
 						console.log("VERBOSE: This message is not for this game id");
 					}

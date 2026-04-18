@@ -12,12 +12,17 @@ export function Loading({ onBack }: LoadingProps) {
     const navigate = useNavigate();
 
 	useEffect(() => {
+		const handleEnterGame = () => {
+			navigate('/phaser-game');
+		};
 		EventBus.emit('handle-public-connect');
+		EventBus.on('you-may-now-enter-the-game', handleEnterGame);
 
 		return () => {
+			EventBus.off('you-may-now-enter-the-game', handleEnterGame);
 			//EventBus.emit('handle-public-cancel');
 		}
-	}, []);
+	}, [navigate]);
 
     return (
         <div className='flex justify-center items-center min-h-screen bg-[url(@/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat relative'>

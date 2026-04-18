@@ -104,6 +104,7 @@ export function Lobby() {
 	const handleButtonClick = () => {
 		if (imOwner) {
 			EventBus.emit('private-start');
+			//navigate('/phaser-game')
 		}
 		else {
 			const nextReadyState = !imReady;
@@ -238,7 +239,7 @@ export function Lobby() {
                 <Button  
                     type="submit" 
                     variant='magnate'
-                    onClick={() => navigate('/phaser-game')}
+                    onClick={handleButtonClick}
                     className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[30px] uppercase font-bold w-[320px] h-14
                     ${bouncyAnimation}`}
                 > 
