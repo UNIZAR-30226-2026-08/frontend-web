@@ -52,7 +52,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!token) return;
 
-    const REFRESH_INTERVAL = 10 * 60 * 1000; 
+    // Cada 1 minuto
+    // TODO: Estaría bien hacerlo sólo cuando falla el token de acceso
+    const REFRESH_INTERVAL = 1 * 60 * 1000; 
 
     const intervalId = setInterval(() => {
       refreshAuthToken();
