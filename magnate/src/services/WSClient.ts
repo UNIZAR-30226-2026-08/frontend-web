@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { EventBus } from '@/EventBus';
-import { GameAction } from "@/services/types/socket";
+import { GameAction, PrivateCommand, ChatMessageContent } from "@/services/types/socket";
 import { useAuth } from '@/context/AuthContext';
 
 /**
@@ -33,6 +33,7 @@ export const WSClient = ( ) => {
 	 */
 	const socket = useRef<WebSocket | null>(null);
 
+	const [inside, setInsideFlag] = useState<boolean>(false);
 	const gameIdRef = useRef("");
 	const playersIdsRef = useRef([]);
 
@@ -188,7 +189,7 @@ export const WSClient = ( ) => {
 		}
 		const url = `ws://localhost:8000/ws/game/${game_id}/?token=${token}`
 		socket.current = new WebSocket(url);
-		const inside : boolean = false;
+
 
 		socket.current.onmessage = (event) => {
 			const data = JSON.parse(event.data);
@@ -224,7 +225,7 @@ export const WSClient = ( ) => {
 						EventBus.emit('new-game-state', data.data);
 						if (!inside) {
 							EventBus.emit('you-may-now-enter-the-game');
-							inside = true;
+							setInsideFlag(true);
 						}
 					} else if (VERBOSE) {
 						console.log("VERBOSE: This message is not for this game id");
@@ -309,7 +310,7 @@ export const WSClient = ( ) => {
 			EventBus.off('handle-private-connect', handlePrivateRoom);
 			EventBus.off('private-send-message', privateSendMessage);
 		};
-	}, []);
+	}, [token, socket]);
 
 	return null;
 };

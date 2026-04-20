@@ -71,6 +71,11 @@ export function Lobby() {
     const lobbySlots = Array.from({ length: 4 }, (_, i) => lobbyPlayers[i] || null);
     const activePlayersCount = lobbyPlayers.filter(player => player !== null).length; 
 
+	const handleVoluntaryLeave = () => {
+		EventBus.emit('private-cancel');
+		navigate(-1);
+	};
+
 	useEffect(() => { 
         const handleOwnerToggle = (data: PrivateRoomOwner) => {
             setImOwner(data.is_owner);
@@ -84,27 +89,28 @@ export function Lobby() {
 		const handleRoomSettings = (data: PrivateRoomHostSettings) => {};
 		const handleSomeoneReady = (data: PrivateRoomReady) => {};
 
-		EventBus.emit('private-set-ready',true); // TODO
+		const handleEnter = () => navigate('/phaser-game');
+
+		EventBus.on('you-may-now-enter-the-game', handleEnter);
         EventBus.on('private-room-owner-toggle', handleOwnerToggle);
         EventBus.on('private-room-player-joined', handlePlayerJoined);
         EventBus.on('private-room-player-left', handlePlayerLeft);
         EventBus.on('private-room-settings', handleRoomSettings);
         EventBus.on('private-room-ready', handleSomeoneReady);
         return () => {
+			EventBus.off('you-may-now-enter-the-game', handleEnter);
             EventBus.off('private-room-owner-toggle', handleOwnerToggle);
         	EventBus.off('private-room-player-joined', handlePlayerJoined);
         	EventBus.off('private-room-player-left', handlePlayerLeft);
         	EventBus.off('private-room-settings', handleRoomSettings);
         	EventBus.off('private-room-ready', handleSomeoneReady);
-			// Turn down private room listener
-			EventBus.emit('private-cancel');
         };
-    }, []);
+    }, [navigate]);
 
 	const handleButtonClick = () => {
 		if (imOwner) {
+			EventBus.emit('private-set-ready',true); // TODO
 			EventBus.emit('private-start');
-			//navigate('/phaser-game')
 		}
 		else {
 			const nextReadyState = !imReady;
@@ -115,7 +121,7 @@ export function Lobby() {
 
   return (
     <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none">
-        <PageHeader title="Lobby" />
+        <PageHeader title="Lobby" onBack={handleVoluntaryLeave} />
 
         <div className="grid grid-cols-1 grid-rows-1 gap-10 py-10 px-10"
             style={{

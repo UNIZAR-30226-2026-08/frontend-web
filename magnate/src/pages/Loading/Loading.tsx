@@ -12,15 +12,14 @@ export function Loading({ onBack }: LoadingProps) {
     const navigate = useNavigate();
 
 	useEffect(() => {
+		EventBus.emit('handle-public-connect');
 		const handleEnterGame = () => {
 			navigate('/phaser-game');
 		};
-		EventBus.emit('handle-public-connect');
 		EventBus.on('you-may-now-enter-the-game', handleEnterGame);
 
 		return () => {
 			EventBus.off('you-may-now-enter-the-game', handleEnterGame);
-			//EventBus.emit('handle-public-cancel');
 		}
 	}, [navigate]);
 
