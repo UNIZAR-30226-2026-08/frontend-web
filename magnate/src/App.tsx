@@ -16,37 +16,40 @@ import { GameService } from "@/services/GameService";
 
 import { AudioProvider } from "@/context/AudioContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { ItemProvider } from "@/context/ItemContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 function App() {
   return (
     <AuthProvider>
-      <AudioProvider>
-        <WSClient /> {/*Low level backend communication*/}
-        { /* TODO tester ?? */ }
-        <GameService /> { /* Integration API */ }
-        
-        <Routes>
-          { /* Rutas públicas */ }
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/basic-rules" element={<BasicRules />} />
+      <ItemProvider>
+        <AudioProvider>
+          <WSClient /> {/*Low level backend communication*/}
+          { /* TODO tester ?? */ }
+          <GameService /> { /* Integration API */ }
+          
+          <Routes>
+            { /* Rutas públicas */ }
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/basic-rules" element={<BasicRules />} />
 
-          { /* Rutas protegidas */ }
-          <Route element={<ProtectedRoute />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/loading" element={<Loading />} />
-            <Route path="/lobby" element={<Lobby />} />
-            <Route path="/private-room" element={<PrivateRoom />} />
-            <Route path="/phaser-game" element={<PhaserGame />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/wstest" element={<WSTest />} />
-          </Route>
-        </Routes>
+            { /* Rutas protegidas */ }
+            <Route element={<ProtectedRoute />}>
+              <Route path="/home" element={<Home />} />
+              <Route path="/loading" element={<Loading />} />
+              <Route path="/lobby" element={<Lobby />} />
+              <Route path="/private-room" element={<PrivateRoom />} />
+              <Route path="/phaser-game" element={<PhaserGame />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/wstest" element={<WSTest />} />
+            </Route>
+          </Routes>
 
-      </AudioProvider>
+        </AudioProvider>
+      </ItemProvider>
     </AuthProvider>
   );
 }

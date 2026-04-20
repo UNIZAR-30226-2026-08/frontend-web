@@ -102,7 +102,7 @@ export const fetchGameSummary = async (accessToken, gameId, updateSummary) => {
     }
 
     const data = await response.json();
-    console.log(data);
+    console.log("sum", data);
     if (updateSummary) updateSummary(data);
   } catch(error) {
     console.error('Error fetching game summary:', error);
