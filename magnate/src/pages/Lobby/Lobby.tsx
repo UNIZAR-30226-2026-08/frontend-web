@@ -1,27 +1,45 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { EventBus } from "@/EventBus";
+import * as WSTypes from "@/services/types/socket";
 
-const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, pos: string }, gridImageUrl: string }) => (
-  <>
+const ModeContent = ( {data} : {data : { title: string, bgImg: string,  isBot: boolean, ready:boolean} }) => {
+	return (
     <div
-      className="absolute inset-0 bg-no-repeat transition-transform duration-700 group-hover:scale-110 pointer-events-none"
+      className="absolute inset-0 bg-center bg-cover bg-no-repeat transition-transform duration-700 group-hover:scale-110 pointer-events-none"
       style={{
-        backgroundImage: `url(${gridImageUrl})`,
-        backgroundSize: "200% 200%",
-        backgroundPosition: mode.pos,
+        backgroundImage: `url(${data.bgImg})`,
       }}
-    />
+    >
+	< div className="absolute top-8 left-0 w-full flex justify-between px-8 gap-3 z-30 pointer-events-none">
+		<div className="w-8 h-8 flex items-center justify-start">
+		{ data.ready && (
+		<img
+			src="icons/check-solid-full.svg"
+			alt="ready"
+			className="w-7 h-7 drop-shadow-md"
+		/>
+		)}
+		</div>
+		<div className="w-8 h-8 flex items-center justify-end">
+		<img
+			src={data.isBot ? "icons/ia.svg" : "icons/single_player.svg"}
+			alt="ready"
+			className="w-7 h-7 drop-shadow-md"
+		/>
+		</div>
+	</div>
     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-end pb-12 text-white pointer-events-none">
         <span className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-            {mode.title}
+            {data.title}
         </span>
     </div>
-  </>
+	</div>
 );
+};
 
 /**
  * Private room lobby
@@ -34,17 +52,16 @@ export function Lobby() {
     const gridImageUrl = "src/assets/bg_city_white.jpg";
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 	const navigate = useNavigate();
-	const [imOwner, setImOwner] = useState<boolean>(true); // TODO - check who is owner in logs
+	const location = useLocation();
+	const [imOwner, setImOwner] = useState<boolean>(false); 
 	const [imReady, setImReady] = useState<boolean>(false);
 
     const [copied, setCopied] = useState(false); // para el icono de copiar código
-    const roomCode = "123456"; // TODO: cambiar cuando esté conectado
+    const roomCode = location.state?.roomCode || "N/A";
 
     const players = [ // TODO: falta añadir icono de cada jugador
-        { title: "usuario1", pos: "0% 0%", isBot: false},
-        { title: "usuario2", pos: "100% 0%", isBot: false},
-        // { title: "usuario3", pos: "0% 100%"},
-        // { title: "usuario4", sub: "Amarillo", pos: "0% 100%"},
+        { title: "usuario1", bgImg: "skins/barco_closeup.png", isBot: false, ready: false},
+        { title: "usuario2", bgImg: "skins/barco_closeup.png", isBot: false, ready: false},
     ];
     const [difficulty, setDifficulty] = useState<'Muy fácil' | 'Fácil' | 'Medio' | 'Difícil' | 'Muy difícil' | 'Experto'>('Medio');
     const [lobbyPlayers, setLobbyPlayers] = useState(players);
@@ -52,7 +69,7 @@ export function Lobby() {
     const addBot = (index : number) => {
         if (lobbyPlayers[index]) return;
 
-        const newBot = { title: `bot ${index + 1}`, pos: "0% 100%", isBot:true };
+        const newBot = { title: `bot ${index + 1}`, bgImg:gridImageUrl , isBot:true, ready:false };
         const newPlayers = [...lobbyPlayers];
         newPlayers[index] = newBot;
         setLobbyPlayers(newPlayers);
@@ -82,7 +99,7 @@ export function Lobby() {
 			if (data.is_owner) {
 				setImReady(true);
 				EventBus.emit('private-set-ready', true);
-			}
+			} // unless you leave room you won't get un-owner-ed
         };
 		const handlePlayerJoined = (data: PrivateRoomPlayers) => {};
 		const handlePlayerLeft = (data: PrivateRoomPlayers) => {};
@@ -109,7 +126,7 @@ export function Lobby() {
 
 	const handleButtonClick = () => {
 		if (imOwner) {
-			EventBus.emit('private-set-ready',true); // TODO
+			//EventBus.emit('private-set-ready',true); // repetido supuestamente
 			EventBus.emit('private-start');
 		}
 		else {
@@ -177,7 +194,7 @@ export function Lobby() {
                         {slot ? (
                             <>
                                 <Button className="w-full h-full p-0 bg-transparent hover:bg-transparent cursor-default">
-                                    <ModeContent mode={slot} gridImageUrl={gridImageUrl} />
+                                    <ModeContent data={slot}  />
                                 </Button>
                                 
                                 {slot.isBot && ( 
@@ -200,12 +217,14 @@ export function Lobby() {
                                         <span className="font-bold uppercase tracking-widest text-zinc-500">Esperando...</span>
                                 </div>
                                 <div className="absolute bottom-10">
-                                    <Button 
+									{(imOwner && index===activePlayersCount) && (
+									<Button 
                                         onClick={() => addBot(index)}
                                         className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[16px] font-black uppercase px-6 py-2 rounded-full
                                                     ${bouncyAnimation}`}>
                                     + Añadir Bot
-                                    </Button>
+                                    </Button>  
+									)}
                                 </div>
                             </div>
                         )}

@@ -46,14 +46,14 @@ export function PrivateRoom () {
     ]
     const [activeMode, setActiveMode ] = useState<string | null>(null);
     const [displayedImage, setDisplayedImage] = useState<string | null>(null);
-    const [roomCode, setRoomCode] = useState<string>('');
+	const activeCodeRef = useRef<string>('');
 
 	const { token } = useAuth();
 
 	useEffect (() => {
 		const handleConnectResponse =  (ok : boolean) => {
 			if (ok) {
-				navigate('/lobby');
+				navigate('/lobby', {state : {roomCode : activeCodeRef.current}});
 			} else {
 				if (codeRef.current) {
 					// full room
@@ -86,7 +86,7 @@ export function PrivateRoom () {
 			// ask for code
 			if (token) {
 				generatePrivateCode(token, (newCode : string) => {
-					setRoomCode(newCode);	
+					activeCodeRef.current = newCode;
 					EventBus.emit('private-connect', newCode);
 					console.log('correct new room login:', newCode);
 				});
@@ -94,17 +94,18 @@ export function PrivateRoom () {
 		} else { if (activeMode === 'join') {
 			console.log("join");
 
-			const cInput = codeRef.current;
+			const cInput = codeRef.current?.value || "";
 			if (!cInput) return;
 
 			// room does not exist
-			if (!checkPrivateCode(token, roomCode)) { // /lobby/check-code// !data.exists
+			if (!checkPrivateCode(token, cInput)) { // /lobby/check-code// !data.exists
 				codeRef.current.setCustomValidity("No hay ninguna sala activa con ese código");
 				codeRef.current.reportValidity();
 				return;
 			} else {
-				EventBus.emit('private-connect', roomCode);
-				console.log('correct old room login:', roomCode);
+				activeCodeRef.current = cInput;
+				EventBus.emit('private-connect', cInput);
+				console.log('correct old room login:', cInput);
 			}
 			}
 
@@ -169,9 +170,7 @@ export function PrivateRoom () {
                                 id="room-code"
 								ref={codeRef}
                                 placeholder="123456789" 
-                                value={roomCode}
                                 onChange={(e) => {
-										setRoomCode(e.target.value);
 										if (codeRef.current) codeRef.current.setCustomValidity("");
 								}}
                                 className="w-[200px] h-16 text-center text-[22px] font-bold border-[5px] 

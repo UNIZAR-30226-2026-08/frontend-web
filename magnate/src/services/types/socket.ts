@@ -172,6 +172,8 @@ export interface PrivateAction {
 	players?: Waiters[];
 	// player left only (instead of user...)
 	user_left? : string; 
+	// player joined only (skin id)
+	//user_piece?: string;
 }
 /*
  * DATA TYPES FOR DEVELOPERS
@@ -198,6 +200,7 @@ export interface PrivateRoomPlayers {
 export interface Waiters {
 	username: string;
 	ready_to_play: boolean;
+	//custom_id: string; // piece / skin
 }
 
 export interface ChatMessageContent {
