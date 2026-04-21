@@ -30,12 +30,12 @@ export const GameService = ( ) => {
 	};
 
 	const handlePrivateStart = () => {
-		const msg : PrivateCommand = {"command": "start_game"};
+		const msg : WSTypes.PrivateCommand = {"command": "start_game"};
 		EventBus.emit('private-send-message', msg);
 	};
 
-	const handlePrivateChangeSettings = (data : PrivateRoomHostSettings) => {
-		const msg : PrivateCommand = {
+	const handlePrivateChangeSettings = (data : WSTypes.PrivateRoomHostSettings) => {
+		const msg : WSTypes.PrivateCommand = {
 			"command": "update_settings",
 			"bot_level": msg.bot_evel,
 			"target_players": msg.target_players
@@ -44,7 +44,7 @@ export const GameService = ( ) => {
 	};
 
 	const handlePrivateSetReady = (ready:boolean = true) => {
-		const msg : PrivateCommand = {
+		const msg : WSTypes.PrivateCommand = {
 			"command": "ready_status",
 			"is_ready": ready
 		};
@@ -110,7 +110,7 @@ export const GameService = ( ) => {
 		EventBus.emit('send-message', message);
 	};
 
-	const actionBuild = ( data : WSTypes.GameAskHouse) => {
+	const actionBuild = ( data : WSTypes.GameAskHouses) => {
 		const message = {
 			"type" : "ActionBuild",
 			"square" : data.square,
@@ -119,7 +119,7 @@ export const GameService = ( ) => {
 		EventBus.emit('send-message', message);
 	};
 
-	const actionDemolish = ( data : WSTypes.GameAskHouse) => {
+	const actionDemolish = ( data : WSTypes.GameAskHouses) => {
 		const message = {
 			"type" : "ActionDemolish",
 			"square" : data.square,
@@ -145,7 +145,7 @@ export const GameService = ( ) => {
 		const message = {
 			"type" : "ActionChooseCard",
 			"destination_user" : data.destination_user,
-			"offered_money" : data.offreded_money,
+			"offered_money" : data.offered_money,
 			"asked_money" : data.asked_money,
 			"offered_properties" : data.offered_properties,
 			"asked_properties" : data.asked_properties

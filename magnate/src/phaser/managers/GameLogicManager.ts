@@ -20,18 +20,25 @@ export class GameLogicManager {
     }
 
     private setupCentralListeners() {
-        EventBus.on('new-game-state', (new_state: GameState) => {
+        // -- Game State
+        EventBus.on('new-game-state', async (new_state: GameState) => {
             console.log("Manager: Received new state", new_state.id);
-			if (!populated) {
-				this.model.populate(new_state);
+			if (!this.populated) {
+                await this.model.populate(new_state);
 				this.populated = true;
-			}
-			else {
+			} else {
             	this.model.updateState(new_state);
 			}
+            EventBus.emit('model-updated', this.model);
+        });
+
+        EventBus.on('report-response-throw-dices', (data: any) => {
+            this.model.active_turn_player = data.active_turn_player;
+            this.model.phase = data.phase;
             
             EventBus.emit('model-updated', this.model);
         });
+
 		EventBus.on('pause-game', () => {
 			this.model.isPaused = true;
 			// whatevs you need now (?) TODO
@@ -43,7 +50,8 @@ export class GameLogicManager {
     }
 
 	public getPlayersIds() : string[] {
-		return Object.keys(this.players).sort((a,b) => a.localCompare(b));
+		//return Object.keys(this.players).sort((a,b) => a.localeCompare(b));
+        return Object.keys(this.model.players).sort((a,b) => a.localeCompare(b));
 	}
 
 	public getPropertyOwner(propertyId: string): string | null {

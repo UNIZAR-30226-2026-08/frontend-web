@@ -4,7 +4,7 @@ export class PlayerModel {
     public id: string;
     public name: string;
     public color: number;
-    public balance: number = 200; // TODO: No se yo lo de hardcodear este número
+    public balance: number = 0; // TODO: No se yo lo de hardcodear este número
     public properties: string[] = [];
     public currentTileId: string = "000"; 
     public jailRemainingTurns: number = 0;
@@ -25,7 +25,7 @@ export class PlayerModel {
             id: this.id,
             balance: this.balance,
             properties: [...this.properties],
-            jailTurnCount: this.jailTurnCount
+            jailTurnCount: this.jailRemainingTurns
         });
     }
 
