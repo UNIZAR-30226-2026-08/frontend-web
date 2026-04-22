@@ -26,42 +26,39 @@ import { TileLogicManager } from '../managers/TileLogicManager';
 import { GameLogicManager } from '../managers/GameLogicManager';
 import { EventManager } from '../managers/EventManager';
 
+import * as WSTypes from "@/services/types/socket";
+import { is } from '@react-three/fiber/dist/declarations/src/core/utils';
+
 export class Board extends Phaser.Scene {
+    
     private tiles: Tile[] = [];
 	private players : { model: PlayerModel, token: PlayerToken }[] = [];
-	//private playerTokens : Record<string, PlayerToken> = {};
     private colorPalette: number[] = [];
     private fantasyCards: any[] = []; // TODO: rellenar con data/fantasyCard.json o recibir de backend
+    
+    // -- Managers Visuales
     public diceManager!: DiceManager;
-    public tileLogicManager!:  TileLogicManager;
-    private eventManager!: EventManager;
-    private localPlayerId: string | null = null;
-    public cameraController!: CameraController; // TODO: para las cámaras
-
-	private logicManager!: GameLogicManager;
-
-    // kinda global (handlePlayerClick)
-    public selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
-
-    // Para animaciones
     public animationManager!: AnimationManager;
+    public tileLogicManager!:  TileLogicManager;
+    public cameraController!: CameraController;
+    private eventManager!: EventManager;
+
+    // -- Estado Global --
+    private GamelogicManager!: GameLogicManager;
+    private localPlayerId: string | null = null;
+    public selectedPlayer: any | null = null;
+    
     private pendingParkingData: { tile: Tile, playerId: string } | null = null;
     private pendingBillData: { playerId: string, bills: number , amount: string } | null = null;
+    private lastTurnPlayerId: string | null = null;
 
     constructor() {
         super({ key: 'BoardScene' });
-		// que escuche el GameModel, PlayerModel, PropertyModel del Manager
-		// EventBus.on();
-		// Una vez obtenido asignarlo a los privates de arriba
     }
 
-    init(data: { myPlayerId?: string }) {
-        if (data && data.myPlayerId) {
-            this.localPlayerId = data.myPlayerId;
-        } else {
-            this.localPlayerId = "0003"; 
-        }
-		this.logicManager = GameLogicManager.getInstance();
+    init() {
+        this.localPlayerId = localStorage.getItem('myId');
+		this.GamelogicManager = GameLogicManager.getInstance();
     }
 
     preload() { // precargar imagenes...
@@ -83,122 +80,16 @@ export class Board extends Phaser.Scene {
     } 
 
     create() { // crear escena
+        this.initManagers();
+        this.createBackground();
+        this.createBoard();
+        this.setupEventBus();
 
-        const fullData = this.cache.json.get('board');
-        const boardTiles = fullData.tiles as TileConfig[];
-        const groups = fullData.groups as { group: number, color: string }[];
-        
-        const fullFantasy = this.cache.json.get('fantasyCards');
-        this.fantasyCards = fullFantasy.fantasy;
-        
-        const { width, height } = this.scale;
-
-        this.animationManager = new AnimationManager(this);
-        this.diceManager = new DiceManager(this);
-        this.tileLogicManager = new TileLogicManager(this);
-        
-        const bgVideo = this.add.video(width / 2, height / 2, 'background_video');
-        bgVideo.setOrigin(0.5, 0.5);
-        bgVideo.setDepth(-100);
-
-        const resizeVideo = (screenWidth: number, screenHeight: number) => {
-            const videoW = bgVideo.width;
-            const videoH = bgVideo.height;
-
-            if (videoW === 0 || videoH === 0) return; 
-
-            const scaleX = screenWidth / videoW;
-            const scaleY = screenHeight / videoH;
-            
-            const scale = Math.max(scaleX, scaleY); 
-            
-            bgVideo.setScale(scale);
-            bgVideo.setPosition(screenWidth / 2, screenHeight / 2);
-        };
-
-        bgVideo.on('play', () => {
-            resizeVideo(this.scale.width, this.scale.height);
-        });
-
-        bgVideo.play(true);
-
-        this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
-            resizeVideo(gameSize.width, gameSize.height);
-        }, this);
-
-        const rawColors = fullData.playerColors as string[];
-        this.colorPalette = rawColors.map(c => parseInt(c.replace('#', '0x')));
-
-        this.cameraController = new CameraController(this);
-
-        boardTiles.forEach((config: TileConfig) => {
-            let tile: Tile;
-
-            if (config.type === TileType.PROPERTY) {
-                const propConfig = config as IPropertyTile;
-                const groupInfo = groups.find(g => g.group === propConfig.group);
-                propConfig.color = groupInfo ? groupInfo.color : '#FFFFFF';
-                tile = new PropertyTile(this, propConfig);
-                
-            } else if (config.type === TileType.FANTASY) {
-                tile = new FantasyTile(this, config as IFantasyTile);
-            } else if (config.type === TileType.BRIDGE) {
-                tile = new BridgeTile(this, config as IBridgeTile);
-            } else if (config.type === TileType.SERVER) {
-                tile = new ServerTile(this, config as IServerTile);
-            } else if (config.type === TileType.START) {
-                tile = new StartTile(this, config as IStartTile);
-            } else if (config.type === TileType.GO_TO_JAIL) {
-                tile = new GoToJailTile(this, config as IGoToJailTile);
-            } else if (config.type === TileType.JAIL) {
-                tile = new JailTile(this, config as IJailTile);
-            } else if (config.type === TileType.PARKING) {
-                tile = new ParkingTile(this, config as IParkingTile);
-            } else if (config.type === TileType.TRAM) {
-                tile = new TramTile(this, config as ITramTile);
-            } else {
-                tile = new Tile(this, config);
-            }
-            this.tiles.push(tile);
-        });
-
-        this.createPlayer("0001", "Player 1")
-        this.createPlayer("0002", "Player 2")
-        this.createPlayer("0003", "Player 3")
-        this.createPlayer("0004", "Player 4")
-
-        this.emitInitialPlayers();
-
-        EventBus.on('trigger-dice-roll', this.handleDiceRoll, this);
-
-        this.events.on('shutdown', () => {
-            EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
-        });
-        // Evento para marcar quien compra propiedad  ----------------------------
-        EventBus.on('property-bought', this.handlePurchase, this);
-        
-        this.eventManager = new EventManager(this, this.tiles, this.players.tokens);
-        this.setupEventListeners();
-
-        // Evento para que camara vuelva a la vista general ----------------------------
-        EventBus.on('close-overlay', () => {
-            this.cameraController.resetView(2000);
-            this.time.delayedCall(2000, () => {
-                this.showUI();
-                if (this.pendingBillData) {
-                    this.animationManager.BillAnimation(this.pendingBillData.playerId, 15, this.pendingBillData.amount);
-                    this.pendingBillData = null;
-                }
-                if (this.pendingParkingData) {
-                    this.animationManager.CoinAnimation(
-                        this.pendingParkingData.tile, 
-                        this.pendingParkingData.playerId,
-                        this.players
-                    );
-                    this.pendingParkingData = null; 
-                }
-            });
-        });
+        // Check if GameLogicManager already has data
+        if (this.GamelogicManager && this.GamelogicManager.model.orderedPlayers.length > 0) {
+            const model = this.GamelogicManager.model;
+            this.syncPlayers(model);
+        }
 
         // DEBUG: para animacion dinero  ----------------------------
         const debugKeys = ['ONE', 'TWO', 'THREE', 'FOUR'];
@@ -246,6 +137,233 @@ export class Board extends Phaser.Scene {
         });
     }
 
+    private initManagers() {
+        this.animationManager = new AnimationManager(this);
+        this.diceManager = new DiceManager(this);
+        this.tileLogicManager = new TileLogicManager(this);
+        this.cameraController = new CameraController(this);
+    }
+
+    private createBackground() {
+        const { width, height } = this.scale;
+        const bgVideo = this.add.video(width / 2, height / 2, 'background_video');
+        bgVideo.setOrigin(0.5, 0.5);
+        bgVideo.setDepth(-100);
+
+        const resizeVideo = (screenWidth: number, screenHeight: number) => {
+            const videoW = bgVideo.width;
+            const videoH = bgVideo.height;
+
+            if (videoW === 0 || videoH === 0) return; 
+
+            const scaleX = screenWidth / videoW;
+            const scaleY = screenHeight / videoH;
+            
+            const scale = Math.max(scaleX, scaleY); 
+            bgVideo.setScale(scale);
+            bgVideo.setPosition(screenWidth / 2, screenHeight / 2);
+        };
+
+        bgVideo.on('play', () => { resizeVideo(this.scale.width, this.scale.height); });
+        bgVideo.play(true);
+
+        this.scale.on('resize', (gameSize: Phaser.Structs.Size) => { resizeVideo(gameSize.width, gameSize.height); }, this);
+    }
+
+    private createBoard() { 
+        const fullData = this.cache.json.get('board');
+        
+        // Extraer colores para players
+        const rawColors = fullData.playerColors as string[];
+        this.colorPalette = rawColors.map(c => parseInt(c.replace('#', '0x')));
+
+        const boardTiles = fullData.tiles as TileConfig[];
+        const groups = fullData.groups as { group: number, color: string }[];
+        
+        const fullFantasy = this.cache.json.get('fantasyCards');
+        this.fantasyCards = fullFantasy.fantasy;
+
+        boardTiles.forEach((config: TileConfig) => {
+            let tile: Tile;
+
+            if (config.type === TileType.PROPERTY) {
+                const propConfig = config as IPropertyTile;
+                const groupInfo = groups.find(g => g.group === propConfig.group);
+                propConfig.color = groupInfo ? groupInfo.color : '#FFFFFF';
+                tile = new PropertyTile(this, propConfig);
+                
+            } else if (config.type === TileType.FANTASY) {
+                tile = new FantasyTile(this, config as IFantasyTile);
+            } else if (config.type === TileType.BRIDGE) {
+                tile = new BridgeTile(this, config as IBridgeTile);
+            } else if (config.type === TileType.SERVER) {
+                tile = new ServerTile(this, config as IServerTile);
+            } else if (config.type === TileType.START) {
+                tile = new StartTile(this, config as IStartTile);
+            } else if (config.type === TileType.GO_TO_JAIL) {
+                tile = new GoToJailTile(this, config as IGoToJailTile);
+            } else if (config.type === TileType.JAIL) {
+                tile = new JailTile(this, config as IJailTile);
+            } else if (config.type === TileType.PARKING) {
+                tile = new ParkingTile(this, config as IParkingTile);
+            } else if (config.type === TileType.TRAM) {
+                tile = new TramTile(this, config as ITramTile);
+            } else {
+                tile = new Tile(this, config);
+            }
+            this.tiles.push(tile);
+        });
+
+        this.eventManager = new EventManager(this, this.tiles, this.players);
+    } 
+
+    private setupEventBus() {
+        
+        EventBus.on('model-updated', async (gameModel: any) => {
+            // Sincronizamos quién está en la partida (Crear/Actualizar nombres)
+            this.syncPlayers(gameModel);
+            // TODO: aquí hacer funciones para actualizar propiedades y movimientos
+
+            const currentTurnId = gameModel.getCurrentTurnPlayerId();
+            if (this.lastTurnPlayerId !== currentTurnId) {
+                this.lastTurnPlayerId = currentTurnId;
+                await this.handleNewTurn(gameModel);
+            }
+        });
+
+        EventBus.on('trigger-dice-roll', this.handleDiceRoll, this);
+        
+        // Evento para marcar quien compra propiedad 
+        EventBus.on('property-bought', this.handlePurchase, this); 
+
+        // Evento para que camara vuelva a la vista general
+        EventBus.on('close-overlay', () => {
+            this.cameraController.resetView(2000);
+            this.time.delayedCall(2000, () => {
+                this.showUI();
+                if (this.pendingBillData) {
+                    this.animationManager.BillAnimation(this.pendingBillData.playerId, 15, this.pendingBillData.amount);
+                    this.pendingBillData = null;
+                }
+                if (this.pendingParkingData) {
+                    this.animationManager.CoinAnimation(
+                        this.pendingParkingData.tile, 
+                        this.pendingParkingData.playerId,
+                        this.players
+                    );
+                    this.pendingParkingData = null; 
+                }
+            });
+        });
+
+        EventBus.on('dark-mode', (active: boolean = true) => {
+            if (active) { // Oscurece todo el tablero
+                BoardEffects.setFocusByIds(this.tiles, [], this, this.players.map(p => p.token));
+            } else { // Limpia oscurecimiento
+                BoardEffects.setFocusByIds(this.tiles, null, this, this.players.map(p => p.token));
+            }
+        });
+
+        EventBus.on('execute-tram-travel', (data: {targetId: string, cost: number}) => {
+        	const p = this.selectedPlayer;
+            if (!p) return;
+			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
+            if (!targetTile) return;
+
+			const path = [{ x: targetTile.x, y: targetTile.y }];
+			p.token.moveToCoords(path, () => {
+				// this.time.delayedCall(800, () => {
+				// 	  this.checkTileLogic(p.model, targetTile); // INFINITE LOOP
+				// });
+			});
+			// unset interactiveness of tram tiles
+			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
+			tramTiles.forEach(tile => {
+				tile.disableInteractive();
+			});
+		});
+
+        this.events.on('shutdown', () => { 
+            EventBus.off('model-updated');
+            EventBus.off('trigger-dice-roll', this.handleDiceRoll, this); });
+    }
+
+    private syncPlayers(gameModel: any) {
+        const orderedIds = gameModel.orderedPlayers || [];
+        let newPlayersAdded = false;
+        
+        orderedIds.forEach((playerId: string, index: number) => {
+            const pData = gameModel.players[playerId];
+            if (!pData) return;
+
+            const existingPlayer = this.players.find(p => p.model.id === playerId);
+
+            if (!existingPlayer) {
+                this.createPlayer(playerId, pData.name, index);
+                newPlayersAdded = true;
+            } else {
+                // Actualizamos solo datos lógicos
+                existingPlayer.model.name = pData.name;
+                existingPlayer.model.balance = pData.balance;
+            }
+        });
+
+        if (newPlayersAdded) {
+            this.emitInitialPlayers();
+            this.showUI();
+        }
+    }
+
+    private async handleNewTurn(gameModel: any) {
+        const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
+        if (!player) return;
+
+        const isMe = gameModel.isMyTurn();
+        const bannerText = isMe ? "Tu turno" : `Turno de ${player.name}`;
+        const playerColor = '#' + player.color.toString(16).padStart(6, '0');
+
+        this.hideUI();
+
+        await this.announceTurn(bannerText, playerColor);
+
+        // Después de enseñar banner, empieza la fase
+        this.handlePhaseLogic(gameModel);
+    }
+
+    private handlePhaseLogic(gameModel: any) {
+        // const isMe = gameModel.isMyTurn();
+        this.showUI();
+
+        switch (gameModel.phase as WSTypes.Phase) {
+            case 'roll_the_dices':
+                break;
+
+            case 'choose_square':
+                break;
+
+            case 'choose_fantasy':
+                break;
+
+            case 'auction':
+                break;
+
+            case 'business':
+                break;
+
+            case 'liquidation':
+                break;
+
+            case 'proposal_acceptance':
+                break;
+
+            case 'end_game':
+                break;
+
+            default:
+                break;
+        }
+    }
+    
     public hideUI() {
         EventBus.emit('hide-players-hud');
         EventBus.emit('hide-controls-hud');
@@ -256,12 +374,30 @@ export class Board extends Phaser.Scene {
         EventBus.emit('show-controls-hud');
     }
 
-    createPlayer(id: string, name: string) {
+    public showToast(message: string, duration?: number) {
+        EventBus.emit('show-toast', { message, duration });
+    }
+
+    public announceTurn(message: string, bgColor: string): Promise<void> {
+        // Estoy prometiendo que voy a acabar
+        return new Promise((resolve) => {
+            EventBus.emit('show-banner', {
+                message: message,
+                color: bgColor
+            });
+
+            this.time.delayedCall(2500, () => {
+                EventBus.emit('hide-banner');
+                resolve();
+            });
+        });
+    }
+
+    createPlayer(id: string, name: string, colorIndex: number) {
         const startTile = this.tiles[0];
-        //const startTile = this.tiles[this.players.length % this.colorPalette.length];
         
-        const colorIndex = this.players.length % this.colorPalette.length;
-        const assignedColor = this.colorPalette[colorIndex];
+        const cIndex = colorIndex % this.colorPalette.length;
+        const assignedColor = this.colorPalette[cIndex];
 
         const offset = 22;
 
@@ -302,25 +438,6 @@ export class Board extends Phaser.Scene {
         });
 
         EventBus.emit('setup-players', playerInitData);
-    }
-
-    public announceTurn(playerName: string, playerColor: string): Promise<void> {
-        // Estoy prometiendo que voy a acabar
-        return new Promise((resolve) => {
-            EventBus.emit('show-banner', {
-                message: `¡Turno de ${playerName}!`,
-                color: playerColor
-            });
-
-            this.time.delayedCall(2500, () => {
-                EventBus.emit('hide-banner');
-                resolve();
-            });
-        });
-    }
-
-    public showToast(message: string, duration?: number) {
-        EventBus.emit('show-toast', { message, duration });
     }
 
     public playSecretaryCutscene(): Promise<void> {
@@ -438,19 +555,9 @@ export class Board extends Phaser.Scene {
     }
 
     private handleDiceRoll() {
-		// if (debugInJail) {
-        // this.diceManager.handleJailDiceRoll(this.tiles, this.players, [1, 1]);
-		// this.time.delayedCall(1000, () => { // wait for dice to stop rolling
-		// 	EventBus.emit('open-in-jail-overlay',{tileList:["104","107"]}); // could go
-		// 	//EventBus.emit('open-in-jail-overlay',["104"]); // forced to leave jail
-		// });
-		// else {
         this.diceManager.handleDiceRoll(this.tiles, this.players, [1, 2, 6]);
-
 		// not clicking anything
-        this.time.delayedCall(8000, () => {
-            EventBus.emit('clear-dice');
-        });
+        this.time.delayedCall(8000, () => { EventBus.emit('clear-dice'); });
     }
 
     // Marcador para cada casilla que compra un player 
@@ -466,34 +573,5 @@ export class Board extends Phaser.Scene {
         } else {
             console.warn("No se encontró la casilla con ID:", data.tileId);
         }
-    }
-
-    private setupEventListeners() {
-        EventBus.on('dark-mode', (active: boolean = true) => {
-            if (active) { // Oscurece todo el tablero
-                BoardEffects.setFocusByIds(this.tiles, [], this, this.players.map(p => p.token));
-            } else { // Limpia oscurecimiento
-                BoardEffects.setFocusByIds(this.tiles, null, this, this.players.map(p => p.token));
-            }
-        });
-
-        EventBus.on('execute-tram-travel', (data: {targetId: string, cost: number}) => {
-        	const p = this.selectedPlayer;
-            if (!p) return;
-			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
-            if (!targetTile) return;
-
-			const path = [{ x: targetTile.x, y: targetTile.y }];
-			p.token.moveToCoords(path, () => {
-				// this.time.delayedCall(800, () => {
-				// 	  this.checkTileLogic(p.model, targetTile); // INFINITE LOOP
-				// });
-			});
-			// unset interactiveness of tram tiles
-			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
-			tramTiles.forEach(tile => {
-				tile.disableInteractive();
-			});
-		});
     }
 }

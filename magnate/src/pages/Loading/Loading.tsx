@@ -11,6 +11,17 @@ interface LoadingProps {
 export function Loading({ onBack }: LoadingProps) {
     const navigate = useNavigate();
 
+    const handleExitQueue = () => {
+        console.log("Cancelando cola pública: clic en botón atrás");
+        EventBus.emit('handle-public-cancel');
+    
+        if (onBack) {
+            onBack();
+        } else {
+            navigate(-1);
+        }
+    };
+
 	useEffect(() => {
 		EventBus.emit('handle-public-connect');
 		const handleEnterGame = () => {
@@ -29,7 +40,7 @@ export function Loading({ onBack }: LoadingProps) {
                 <div className="absolute top-8 left-8 z-50"> 
                     <Button
                         variant="ghost"
-                        onClick={onBack || (() => navigate(-1))}
+                        onClick={handleExitQueue}
                         aria-label="Go back"
                         sound="button_back"
                        className="z-60 bg-[var(--color-black)] hover:bg-[var(--color-black)] rounded-full flex items-center justify-center ml-2 w-20 h-20 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.25)] transform-gpu transition-transform duration-200 ease-in-out hover:scale-110"

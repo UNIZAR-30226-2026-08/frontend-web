@@ -9,6 +9,7 @@ export class PropertyModel {
     // los jugadores y todas sus propiedades
     public ownerId: string | null;
     public isMortgaged: boolean;
+	public group: number;
 
     constructor(data: string | PropertyInfo) {
 		if (typeof data === 'string') {
@@ -16,11 +17,13 @@ export class PropertyModel {
         	this.houseCount = 0;
         	this.ownerId = null; 
         	this.isMortgaged = false;
+			this.group = -1;
 		} else {
 			this.id = data.square;
 			this.houseCount = data.houses;
 			this.ownerId = data.owner;
 			this.isMortgaged = data.mortgage;
+			this.group = data.group;
 		}
     }
 
