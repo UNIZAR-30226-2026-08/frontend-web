@@ -19,7 +19,7 @@ export const ItemProvider = ({ children }) => {
       .catch((err) => console.error("Error loading JSON:", err));
   }, []);
 
-  const getItemInfo = useCallback((id) => {
+  const getItemInfo = useCallback((id : any) => {
     const token = itemData.token.find(t => t.id === id);
     if (token) {
       return { name: token.name, url: `/skins/${token.icon}` };

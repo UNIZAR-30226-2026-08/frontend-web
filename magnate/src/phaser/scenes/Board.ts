@@ -26,6 +26,9 @@ import { TileLogicManager } from '../managers/TileLogicManager';
 import { GameLogicManager } from '../managers/GameLogicManager';
 import { EventManager } from '../managers/EventManager';
 
+import * as WSTypes from "@/services/types/socket";
+import { is } from '@react-three/fiber/dist/declarations/src/core/utils';
+
 export class Board extends Phaser.Scene {
     
     private tiles: Tile[] = [];
@@ -47,24 +50,14 @@ export class Board extends Phaser.Scene {
     
     private pendingParkingData: { tile: Tile, playerId: string } | null = null;
     private pendingBillData: { playerId: string, bills: number , amount: string } | null = null;
-
-    // kinda global (handlePlayerClick)
-    //public selectedPlayer: { model: PlayerModel, token: PlayerToken } | null = null;
-
+    private lastTurnPlayerId: string | null = null;
 
     constructor() {
         super({ key: 'BoardScene' });
-		// que escuche el GameModel, PlayerModel, PropertyModel del Manager
-		// EventBus.on();
-		// Una vez obtenido asignarlo a los privates de arriba
     }
 
-    init(data: { myPlayerId?: string }) {
-        if (data && data.myPlayerId) {
-            this.localPlayerId = data.myPlayerId;
-        } else {
-            this.localPlayerId = "0003"; 
-        }
+    init() {
+        this.localPlayerId = localStorage.getItem('myId');
 		this.GamelogicManager = GameLogicManager.getInstance();
     }
 
@@ -97,13 +90,6 @@ export class Board extends Phaser.Scene {
             const model = this.GamelogicManager.model;
             this.syncPlayers(model);
         }
-
-        // this.createPlayer("0001", "Player 1")
-        // this.createPlayer("0002", "Player 2")
-        // this.createPlayer("0003", "Player 3")
-        // this.createPlayer("0004", "Player 4")
-
-        // this.emitInitialPlayers();
 
         // DEBUG: para animacion dinero  ----------------------------
         const debugKeys = ['ONE', 'TWO', 'THREE', 'FOUR'];
@@ -233,17 +219,17 @@ export class Board extends Phaser.Scene {
 
     private setupEventBus() {
         
-        EventBus.on('model-updated', (gameModel: any) => {
+        EventBus.on('model-updated', async (gameModel: any) => {
             // Sincronizamos quién está en la partida (Crear/Actualizar nombres)
             this.syncPlayers(gameModel);
+            // TODO: aquí hacer funciones para actualizar propiedades y movimientos
 
-            // Sincronizamos las propiedades (Dueños, casas, hoteles)
-            // this.syncTileVisuals(gameModel); // TODO: falta
-
-            // Procesamos los movimientos (Fichas y Cámara)
-            // this.processMovements(gameModel); // TODO: falta
+            const currentTurnId = gameModel.getCurrentTurnPlayerId();
+            if (this.lastTurnPlayerId !== currentTurnId) {
+                this.lastTurnPlayerId = currentTurnId;
+                await this.handleNewTurn(gameModel);
+            }
         });
-        //EventBus.on('model-updated', (gameModel: any) => this.updateBoardFromModel(gameModel));
 
         EventBus.on('trigger-dice-roll', this.handleDiceRoll, this);
         
@@ -297,32 +283,10 @@ export class Board extends Phaser.Scene {
 			});
 		});
 
-        this.events.on('shutdown', () => { EventBus.off('trigger-dice-roll', this.handleDiceRoll, this); });
+        this.events.on('shutdown', () => { 
+            EventBus.off('model-updated');
+            EventBus.off('trigger-dice-roll', this.handleDiceRoll, this); });
     }
-
-    // private updateBoardFromModel(gameModel: any) {
-
-    //     const orderedIds = gameModel.orderedPlayers || [];
-    //     let newPlayersAdded = false;
-
-    //     orderedIds.forEach((playerId: string, index: number) => {
-    //         const pData = gameModel.players[playerId];
-    //         if (!pData) return;
-    //         const existingPlayer = this.players.find(p => p.model.id === playerId);
-
-    //         if (!existingPlayer) {
-    //             this.createPlayer(playerId, pData.name, index);
-    //             newPlayersAdded = true;
-    //         } else {
-    //             existingPlayer.model.name = pData.name;
-    //         }
-    //     });
-
-    //     if (newPlayersAdded) {
-    //         this.emitInitialPlayers();
-    //         this.showUI();
-    //     }
-    // }
 
     private syncPlayers(gameModel: any) {
         const orderedIds = gameModel.orderedPlayers || [];
@@ -338,7 +302,7 @@ export class Board extends Phaser.Scene {
                 this.createPlayer(playerId, pData.name, index);
                 newPlayersAdded = true;
             } else {
-                // Actualizamos solo datos lógicos (dinero, nombre si cambió)
+                // Actualizamos solo datos lógicos
                 existingPlayer.model.name = pData.name;
                 existingPlayer.model.balance = pData.balance;
             }
@@ -349,7 +313,56 @@ export class Board extends Phaser.Scene {
             this.showUI();
         }
     }
-    
+
+    private async handleNewTurn(gameModel: any) {
+        const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
+        if (!player) return;
+
+        const isMe = gameModel.isMyTurn();
+        const bannerText = isMe ? "Tu turno" : `Turno de ${player.name}`;
+        const playerColor = '#' + player.color.toString(16).padStart(6, '0');
+
+        this.hideUI();
+
+        await this.announceTurn(bannerText, playerColor);
+
+        // Después de enseñar banner, empieza la fase
+        this.handlePhaseLogic(gameModel);
+    }
+
+    private handlePhaseLogic(gameModel: any) {
+        // const isMe = gameModel.isMyTurn();
+        this.showUI();
+
+        switch (gameModel.phase as WSTypes.Phase) {
+            case 'roll_the_dices':
+                break;
+
+            case 'choose_square':
+                break;
+
+            case 'choose_fantasy':
+                break;
+
+            case 'auction':
+                break;
+
+            case 'business':
+                break;
+
+            case 'liquidation':
+                break;
+
+            case 'proposal_acceptance':
+                break;
+
+            case 'end_game':
+                break;
+
+            default:
+                break;
+        }
+    }
     
     public hideUI() {
         EventBus.emit('hide-players-hud');
@@ -365,12 +378,12 @@ export class Board extends Phaser.Scene {
         EventBus.emit('show-toast', { message, duration });
     }
 
-    public announceTurn(playerName: string, playerColor: string): Promise<void> {
+    public announceTurn(message: string, bgColor: string): Promise<void> {
         // Estoy prometiendo que voy a acabar
         return new Promise((resolve) => {
             EventBus.emit('show-banner', {
-                message: `¡Turno de ${playerName}!`,
-                color: playerColor
+                message: message,
+                color: bgColor
             });
 
             this.time.delayedCall(2500, () => {
@@ -382,7 +395,6 @@ export class Board extends Phaser.Scene {
 
     createPlayer(id: string, name: string, colorIndex: number) {
         const startTile = this.tiles[0];
-        //const startTile = this.tiles[this.players.length % this.colorPalette.length];
         
         const cIndex = colorIndex % this.colorPalette.length;
         const assignedColor = this.colorPalette[cIndex];

@@ -33,28 +33,15 @@ export class GameLogicManager {
         });
 
         EventBus.on('report-response-throw-dices', (data: any) => {
-            this.model.active_turn_player = data.active_turn_player;
-            this.model.phase = data.phase;
+            // TODO: --- inicio dados
             
             EventBus.emit('model-updated', this.model);
         });
 
 		EventBus.on('pause-game', () => {
 			this.model.isPaused = true;
+            EventBus.emit('model-updated', this.model);
 			// whatevs you need now (?) TODO
 		});
-    }
-
-    public getPlayer(id: string) {
-        return this.model.players[id];
-    }
-
-	public getPlayersIds() : string[] {
-		//return Object.keys(this.players).sort((a,b) => a.localeCompare(b));
-        return Object.keys(this.model.players).sort((a,b) => a.localeCompare(b));
-	}
-
-	public getPropertyOwner(propertyId: string): string | null {
-        return this.model.boardProperties[propertyId].ownerId;
     }
 }

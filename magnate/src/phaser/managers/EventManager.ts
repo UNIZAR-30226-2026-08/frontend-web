@@ -184,7 +184,7 @@ export class EventManager {
             if (isDouble) {
                 BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p=>p.token));
                 this.scene.showToast('¡Dobles! Sales libre.');
-                p.model.jailTurnCount = 0;
+                p.model.jailRemainingTurns = 0;
                 p.model.emitUpdate();
                 this.scene.time.delayedCall(1500, () => {
                     this.scene.diceManager.clearDice();
@@ -194,7 +194,7 @@ export class EventManager {
                 });
                 
             } else {
-                if (p.model.jailTurnCount >= 3) {
+                if (p.model.jailRemainingTurns >= 3) {
                     BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p=>p.token));
                     this.scene.showToast('¡Tercer turno! Debes pagar la fianza obligatoriamente');
                     this.setupJailClick(targetId, 'pay');
@@ -203,7 +203,7 @@ export class EventManager {
                     this.setupJailClick(jailId, 'stay');
                     this.setupJailClick(targetId, 'pay');
                 }
-                p.model.jailTurnCount++;
+                p.model.jailRemainingTurns++;
                 p.model.emitUpdate();
             }
         });
@@ -216,7 +216,7 @@ export class EventManager {
             const p = this.getActivePlayer();
             if (p && p.model.balance >= pay.amount) { // TODO: ajustar dinero players
                 p.model.balance -= pay.amount;
-                p.model.jailTurnCount = 0;
+                p.model.jailRemainingTurns = 0;
                 this.scene.showToast("Fianza pagada");
                 EventBus.emit('player-updated', p.model);
                 EventBus.emit('close-overlay');
@@ -235,7 +235,7 @@ export class EventManager {
             const jailId = "104";
             const targetId = "108"; // ID de destino tras los dados
 
-            if (p.model.jailTurnCount >= 3) {
+            if (p.model.jailRemainingTurns >= 3) {
                 BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p => p.token));
                 this.setupJailClick(targetId, 'pay');
             } else {
@@ -277,7 +277,7 @@ export class EventManager {
                 tileId: tileId,
                 tileName: tile.tileConfig.name,
                 mode: mode, // 'pay' (50€) o 'stay' (pasar turno)
-                turnCount: p?.model.jailTurnCount || 0
+                turnCount: p?.model.jailRemainingTurns || 0
             });
         });
     }

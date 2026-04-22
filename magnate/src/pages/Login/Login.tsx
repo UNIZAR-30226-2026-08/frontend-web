@@ -27,8 +27,8 @@ export function Login({ onBack }: LoginProps) {
         loginUser(
             { username, password },
             (data : any) => {
-                if (data && data.tokens) {
-                    login(data.tokens.access, data.tokens.refresh);
+                if (data && data.tokens && data.user && data.user.pk) {
+                    login(data.tokens.access, data.tokens.refresh, String(data.user.pk));
                 }
                 navigate('/home');
             },

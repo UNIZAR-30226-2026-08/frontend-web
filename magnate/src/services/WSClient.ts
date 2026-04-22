@@ -192,7 +192,6 @@ export const WSClient = ( ) => {
 	 * @fires many many event buses TODO
 	 */
 	const handleGame = (game_id: string) => {
-		//closeExistingSocket();
 		gameIdRef.current = game_id;
 		if (VERBOSE) {
 			console.log("DEBUG: entered handleGame");
@@ -242,15 +241,8 @@ export const WSClient = ( ) => {
 						if (gameStateData.players && (playersIdsRef.current.length === 0)) {
 							playersIdsRef.current = gameStateData.players;
 						}
-						//EventBus.emit('new-game-state', gameStateData);
-						// if (!insideRef.current) {
-                        //     insideRef.current = true;
-                        //     EventBus.emit('you-may-now-enter-the-game');
-                        
-                        // } 
                         EventBus.emit('new-game-state', gameStateData);
-                        
-						
+                    
 					} else if (VERBOSE) {
 						console.log("VERBOSE: This message is not for this game id");
 					}
@@ -270,7 +262,6 @@ export const WSClient = ( ) => {
 					if (SELF_PROTECTION) {
 						console.log("SELF PROTECTION: mensaje desconocido",data);	
 					}
-
 			}
 		};
 

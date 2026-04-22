@@ -265,6 +265,7 @@ export interface PropertyInfo {
 	square: string;	// tile id
 	houses: number;	// nº of houses
 	mortgage: boolean;
+	group: number;
 }
 
 export interface GameState {

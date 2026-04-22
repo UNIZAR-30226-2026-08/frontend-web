@@ -121,7 +121,7 @@ export class TileLogicManager {
 		}
 
         else if (tile instanceof GoToJailTile) {
-            player.jailTurnCount = 1;
+            player.jailRemainingTurns = 1;
             player.emitUpdate();
             this.scene.sendToSecretary(player.id);
         }
@@ -134,8 +134,8 @@ export class TileLogicManager {
         else if (tile instanceof JailTile) {
             EventBus.emit('open-jail-overlay', { 
                 tileId: tile.tileConfig.id,
-                turnCount: player.jailTurnCount,
-                isPrisoner: player.jailTurnCount >= 1 
+                turnCount: player.jailRemainingTurns,
+                isPrisoner: player.jailRemainingTurns >= 1 
             });
         }
         

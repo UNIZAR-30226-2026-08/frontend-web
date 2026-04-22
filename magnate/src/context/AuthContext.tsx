@@ -3,7 +3,7 @@ import { refreshToken } from '@/api/authServices';
 
 interface AuthContextType {
   token: string | null;
-  login: (accessToken: string, refreshToken: string) => void;
+  login: (accessToken: string, refreshToken: string, pk: string) => void;
   logout: () => void;
   refreshAuthToken: () => Promise<void>;
   isAuthenticated: boolean;
@@ -14,16 +14,18 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('accessToken'));
 
-  const login = (accessToken: string, refreshToken: string) => {
+  const login = (accessToken: string, refreshToken: string, pk: string) => {
     setToken(accessToken);
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('myId', pk);
   };
 
   const logout = () => {
     setToken(null);
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('myId');
   };
 
   const refreshAuthToken = async () => {
