@@ -11,13 +11,21 @@ export const ControlsHUD = () => {
     const [isDark, setIsDark] = useState(false); // Para oscurecer botones
     const [isHidden, setIsHidden] = useState(false);
 
-    const [canRoll, setCanRoll] = useState(true);
-    const [canAdminister, setCanAdminister] = useState(true);
-    const [canTrade, setCanTrade] = useState(true);
+    const [canRoll, setCanRoll] = useState(false);
+    const [canAdminister, setCanAdminister] = useState(false);
+    const [canTrade, setCanTrade] = useState(false);
     const [canFinishTurn, setCanFinishTurn] = useState(false);
-    const [canBankrupt, setCanBankrupt] = useState(true);
+    const [canBankrupt, setCanBankrupt] = useState(false);
 
     useEffect(() => {
+        const handleUpdateTurnControls = (isMyTurn: boolean) => {
+            setCanRoll(isMyTurn);
+            setCanAdminister(false);
+            setCanTrade(false);
+            setCanFinishTurn(false);
+            setCanBankrupt(true);
+        };
+
         const handleUpdateControls = (states: { 
             roll?: boolean, 
             administer?: boolean, 
@@ -43,6 +51,7 @@ export const ControlsHUD = () => {
         const handleHide = () => setIsHidden(true);
         const handleShow = () => setIsHidden(false);
 
+        EventBus.on('update-turn-controls', handleUpdateTurnControls);
         EventBus.on('update-controls-state', handleUpdateControls);
         EventBus.on('dice-roll-complete', handleRollComplete);
         EventBus.on('hide-controls-hud', handleHide);
@@ -50,6 +59,7 @@ export const ControlsHUD = () => {
 
         return () => {
             EventBus.off('dark-mode', handleDarkMode);
+            EventBus.off('update-turn-controls', handleUpdateTurnControls);
             EventBus.off('update-controls-state', handleUpdateControls);
             EventBus.off('dice-roll-complete', handleRollComplete);
             EventBus.off('hide-controls-hud', handleHide);
@@ -67,7 +77,8 @@ export const ControlsHUD = () => {
 
     const handleRollClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setIsRolling(true);
-        EventBus.emit('trigger-dice-roll');
+        // EventBus.emit('trigger-dice-roll');
+        EventBus.emit('action-throw-dices')
         e.currentTarget.blur();
     };
 

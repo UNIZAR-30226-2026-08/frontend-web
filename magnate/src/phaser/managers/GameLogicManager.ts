@@ -34,6 +34,12 @@ export class GameLogicManager {
 
         EventBus.on('report-response-throw-dices', (data: any) => {
             // TODO: --- inicio dados
+            console.log("Manager: Rolling dices...", data);
+            EventBus.emit('trigger-dice-roll', {
+                dice1: data.dice1,
+                dice2: data.dice2,
+                dice_bus: data.dice_bus
+            });
             
             EventBus.emit('model-updated', this.model);
         });

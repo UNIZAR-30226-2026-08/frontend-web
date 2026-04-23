@@ -62,7 +62,7 @@ export class Board extends Phaser.Scene {
     }
 
     preload() { // precargar imagenes...
-        this.load.video('background_video', 'videos/game_background.webm');
+        // this.load.video('background_video', 'videos/game_background.webm');
         this.load.json('board', 'data/board.json');
         this.load.json('fantasyCards', 'data/fantasyCard.json');
         this.load.image('hat', 'images/hat.png'); // fantasy tiles
@@ -81,7 +81,7 @@ export class Board extends Phaser.Scene {
 
     create() { // crear escena
         this.initManagers();
-        this.createBackground();
+        // this.createBackground();
         this.createBoard();
         this.setupEventBus();
 
@@ -226,12 +226,23 @@ export class Board extends Phaser.Scene {
 
             const currentTurnId = gameModel.getCurrentTurnPlayerId();
             if (this.lastTurnPlayerId !== currentTurnId) {
+                const isFirstTurn = this.lastTurnPlayerId === null;
                 this.lastTurnPlayerId = currentTurnId;
-                await this.handleNewTurn(gameModel);
+    
+                // Algo de tiempo antes del primer turno
+                if (isFirstTurn) {
+                    this.time.delayedCall(2000, async () => {
+                        await this.handleNewTurn(gameModel);
+                    });
+                } else {
+                    this.handleNewTurn(gameModel);
+                }
             }
         });
 
-        EventBus.on('trigger-dice-roll', this.handleDiceRoll, this);
+        EventBus.on('trigger-dice-roll', (data: any) => {
+            this.handleDiceRoll(data);
+        }, this);
         
         // Evento para marcar quien compra propiedad 
         EventBus.on('property-bought', this.handlePurchase, this); 
@@ -333,6 +344,9 @@ export class Board extends Phaser.Scene {
     private handlePhaseLogic(gameModel: any) {
         // const isMe = gameModel.isMyTurn();
         this.showUI();
+
+        const isMe = gameModel.isMyTurn();
+        EventBus.emit('update-turn-controls', isMe);
 
         switch (gameModel.phase as WSTypes.Phase) {
             case 'roll_the_dices':
@@ -554,10 +568,26 @@ export class Board extends Phaser.Scene {
         });
     }
 
-    private handleDiceRoll() {
-        this.diceManager.handleDiceRoll(this.tiles, this.players, [1, 2, 6]);
-		// not clicking anything
-        this.time.delayedCall(8000, () => { EventBus.emit('clear-dice'); });
+    private handleDiceRoll(diceData?: { dice1: number, dice2: number, dice_bus?: number }) {
+        if (!diceData) {
+            console.warn("handleDiceRoll llamado sin datos del servidor");
+            return;
+        }
+
+        console.log("Phaser: Procesando tirada de dados confirmada:", diceData);
+
+        const values = [diceData.dice1, diceData.dice2];
+        if (diceData.dice_bus !== undefined && diceData.dice_bus !== null) {
+            values.push(diceData.dice_bus);
+        }
+
+        this.hideUI();
+        this.diceManager.handleDiceRoll(this.tiles, this.players, values);
+
+        this.time.delayedCall(7000, () => { 
+            EventBus.emit('clear-dice'); 
+            this.showUI();
+        });
     }
 
     // Marcador para cada casilla que compra un player 
