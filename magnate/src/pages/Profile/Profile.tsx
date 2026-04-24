@@ -214,8 +214,12 @@ function ShopSection({ title, skins, currentSkinId, selectedSkinId, onSelect, ge
             <Carousel className="w-full px-12">
                 <CarouselContent className="-ml-4">
                     {skins.map((item: any) => {
-                        const id = item.custom_id || item.id;
-                        const info = getItemInfo(id) || getItemInfo(1);
+                        console.log(item);
+                        const id = item.custom_id;
+                        const info = getItemInfo(id) || { 
+                            name: `Skin Desconocida ${id}`, 
+                            url: "/skins/sombrero_closeup.png" 
+                        };
                         const isCurrent = id === currentSkinId;
                         const isSelected = id === selectedSkinId;
                         return (
@@ -226,7 +230,7 @@ function ShopSection({ title, skins, currentSkinId, selectedSkinId, onSelect, ge
                                             <img src={info.url} alt={info.name} className="w-10 h-10 object-contain" />
                                         </div>
                                         <div className="text-center">
-                                            <h3 className="font-black uppercase text-xs">{info.name}</h3>
+                                            <h3 className="font-black uppercase text-xs text-black tracking-tight leading-none mb-1">{info.name}</h3>
                                         </div>
                                        <Button disabled={isCurrent} onClick={() => onSelect(id)}
                                             className={`h-9 px-6 rounded-full font-black text-[12px] uppercase transition-all duration-200 ${isCurrent ? "bg-slate-100 text-slate-400 cursor-not-allowed opacity-50" : isSelected ? "bg-[var(--color-primary)] text-white shadow-lg scale-105" : "bg-[var(--color-primary)]/20 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white"} ${bouncyAnimation}`}>
