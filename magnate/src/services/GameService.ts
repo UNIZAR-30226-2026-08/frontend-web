@@ -266,7 +266,6 @@ export const GameService = ( ) => {
 					"fantasy_event" : data.fantasy_event
 				};
 				EventBus.emit('report-response-movement',responseMovement);
-                break;
 			case "ResponseChooseSquare":
 				const responseChooseSquare : WSTypes.GameInfoMovement = {
 					"money" : data.money,
@@ -277,7 +276,6 @@ export const GameService = ( ) => {
 					"fantasy_event" : data.fantasy_event
 				};
 				EventBus.emit('report-response-choose-square',responseChooseSquare);
-                break;
 			case "ResponseThrowDices":
 				const responseThrowDices : WSTypes.GameInfoThrowDices = {
 					"money" : data.money,
@@ -294,7 +292,6 @@ export const GameService = ( ) => {
 					"streak" : data.streak
 				};
 				EventBus.emit('report-response-throw-dices',responseThrowDices);
-                break;
 			case "ResponseChooseFantasy":
 				const responseChooseFantasy : WSTypes.GameInfoFantasy = {
 					"money" : data.money,
@@ -305,7 +302,6 @@ export const GameService = ( ) => {
 					"positions": data.positions
 				};
 				EventBus.emit('report-response-choose-fantasy',responseChooseFantasy);
-                break;
 			case "ResponseAuction":
 				const responseAuction : WSTypes.GameInfoAuction = {
 					"money" : data.money,
@@ -316,7 +312,6 @@ export const GameService = ( ) => {
 					"bids": data.bids
 				};
 				EventBus.emit('report-response-auction',responseAuction);
-                break;
 			default: // + case "Response": // always send for state update
 				const responseBasic : WSTypes.GameInfoResponse = {
 					"money" : data.money,
@@ -325,7 +320,6 @@ export const GameService = ( ) => {
 					"phase" : data.phase
 				};
 				EventBus.emit('report-response',responseBasic);
-                break;
 		}
 	};
 	
