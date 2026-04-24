@@ -11,47 +11,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
 import { fetchShopItems, buyItem, fetchUserPieces } from '@/api/shopServices';
-
-// TODO: ejemplos
-const SKINS = [
-    { id: 1, name: "Barco", price: 0, img: "/skins/barco_closeup.png", available: true },
-    { id: 2, name: "Burguer", price: 10, img: "/skins/burguer_closeup.png", available: true },
-    { id: 3, name: "Coche f1", price: 50, img: "/skins/f1_closeup.png", available: false },
-    { id: 4, name: "Sombrero", price: 100, img: "/skins/sombrero_closeup.png", available: true },
-    { id: 5, name: "Barco", price: 150, img: "/skins/barco_closeup.png", available: false },
-    { id: 6, name: "Barco", price: 200, img: "/skins/barco_closeup.png", available: true },
-];
-
-const EMOJIS = [
-    { id: 101, name: "Enfado", price: 100, img: "/emojis/emote_anger.png", available: true },
-    { id: 102, name: "Gota", price: 250, img: "/emojis/emote_drop.png", available: false },
-    { id: 103, name: "Exclamación", price: 100, img: "/emojis/emote_exclamation.png", available: false },
-    { id: 104, name: "Cara Triste", price: 300, img: "/emojis/emote_faceSad.png", available: true },
-    { id: 105, name: "Corazón", price: 350, img: "/emojis/emote_heart.png", available: true },
-];
-
-// TODO: Vamos a necesitar el fichero con mapeos (id-toda_la_info)
-const PIECE_VISUALS: Record<number, any> = {
-    1: { name: "Barco", img: "/skins/barco_closeup.png" },
-    2: { name: "Burguer", img: "/skins/burguer_closeup.png" },
-    3: { name: "Coche f1", img: "/skins/f1_closeup.png" },
-    4: { name: "Sombrero", img: "/skins/sombrero_closeup.png" },
-    5: { name: "Barco", img: "/skins/barco_closeup.png" },
-    6: { name: "Barco", img: "/skins/barco_closeup.png" },
-};
-
-const EMOJI_VISUALS: Record<number, any> = {
-    1: { name: "Enfado", img: "/emojis/emote_anger.png" },
-    2: { name: "Gota", img: "/emojis/emote_drop.png" },
-    3: { name: "Exclamación", img: "/emojis/emote_exclamation.png" },
-    4: { name: "Cara Triste", img: "/emojis/emote_faceSad.png" },
-    5: { name: "Corazón", img: "/emojis/emote_heart.png" },
-    101: { name: "Enfado", img: "/emojis/emote_anger.png" },
-    102: { name: "Gota", img: "/emojis/emote_drop.png" },
-    103: { name: "Exclamación", img: "/emojis/emote_exclamation.png" },
-    104: { name: "Cara Triste", img: "/emojis/emote_faceSad.png" },
-    105: { name: "Corazón", img: "/emojis/emote_heart.png" },
-};
+import { useItemData } from '@/context/ItemContext'; 
 
 const stripedBackgroundStyle = { backgroundImage: `
         linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
@@ -64,15 +24,16 @@ const stripedBackgroundStyle = { backgroundImage: `
     backgroundSize: 'cover'
 };
 
-
 export function Shop() {
-    const [skinsList, setSkinsList] = useState<any[]>(SKINS);
-    const [emojisList, setEmojisList] = useState<any[]>(EMOJIS);
+    const [skinsList, setSkinsList] = useState<any[]>([]);
+    const [emojisList, setEmojisList] = useState<any[]>([]);
     const [ownedIds, setOwnedIds] = useState<number[]>([1]);
+    
     const { token } = useAuth();
+    const { getItemInfo, loading: isContextLoading } = useItemData();
 
     useEffect(() => {
-        if (token) {
+        if (token && !isContextLoading) {
             fetchShopItems(token, (data : any) => {
                 if (data && data.length > 0) {
                     const mappedSkins: any[] = [];
@@ -82,24 +43,23 @@ export function Shop() {
                     data.forEach((item: any) => {
                         if (item.owned) fetchedOwned.push(item.custom_id);
 
+                        const visual = getItemInfo(item.custom_id) || { 
+                            name: item.itemType === 'piece' ? `Pieza ${item.custom_id}` : `Emoji ${item.custom_id}`, 
+                            url: item.itemType === 'piece' ? "/skins/sombrero_closeup.png" : "/emojis/emote_anger.png" 
+                        };
+
+                        const formattedItem = {
+                            id: item.custom_id,
+                            name: visual.name,
+                            price: item.price,
+                            img: visual.url,
+                            available: true
+                        };
+
                         if (item.itemType === 'piece') {
-                            const visual = PIECE_VISUALS[item.custom_id] || { name: `Pieza ${item.custom_id}`, img: "/skins/sombrero_closeup.png" };
-                            mappedSkins.push({
-                                id: item.custom_id,
-                                name: visual.name,
-                                price: item.price,
-                                img: visual.img,
-                                available: true
-                            });
+                            mappedSkins.push(formattedItem);
                         } else if (item.itemType === 'emoji') {
-                            const visual = EMOJI_VISUALS[item.custom_id] || { name: `Emoji ${item.custom_id}`, img: "/emojis/emote_anger.png" };
-                            mappedEmojis.push({
-                                id: item.custom_id,
-                                name: visual.name,
-                                price: item.price,
-                                img: visual.img,
-                                available: true
-                            });
+                            mappedEmojis.push(formattedItem);
                         }
                     });
 
@@ -116,7 +76,7 @@ export function Shop() {
                 }
             });
         }
-    }, [token]);
+    }, [token, isContextLoading, getItemInfo]);
 
     const handleBuy = (id: number) => {
         // TODO: cuando se compra, guardar para el jugador
@@ -179,6 +139,7 @@ function ShopSection({ title, items, onBuy, ownedIds = [] }: any) {
         active:text-white 
         active:scale-95
     `;
+    
     return (
         <div className="flex flex-col gap-3 min-h-0">
             <div className="flex items-center gap-2">
@@ -255,6 +216,7 @@ function ShopSection({ title, items, onBuy, ownedIds = [] }: any) {
 const Confirm = ({ isOpen, title, price, onConfirm, onCancel }: any) => {
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     if (!isOpen) return null;
+    
     const stripedBackgroundStyle = { backgroundImage: `
             linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
             repeating-linear-gradient(
