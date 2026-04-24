@@ -100,27 +100,38 @@ export class DiceManager {
                             if (destinations && destinations.length > 0) {
                                 
                                 BoardEffects.setFocusByIds(tiles, destinations, this.board, players.map(p=>p.token));
-
-                                tiles.forEach(tile => {
-                                    tile.off('pointerdown');
-
-                                    if (destinations.includes(tile.tileConfig.id)) {
-                                        
-                                        if (isMyTurn) {
-                                            tile.setInteractive({ useHandCursor: true }); 
+                    
+                                if (destinations.length === 1 && isMyTurn) {
+                                    
+                                    tiles.forEach(tile => tile.disableInteractive());
+                    
+                                    this.board.time.delayedCall(800, () => {
+                                        const targetId = parseInt(destinations[0], 10).toString();
+                                        console.log(`Me obligan: ${targetId}`);
+                                    });
+                    
+                                } else {
+                                    tiles.forEach(tile => {
+                                        tile.off('pointerdown');
+                    
+                                        if (destinations.includes(tile.tileConfig.id)) {
                                             
-                                            tile.on('pointerdown', () => {
-                                                console.log(parseInt(tile.tileConfig.id, 10).toString())
-                                                EventBus.emit('action-move-to', { square: parseInt(tile.tileConfig.id, 10).toString() });
-                                            });
+                                            if (isMyTurn) {
+                                                tile.setInteractive({ useHandCursor: true }); 
+                                                
+                                                tile.on('pointerdown', () => {
+                                                    console.log(parseInt(tile.tileConfig.id, 10).toString());
+                                                    EventBus.emit('action-move-to', { square: parseInt(tile.tileConfig.id, 10).toString() });
+                                                });
+                                            } else {
+                                                tile.disableInteractive();
+                                            }
+                    
                                         } else {
-                                            tile.disableInteractive();
+                                            tile.disableInteractive(); 
                                         }
-
-                                    } else {
-                                        tile.disableInteractive(); 
-                                    }
-                                });
+                                    });
+                                }
                             }
                         } catch (error) {
                             console.error(error);
@@ -232,7 +243,9 @@ export class DiceManager {
             alpha: 0,
             duration: 500,
             onComplete: () => {
-                BoardEffects.setFocusByIds(this.board.tiles, null, this.board);
+                const playerTokens = this.board.players.map((p: any) => p.token);
+                
+                BoardEffects.setFocusByIds(this.board.tiles, null, this.board, playerTokens);
 
                 this.board.tiles.forEach((tile: Tile) => {
                     tile.off('pointerdown'); 
@@ -240,7 +253,7 @@ export class DiceManager {
                 });
 
                 this.isRolling = false; 
-                this.board.showUI();
+                // this.board.showUI();
 
                 if (this.diceBg) {
                     this.diceBg.destroy();

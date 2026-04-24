@@ -245,6 +245,8 @@ export class Board extends Phaser.Scene {
         }, this);
 
         EventBus.on('view-animate-path', (data: any) => {
+            this.hideUI();
+
             const formattedPath = data.path.map((id: number) => String(id).padStart(3, '0'));
             
             const playerToMove = this.players.find(p => p.model.id === String(data.playerId));
@@ -262,7 +264,11 @@ export class Board extends Phaser.Scene {
                     }
                 }).filter(coord => coord !== null);
 
-                playerToMove.token.moveToCoords(pathCoordinates, () => {
+                this.cameraController.followToken(playerToMove.token, 2.2, () => {
+                    playerToMove.token.moveToCoords(pathCoordinates, () => {
+                        this.time.delayedCall(800, () => {
+                        });
+                    });
                 });
             }
         });
@@ -350,6 +356,7 @@ export class Board extends Phaser.Scene {
 
     private async handleNewTurn(gameModel: any) {
         const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
+        console.log(player);
         if (!player) return;
 
         const isMe = gameModel.isMyTurn();
@@ -368,14 +375,16 @@ export class Board extends Phaser.Scene {
         // const isMe = gameModel.isMyTurn();
         this.showUI();
 
-        const isMe = gameModel.isMyTurn();
-        EventBus.emit('update-turn-controls', isMe);
-
         switch (gameModel.phase as WSTypes.Phase) {
             case 'roll_the_dices':
+                console.log("Enseño UI")
+                this.showUI();
+                const isMe = gameModel.isMyTurn();
+                EventBus.emit('update-turn-controls', isMe);
                 break;
-
             case 'choose_square':
+                this.hideUI();
+                console.log("hola")
                 break;
 
             case 'choose_fantasy':

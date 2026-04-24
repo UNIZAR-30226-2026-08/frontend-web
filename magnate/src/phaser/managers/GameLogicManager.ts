@@ -39,34 +39,63 @@ export class GameLogicManager {
                 dice1: data.dice1,
                 dice2: data.dice2,
                 dice_bus: data.dice_bus,
-                destinations: data.destinations
+                destinations: data.destinations || []
             });
+
+            
+            if (data.destinations?.length === 1) {
+            console.log("Manager: Square forced, waiting for dice to land...");
+
+            EventBus.once('dice-roll-complete', () => {
+                setTimeout(() => {
+                    const movingPlayerId = String(data.active_turn_player); 
+                    if (data.path && data.path.length > 0) {
+                        const finalDestination = data.path[data.path.length - 1]; 
+                        this.model.updatePlayerPosition(movingPlayerId, String(finalDestination).padStart(3, '0'));
+                    }
+        
+                    EventBus.emit('clear-dice'); 
+        
+                    EventBus.emit('view-animate-path', {
+                        playerId: movingPlayerId,
+                        path: data.path,
+                    });
+                    
+                    EventBus.emit('model-updated', this.model);
+                }, 1800);
+            });
+
+        }
             
             EventBus.emit('model-updated', this.model);
         });
 
-    EventBus.on('report-response-choose-square', (data: any) => { // Puedes usar tu tipo WSTypes.GameInfoMovement
-        console.log("Manager: Square chosen...", data);
-    
-        this.model.active_phase_player = data.active_phase_player;
-        this.model.active_turn_player = data.active_turn_player;
-        this.model.phase = data.phase;
-    
-        const movingPlayerId = String(data.active_turn_player); 
-        if (data.path && data.path.length > 0) {
-            const finalDestination = data.path[data.path.length - 1]; 
-            this.model.updatePlayerPosition(movingPlayerId, String(finalDestination).padStart(3, '0'));
-        }
-    
-        EventBus.emit('clear-dice'); 
-    
-        EventBus.emit('view-animate-path', {
-            playerId: movingPlayerId,
-            path: data.path,
+        EventBus.on('report-response-choose-square', (data: any) => {
+            console.log("Manager: Square chosen...", data);
+        
+            const movingPlayerId = String(data.active_turn_player); 
+            if (data.path && data.path.length > 0) {
+                const finalDestination = data.path[data.path.length - 1]; 
+                this.model.updatePlayerPosition(movingPlayerId, String(finalDestination).padStart(3, '0'));
+            }
+        
+            EventBus.emit('clear-dice'); 
+        
+            EventBus.emit('view-animate-path', {
+                playerId: movingPlayerId,
+                path: data.path,
+            });
+        
+            EventBus.emit('model-updated', this.model);
         });
-    
-        EventBus.emit('model-updated', this.model);
-    });
+
+        EventBus.on('report-response', (data: any) => {
+            this.model.active_phase_player = data.active_phase_player;
+            this.model.active_turn_player = data.active_turn_player;
+            this.model.phase = data.phase;
+
+            console.log("eeeeey", this.model);
+        });
 
 		EventBus.on('pause-game', () => {
 			this.model.isPaused = true;
