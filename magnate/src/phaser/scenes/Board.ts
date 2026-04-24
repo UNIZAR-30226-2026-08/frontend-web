@@ -243,6 +243,29 @@ export class Board extends Phaser.Scene {
         EventBus.on('trigger-dice-roll', (data: any) => {
             this.handleDiceRoll(data);
         }, this);
+
+        EventBus.on('view-animate-path', (data: any) => {
+            const formattedPath = data.path.map((id: number) => String(id).padStart(3, '0'));
+            
+            const playerToMove = this.players.find(p => p.model.id === String(data.playerId));
+            
+            if (playerToMove && formattedPath.length > 0) {
+                
+                const pathCoordinates = formattedPath.map((tileId: string) => {
+                    const targetTile = this.tiles.find(t => t.tileConfig.id === tileId);
+                    
+                    if (targetTile) {
+                        return { x: targetTile.x, y: targetTile.y }; 
+                    } else {
+                        console.warn(`Tile ${tileId} not found on the board!`);
+                        return null;
+                    }
+                }).filter(coord => coord !== null);
+
+                playerToMove.token.moveToCoords(pathCoordinates, () => {
+                });
+            }
+        });
         
         // Evento para marcar quien compra propiedad 
         EventBus.on('property-bought', this.handlePurchase, this); 
@@ -568,26 +591,31 @@ export class Board extends Phaser.Scene {
         });
     }
 
-    private handleDiceRoll(diceData?: { dice1: number, dice2: number, dice_bus?: number }) {
-        if (!diceData) {
-            console.warn("handleDiceRoll llamado sin datos del servidor");
-            return;
-        }
-
-        console.log("Phaser: Procesando tirada de dados confirmada:", diceData);
+    private handleDiceRoll(diceData?: { dice1: number, dice2: number, dice_bus?: number, destinations?: number[] }) {
+        if (!diceData) return;
 
         const values = [diceData.dice1, diceData.dice2];
         if (diceData.dice_bus !== undefined && diceData.dice_bus !== null) {
             values.push(diceData.dice_bus);
         }
 
-        this.hideUI();
-        this.diceManager.handleDiceRoll(this.tiles, this.players, values);
+        let formattedDestinations: string[] = [];
+        if (diceData.destinations) {
+            formattedDestinations = diceData.destinations.map(d => String(d).padStart(3, '0'));
+        }
 
-        this.time.delayedCall(7000, () => { 
-            EventBus.emit('clear-dice'); 
-            this.showUI();
-        });
+        const isMyTurn = this.GamelogicManager.model.isMyTurn();
+
+        this.hideUI();
+
+        this.diceManager.handleDiceRoll(
+            this.tiles, 
+            this.players, 
+            values as [number, number, number],
+            formattedDestinations,
+            isMyTurn
+        );
+
     }
 
     // Marcador para cada casilla que compra un player 

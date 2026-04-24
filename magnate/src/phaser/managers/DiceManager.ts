@@ -22,7 +22,9 @@ export class DiceManager {
     public handleDiceRoll(
         tiles: Tile[], 
         players: { model: PlayerModel, token: PlayerToken }[], 
-        forcedValues?: [number, number, number]
+        forcedValues?: [number, number, number],
+        destinations?: string[],
+        isMyTurn?: boolean
     ) {
         if (this.isRolling) return;
 
@@ -52,6 +54,7 @@ export class DiceManager {
 
             if (completedRolls === 3) {
                 this.board.time.delayedCall(1000, () => {
+                    
                     const bgX = 40;
                     const bgY = 40;
 
@@ -91,11 +94,33 @@ export class DiceManager {
 
                     moveDiceToCorner(dice1, bgX + 60, bgY + 50);
                     moveDiceToCorner(dice2, bgX + 150, bgY + 50);
+                    
                     moveDiceToCorner(dice3, bgX + 240, bgY + 50, () => {
                         try {
-                            const myPlayer = this.board.getLocalPlayer();
-                            if (myPlayer) {
-                                BoardEffects.setFocusByIds(tiles, ["003", "006", "009"], this.board, players.map(p=>p.token));
+                            if (destinations && destinations.length > 0) {
+                                
+                                BoardEffects.setFocusByIds(tiles, destinations, this.board, players.map(p=>p.token));
+
+                                tiles.forEach(tile => {
+                                    tile.off('pointerdown');
+
+                                    if (destinations.includes(tile.tileConfig.id)) {
+                                        
+                                        if (isMyTurn) {
+                                            tile.setInteractive({ useHandCursor: true }); 
+                                            
+                                            tile.on('pointerdown', () => {
+                                                console.log(parseInt(tile.tileConfig.id, 10).toString())
+                                                EventBus.emit('action-move-to', { square: parseInt(tile.tileConfig.id, 10).toString() });
+                                            });
+                                        } else {
+                                            tile.disableInteractive();
+                                        }
+
+                                    } else {
+                                        tile.disableInteractive(); 
+                                    }
+                                });
                             }
                         } catch (error) {
                             console.error(error);
@@ -208,6 +233,12 @@ export class DiceManager {
             duration: 500,
             onComplete: () => {
                 BoardEffects.setFocusByIds(this.board.tiles, null, this.board);
+
+                this.board.tiles.forEach((tile: Tile) => {
+                    tile.off('pointerdown'); 
+                    tile.setInteractive(); 
+                });
+
                 this.isRolling = false; 
                 this.board.showUI();
 
