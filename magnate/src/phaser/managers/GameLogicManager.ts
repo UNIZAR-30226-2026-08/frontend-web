@@ -89,6 +89,29 @@ export class GameLogicManager {
             EventBus.emit('model-updated', this.model);
         });
 
+        EventBus.on('new-chat-message', (data: any) => {
+            console.log("El mensajito", data);
+            
+            const senderName = data.user;
+            const messageText = data.msg?.text || "";
+
+            const player = Object.values(this.model.players).find(p => p.name === senderName);
+            
+            const isSender = player ? player.id === this.model.myId : false;
+
+            const playerColor = player 
+                ? `#${player.color.toString(16).padStart(6, '0')}` 
+                : "#9ca3af";
+
+            EventBus.emit('receive-chat-message', {
+                playerId: player ? player.id : "unknown",
+                playerName: senderName,
+                playerColor: playerColor,
+                text: messageText,
+                isSender: isSender
+            });
+        });
+
         EventBus.on('report-response', (data: any) => {
             this.model.active_phase_player = data.active_phase_player;
             this.model.active_turn_player = data.active_turn_player;

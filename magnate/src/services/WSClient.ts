@@ -224,7 +224,10 @@ export const WSClient = ( ) => {
 						// It'd b Better to use the API in fact, deprecated(?)
 					break;
 				case "chat_message": 
-					if (data.game === gameIdRef.current && playersIdsRef.current.includes(data.user) ) {
+                    console.log(playersIdsRef);
+                    // FIXME
+					// if (data.game === gameIdRef.current && playersIdsRef.current.includes(data.user) ) {
+					if (data.game === gameIdRef.current) {
 						const chatMessage : ChatMessageContent = {
 							"user": data.user,
 							"msg":  data.msg
