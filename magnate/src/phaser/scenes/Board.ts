@@ -62,7 +62,7 @@ export class Board extends Phaser.Scene {
     }
 
     preload() { // precargar imagenes...
-        this.load.video('background_video', 'videos/game_background.webm');
+        // this.load.video('background_video', 'videos/game_background.webm');
         this.load.json('board', 'data/board.json');
         this.load.json('fantasyCards', 'data/fantasyCard.json');
         this.load.image('hat', 'images/hat.png'); // fantasy tiles
@@ -81,7 +81,7 @@ export class Board extends Phaser.Scene {
 
     create() { // crear escena
         this.initManagers();
-        this.createBackground();
+        // this.createBackground();
         this.createBoard();
         this.setupEventBus();
 
@@ -226,12 +226,52 @@ export class Board extends Phaser.Scene {
 
             const currentTurnId = gameModel.getCurrentTurnPlayerId();
             if (this.lastTurnPlayerId !== currentTurnId) {
+                const isFirstTurn = this.lastTurnPlayerId === null;
                 this.lastTurnPlayerId = currentTurnId;
-                await this.handleNewTurn(gameModel);
+    
+                // Algo de tiempo antes del primer turno
+                if (isFirstTurn) {
+                    this.time.delayedCall(2000, async () => {
+                        await this.handleNewTurn(gameModel);
+                    });
+                } else {
+                    this.handleNewTurn(gameModel);
+                }
             }
         });
 
-        EventBus.on('trigger-dice-roll', this.handleDiceRoll, this);
+        EventBus.on('trigger-dice-roll', (data: any) => {
+            this.handleDiceRoll(data);
+        }, this);
+
+        EventBus.on('view-animate-path', (data: any) => {
+            this.hideUI();
+
+            const formattedPath = data.path.map((id: number) => String(id).padStart(3, '0'));
+            
+            const playerToMove = this.players.find(p => p.model.id === String(data.playerId));
+            
+            if (playerToMove && formattedPath.length > 0) {
+                
+                const pathCoordinates = formattedPath.map((tileId: string) => {
+                    const targetTile = this.tiles.find(t => t.tileConfig.id === tileId);
+                    
+                    if (targetTile) {
+                        return { x: targetTile.x, y: targetTile.y }; 
+                    } else {
+                        console.warn(`Tile ${tileId} not found on the board!`);
+                        return null;
+                    }
+                }).filter(coord => coord !== null);
+
+                this.cameraController.followToken(playerToMove.token, 2.2, () => {
+                    playerToMove.token.moveToCoords(pathCoordinates, () => {
+                        this.time.delayedCall(800, () => {
+                        });
+                    });
+                });
+            }
+        });
         
         // Evento para marcar quien compra propiedad 
         EventBus.on('property-bought', this.handlePurchase, this); 
@@ -316,6 +356,7 @@ export class Board extends Phaser.Scene {
 
     private async handleNewTurn(gameModel: any) {
         const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
+        console.log(player);
         if (!player) return;
 
         const isMe = gameModel.isMyTurn();
@@ -336,9 +377,14 @@ export class Board extends Phaser.Scene {
 
         switch (gameModel.phase as WSTypes.Phase) {
             case 'roll_the_dices':
+                console.log("Enseño UI")
+                this.showUI();
+                const isMe = gameModel.isMyTurn();
+                EventBus.emit('update-turn-controls', isMe);
                 break;
-
             case 'choose_square':
+                this.hideUI();
+                console.log("hola")
                 break;
 
             case 'choose_fantasy':
@@ -554,10 +600,31 @@ export class Board extends Phaser.Scene {
         });
     }
 
-    private handleDiceRoll() {
-        this.diceManager.handleDiceRoll(this.tiles, this.players, [1, 2, 6]);
-		// not clicking anything
-        this.time.delayedCall(8000, () => { EventBus.emit('clear-dice'); });
+    private handleDiceRoll(diceData?: { dice1: number, dice2: number, dice_bus?: number, destinations?: number[] }) {
+        if (!diceData) return;
+
+        const values = [diceData.dice1, diceData.dice2];
+        if (diceData.dice_bus !== undefined && diceData.dice_bus !== null) {
+            values.push(diceData.dice_bus);
+        }
+
+        let formattedDestinations: string[] = [];
+        if (diceData.destinations) {
+            formattedDestinations = diceData.destinations.map(d => String(d).padStart(3, '0'));
+        }
+
+        const isMyTurn = this.GamelogicManager.model.isMyTurn();
+
+        this.hideUI();
+
+        this.diceManager.handleDiceRoll(
+            this.tiles, 
+            this.players, 
+            values as [number, number, number],
+            formattedDestinations,
+            isMyTurn
+        );
+
     }
 
     // Marcador para cada casilla que compra un player 
