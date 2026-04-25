@@ -61,7 +61,7 @@ export const ServiceOverlay = () => {
 	                    front={<ServiceCardContent data={propData} />}
 	                    back={<div  />} 
 	                />
-	                <Button onClick={() => setPropData(null)} 
+	                <Button onClick={closeOverlay} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
 	                            Aceptar
 	                </Button>
@@ -79,7 +79,7 @@ export const ServiceOverlay = () => {
             	        front={<ServiceCardContent data={propData} />}
             	        back={<div />} 
             	    />
-	                <Button onClick={() => setPropData(null)} 
+	                <Button onClick={closeOverlay} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
 	                            Pagar {propData.buyPrice}M
 	                </Button>

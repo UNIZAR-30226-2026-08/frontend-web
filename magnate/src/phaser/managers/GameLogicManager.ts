@@ -2,6 +2,7 @@ import { GameModel } from '@/phaser/models/GameModel';
 import { GameState } from '@/services/types/socket';
 import { EventBus } from '@/EventBus';
 import * as WSTypes from "@/services/types/socket";
+import { TramTile } from '../objects/TramTile';
 
 export class GameLogicManager {
     private static instance: GameLogicManager;
@@ -255,13 +256,32 @@ export class GameLogicManager {
 
     private updateHUDControls(phase: string) {
         const isMe = this.model.isMyTurn();
+        const myId = this.model.myId;
         if (phase === 'roll_the_dices') {
             EventBus.emit('update-turn-controls', isMe);
         } else if (phase === 'business') {
             const tile = this.model.getPlayerPosition(this.model.myId);
-            if (! (tile in this.model.boardProperties) || this.model.boardProperties[tile].ownerId === null) {
+            
+            // Si me muevo a otra casilla de tranvía 
+            if (tile in ["010", "030", "100", "107"]) {
+                EventBus.emit('update-controls-state', {
+                    roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
+                });
                 return;
-            }
+                
+            } 
+            if ((tile in this.model.boardProperties) && this.model.boardProperties[tile].ownerId !== null) {
+                if (this.model.boardProperties[tile].ownerId === myId) {
+                    EventBus.emit('update-controls-state', {
+                        roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
+                    });
+                    return; // es propiedad/server/puente y tiene dueño -> sale porque tiene que ir al overlay de pagar primero
+                } else {
+                    console.log("Manager: Casilla de otro jugador");
+                    return;
+                }
+            } 
+
             EventBus.emit('update-controls-state', {
                 roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
             });
@@ -270,3 +290,5 @@ export class GameLogicManager {
         }
     }
 }
+
+// se tienen que activar los botones: 

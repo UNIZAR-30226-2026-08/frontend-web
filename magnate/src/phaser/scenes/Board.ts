@@ -345,23 +345,42 @@ export class Board extends Phaser.Scene {
         });
 
         EventBus.on('execute-tram-travel', (data: {targetId: string, cost: number}) => {
-        	const p = this.selectedPlayer;
-            if (!p) return;
+        	// const p = this.selectedPlayer; 
+            const activePlayerId = this.GamelogicManager.model.getCurrentTurnPlayerId();
+            const playerPair = this.players.find(p => p.model.id === activePlayerId);
+            if (!playerPair) {
+                console.error("TRAM ERROR: No se encontró el objeto visual del jugador");
+                return;
+            }
 			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
             if (!targetTile) return;
 
-			const path = [{ x: targetTile.x, y: targetTile.y }];
-			p.token.moveToCoords(path, () => {
-				// this.time.delayedCall(800, () => {
-				// 	  this.checkTileLogic(p.model, targetTile); // INFINITE LOOP
-				// });
-			});
-			// unset interactiveness of tram tiles
-			const tramTiles = this.tiles.filter(t => t instanceof TramTile);
-			tramTiles.forEach(tile => {
-				tile.disableInteractive();
-			});
-		});
+            const finalX = targetTile.x;
+            const finalY = targetTile.y;
+
+            const path = [{ x: finalX, y: finalY }];
+            
+            playerPair.token.moveToCoords(path, () => {
+                // Efecto de llegada
+                this.tweens.add({
+                    targets: playerPair.token,
+                    y: finalY - 15,
+                    yoyo: true,
+                    ease: 'Back.easeOut',
+                    duration: 400,
+                    onComplete: () => {
+                        // 6. Actualizamos la posición LÓGICA
+                        playerPair.model.currentTileId = data.targetId;
+                        this.GamelogicManager.model.updatePlayerPosition(activePlayerId, data.targetId);
+                        
+                    }
+                });
+            });
+
+
+            const tramTiles = this.tiles.filter(t => t instanceof TramTile);
+            tramTiles.forEach(tile => tile.disableInteractive());
+        });
 
         this.events.on('shutdown', () => { 
             EventBus.off('model-updated');

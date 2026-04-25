@@ -71,6 +71,10 @@ export const TramOverlay = () => {
 			targetId: selectedTram.id, 
             cost: cost 
 		});
+
+        EventBus.emit('action-take-tram', {
+            square: selectedTram.id
+        });
         
 		setIsOpen(false);
 		setSelectedTram(null);
