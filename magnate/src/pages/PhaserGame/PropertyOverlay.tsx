@@ -10,8 +10,7 @@ export const PropertyOverlay = () => {
     const [showTooltip, setShowTooltip] = useState(false);
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
-    const currentPlayerId = "0001"; // TODO: esto estará en el estado global
-
+    const currentPlayerId = localStorage.getItem('myId') || "";
 	const { playSound } = useAudio();
 
     useEffect(() => {
@@ -26,14 +25,18 @@ export const PropertyOverlay = () => {
     const handleBuy = () => {
         if (!propData) return;
 
-        // enviamos info a phaser
-        EventBus.emit('property-bought', {
-            tileId: propData.id,
-            playerId: propData.playerId,
-            playerColor: propData.playerColor
+        EventBus.emit('action-buy-square', {
+            square: propData.id
         });
-        EventBus.emit('close-overlay');
-        setPropData(null);
+        closeOverlay();
+    };
+    
+    const handleAuction = () => {
+        if (!propData) return;
+        EventBus.emit('action-drop-purchase', {
+            square: propData.id 
+        });
+        closeOverlay();
     };
 
     const closeOverlay = () => {
@@ -44,7 +47,6 @@ export const PropertyOverlay = () => {
     if (!propData) {return null;}
 
 	// Just in case they are not set
-	const currentLevel = propData.constructionLevel || 'base';
 	const mortgaged = propData.isMortgaged || false;
 
     const hasOwner = propData.ownerId !== null && propData.ownerId !== undefined && propData.ownerId !== "";
@@ -80,7 +82,7 @@ export const PropertyOverlay = () => {
                 	/>
 	                <Button onClick={closeOverlay}
 	                        className={`px-9 py-6 text-[16px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
-	                            Pagar {propData.rent[currentLevel]}€
+	                            Pagar {propData.currentRent}M
 	                </Button>
 				</div>
 			</div>
@@ -126,17 +128,14 @@ export const PropertyOverlay = () => {
                     <Button onClick={handleBuy} 
 							sound="bookmark"
                             className={`px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
-                                Comprar {propData.price}€
+                                Comprar {propData.buyPrice}M
                     </Button>
 
                     <div className="relative group">
                         <Button 
                             onMouseEnter={() => setShowTooltip(true)}
                             onMouseLeave={() => setShowTooltip(false)}
-                            onClick={() =>  {
-                                EventBus.emit('start-auction', propData);
-                                setPropData(null);
-                            }} 
+                            onClick={handleAuction} 
                             className={`px-9 py-6 text-[16px] bg-white hover:bg-gray-100 text-black font-black uppercase rounded-full shadow-xl 
                             transition-all hover:scale-105 active:scale-95 ${bouncyAnimation}`} >
                             Subastar

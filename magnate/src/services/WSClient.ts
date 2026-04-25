@@ -248,15 +248,19 @@ export const WSClient = ( ) => {
 					}
 					break;
 				case "game_action": 
-					if (data.data.game === gameIdRef.current && playersIdsRef.current.includes(data.data.player) ) {
+					if (data.data.game === gameIdRef.current) {
 						EventBus.emit('receive-action',data.data);
+						
+						if (VERBOSE) {
+							console.log(`WS: Acción recibida y emitida (${data.data.type}) del jugador ${data.data.player}`);
+						}
 					} else if (VERBOSE) {
 						//console.err("VERBOSE: game id or action sender do not align with current game.");
 						console.log("VERBOSE: No need to report my own actions");
 					}
 					break;
 				case "game_response":
-					EventBus.emit('receive-response',data.data);
+					EventBus.emit('receive-response', data.data);
 					break;
 				default:
 					if (SELF_PROTECTION) {

@@ -32,8 +32,7 @@ export class PropertyTile extends Tile {
 
         this.add(this.nameText);
 
-        //TODO: falta precio de las property tiles
-        const priceText = this.scene.add.text(0, 45, `200M`, {
+        const priceText = this.scene.add.text(0, 45, `${config.price}M`, {
             fontFamily: 'LTSuperior',
             fontSize: '14px',
             color: '#222222',

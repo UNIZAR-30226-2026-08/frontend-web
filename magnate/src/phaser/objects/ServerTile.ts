@@ -8,11 +8,20 @@ export class ServerTile extends Tile {
     constructor(scene: Phaser.Scene, config: IServerTile) {
         super(scene, config);
 
-         this.icon = this.scene.add.image(0, 15, 'icon_server')
+         this.icon = this.scene.add.image(0, 5, 'icon_server')
                 .setOrigin(0.5)
                 .setDisplaySize(60, 60);
         
         this.add(this.icon);
+        
+        const priceText = this.scene.add.text(0, 45, `${config.price}M`, {
+            fontFamily: 'LTSuperior',
+            fontSize: '14px',
+            color: '#222222',
+            align: 'center',
+        }).setOrigin(0.5);
+        
+        this.add(priceText);
     }
     
     public setOwnerMarker(playerColor: number) {

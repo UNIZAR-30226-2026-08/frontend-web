@@ -10,6 +10,7 @@ export const ServiceOverlay = () => {
     const [showTooltip, setShowTooltip] = useState(false);
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+    const currentPlayerId = localStorage.getItem('myId') || "";
 
 	const { playSound } = useAudio();
 
@@ -26,11 +27,21 @@ export const ServiceOverlay = () => {
         if (!propData) return;
 
         // enviamos info a phaser
-        EventBus.emit('property-bought', {
-            tileId: propData.id,
-            playerName: propData.playerName,
-            playerColor: propData.playerColor
+        EventBus.emit('action-buy-square', {
+            square: propData.id
         });
+        closeOverlay();
+    };
+    const handleAuction = () => {
+        if (!propData) return;
+
+        EventBus.emit('action-drop-purchase', {
+            square: propData.id 
+        });
+        closeOverlay();
+    };
+
+    const closeOverlay = () => {
         EventBus.emit('close-overlay');
         setPropData(null);
     };
@@ -38,8 +49,8 @@ export const ServiceOverlay = () => {
     if (!propData) {return null;}
 
 	// Just in case they are not set
-	const currentLevel = propData.hasAll || 'one';
-	const mortgaged = propData.isMortgaged || false;
+    const hasOwner = propData.ownerId !== null && propData.ownerId !== undefined && propData.ownerId !== "";
+    const isMine = propData.ownerId === currentPlayerId;
 
 	if (propData.isMortgaged) { 
 		return ( // mortgage view
@@ -47,7 +58,7 @@ export const ServiceOverlay = () => {
 	            <div className="flex flex-col items-center gap-8">
 	                <GameCard 
 	                    isFlipped={true}
-	                    front={<ServiceCardContent data={propData} isMortgaged={mortgaged} />}
+	                    front={<ServiceCardContent data={propData} />}
 	                    back={<div  />} 
 	                />
 	                <Button onClick={() => setPropData(null)} 
@@ -59,7 +70,7 @@ export const ServiceOverlay = () => {
 		);
 	}
 
-	if (!propData.isAvailable) { 
+	if (hasOwner && !isMine) { 
 		return ( // pay rent view
 		    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
 	            <div className="flex flex-col items-center gap-8">
@@ -70,12 +81,37 @@ export const ServiceOverlay = () => {
             	    />
 	                <Button onClick={() => setPropData(null)} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
-	                            Pagar {propData.rent[currentLevel]}€
+	                            Pagar {propData.buyPrice}M
 	                </Button>
 				</div>
 			</div>
 		);
 	}
+
+    if (hasOwner && isMine) {
+            return (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/10 backdrop-blur-sm p-6 animate-in fade-in duration-300">
+                    <div className="flex flex-col items-center gap-8">
+                        <GameCard 
+                            isFlipped={true}
+                            front={<ServiceCardContent data={propData} />}
+                            back={<div />} 
+                        />
+                        <Button 
+                            onClick={closeOverlay}
+                            className={`px-9 py-6 flex flex-col items-center justify-center bg-[var(--color-primary)] text-[var(--color-text)] rounded-full ${bouncyAnimation}`}>
+                            <span className="text-[16px] font-black uppercase leading-none italic tracking-tight">
+                                Continuar
+                            </span>
+                            <span className="text-[10px] opacity-80 font-bold uppercase tracking-widest  leading-none">
+                                Esta propiedad te pertenece
+                            </span>
+                        </Button>
+                    
+                    </div>
+                </div>
+            );
+        }
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -87,16 +123,16 @@ export const ServiceOverlay = () => {
                 />
                 <div className="flex gap-4">
                 
-                <Button onClick={handleBuy}  // TODO: añadir marcador
+                <Button onClick={handleBuy}
                             className={`px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
-                                Comprar {propData.price}€
+                                Comprar {propData.buyPrice}M
                     </Button>
 
                     <div className="relative group">
                         <Button 
                             onMouseEnter={() => setShowTooltip(true)}
                             onMouseLeave={() => setShowTooltip(false)}
-                            onClick={() => setPropData(null)} 
+                            onClick={handleAuction} 
                             className={`px-9 py-6 bg-white hover:bg-gray-100 text-black font-black uppercase rounded-full shadow-xl 
                             transition-all hover:scale-105 active:scale-95 ${bouncyAnimation}`}
                         >

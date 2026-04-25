@@ -6,6 +6,7 @@ import { Phase, GameState } from "@/services/types/socket"
 // @ts-ignore 
 import { fetchUserNamePiece } from '@/api/userServices'; 
 import boardConfig from '../../../public/data/board.json';
+import moneyConfig from '../../../public/data/money.json';
 
 export class GameModel {
     public gameId: string = "";
@@ -43,7 +44,8 @@ export class GameModel {
 		});
 
 		new_state.property_relationships.forEach((propInfo) => {
-			const propId = String(propInfo.square);
+			const propId = String(propInfo.square).padStart(3, '0');
+            
 			this.setPropertyOwner(propId, propInfo.owner ? String(propInfo.owner) : null);
 			this.setPropertyHouses(propId, propInfo.houses || 0);
 			this.setPropertyMortgaged(propId, propInfo.mortgage || false);
@@ -76,7 +78,7 @@ export class GameModel {
                     const player = new PlayerModel(playerId, finalName, playerColor);
 
                     player.balance = new_state.money[playerId];
-                    player.currentTileId = new_state.positions[playerId];
+                    player.currentTileId = String(new_state.positions[playerId]).padStart(3, '0');
                     player.jailRemainingTurns = new_state.jail_remaining_turns[playerId] || 0;
                     player.properties = new_state.property_relationships.filter(p => String(p.owner) === playerId).map(p => p.square);
                     
@@ -88,9 +90,51 @@ export class GameModel {
         });
 		await Promise.all(peticiones);
 
-		new_state.property_relationships.forEach((propInfo) => {
-			this.boardProperties[propInfo.square] = new PropertyModel(propInfo);
-		});
+        boardConfig.tiles.forEach((tile: any) => {
+            // Solo procesamos casillas de tipo propiedad, servidor o puente
+            if (!["property", "server", "bridge"].includes(tile.type)) return;
+
+            const propId = String(tile.id).padStart(3, '0');
+            const model = new PropertyModel(propId);
+            model.name = tile.name;
+            const moneyData = moneyConfig.tiles.find((t: any) => t.id === propId);
+            if (moneyData) {
+                model.setMoneyData(moneyData);
+            }
+
+            // Asignación de grupos y colores
+            if (tile.type === "server") {
+                model.group = 13;
+            } else if (tile.type === "bridge") {
+                model.group = 14;
+            } else {
+                model.group = tile.group;
+                const groupData = boardConfig.groups.find((g: any) => g.group === tile.group);
+                if (groupData) {
+                    model.color = groupData.color;
+                }
+            }
+
+            this.boardProperties[propId] = model;
+        });
+
+		new_state.property_relationships.forEach((p: any) => {
+            const propId = String(p.square).padStart(3, '0');
+            const property = this.boardProperties[propId];
+            
+            if (property) {
+                property.ownerId = p.owner ? String(p.owner) : null;
+                property.houseCount = p.houses || 0;
+                property.isMortgaged = p.mortgage || false;
+
+                // Actualizar la lista de propiedades del jugador
+                if (property.ownerId && this.players[property.ownerId]) {
+                    if (!this.players[property.ownerId].properties.includes(propId)) {
+                        this.players[property.ownerId].properties.push(propId);
+                    }
+                }
+            }
+        });
     }
 
 	// ---- FUNCIONES PLAYERS ----
@@ -107,6 +151,17 @@ export class GameModel {
 
 	public getPlayer(playerId: string): PlayerModel | undefined {
         return this.players[playerId];
+    }
+
+    public getPlayerName(playerId: string): string {
+        const player = this.players[playerId];
+        return player ? player.name : `Jugador ${playerId}`;
+    }
+
+    public getPlayerColor(playerId: string): string {
+        const player = this.players[playerId];
+        if (!player) return '#ffffff';
+        return `#${player.color.toString(16).padStart(6, '0')}`;
     }
 
 	public getPlayerBalance(playerId: string): number {
@@ -149,7 +204,6 @@ export class GameModel {
         const owner = this.getPropertyOwnerId(propertyId);
         return owner !== null && owner !== "";
     }
-
 	// ---- Modificaciones
 	public setPropertyOwner(propertyId: string, newOwnerId: string | null): void {
 		const property = this.getProperty(propertyId);
@@ -205,8 +259,16 @@ export class GameModel {
 	public updatePlayerPosition(playerId: string, newTileId: string): void {
         const player = this.getPlayer(playerId);
         if (player) {
-            player.currentTileId = newTileId;
+            player.currentTileId = String(newTileId).padStart(3, '0');
         }
+    }
+
+    public getCountOwnedInGroup(groupId: number, playerId: string): number {
+        if (!playerId) return 0;
+
+        return Object.values(this.boardProperties).filter(
+            prop => prop.group === groupId && prop.ownerId === playerId
+        ).length;
     }
 
 

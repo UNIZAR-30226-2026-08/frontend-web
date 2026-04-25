@@ -62,8 +62,9 @@ export class Board extends Phaser.Scene {
     }
 
     preload() { // precargar imagenes...
-        // this.load.video('background_video', 'videos/game_background.webm');
+        this.load.video('background_video', 'videos/game_background.webm');
         this.load.json('board', 'data/board.json');
+        this.load.json('money', 'data/money.json');
         this.load.json('fantasyCards', 'data/fantasyCard.json');
         this.load.image('hat', 'images/hat.png'); // fantasy tiles
         this.load.image('tram', 'images/tram.png'); // tram tiles
@@ -81,7 +82,7 @@ export class Board extends Phaser.Scene {
 
     create() { // crear escena
         this.initManagers();
-        // this.createBackground();
+        this.createBackground();
         this.createBoard();
         this.setupEventBus();
 
@@ -172,6 +173,14 @@ export class Board extends Phaser.Scene {
 
     private createBoard() { 
         const fullData = this.cache.json.get('board');
+        const moneyData = this.cache.json.get('money');
+
+        const priceMap = new Map();
+        if (moneyData && moneyData.tiles) {
+            moneyData.tiles.forEach((t: any) => {
+                priceMap.set(String(t.id).padStart(3, '0'), t.buy_price);
+            });
+        }
         
         // Extraer colores para players
         const rawColors = fullData.playerColors as string[];
@@ -185,19 +194,27 @@ export class Board extends Phaser.Scene {
 
         boardTiles.forEach((config: TileConfig) => {
             let tile: Tile;
+            const normalizedId = String(config.id).padStart(3, '0');
 
             if (config.type === TileType.PROPERTY) {
                 const propConfig = config as IPropertyTile;
                 const groupInfo = groups.find(g => g.group === propConfig.group);
                 propConfig.color = groupInfo ? groupInfo.color : '#FFFFFF';
+                if (priceMap.has(normalizedId)) {
+                    propConfig.price = priceMap.get(normalizedId);
+                }
                 tile = new PropertyTile(this, propConfig);
                 
             } else if (config.type === TileType.FANTASY) {
                 tile = new FantasyTile(this, config as IFantasyTile);
             } else if (config.type === TileType.BRIDGE) {
-                tile = new BridgeTile(this, config as IBridgeTile);
+                const bridgeConfig = config as IBridgeTile;
+                if (priceMap.has(normalizedId)) bridgeConfig.price = priceMap.get(normalizedId);
+                tile = new BridgeTile(this, bridgeConfig);
             } else if (config.type === TileType.SERVER) {
-                tile = new ServerTile(this, config as IServerTile);
+                const serverConfig = config as IServerTile;
+                if (priceMap.has(normalizedId)) serverConfig.price = priceMap.get(normalizedId);
+                tile = new ServerTile(this, serverConfig);
             } else if (config.type === TileType.START) {
                 tile = new StartTile(this, config as IStartTile);
             } else if (config.type === TileType.GO_TO_JAIL) {
@@ -234,9 +251,9 @@ export class Board extends Phaser.Scene {
                     this.time.delayedCall(2000, async () => {
                         await this.handleNewTurn(gameModel);
                     });
-                } else {
-                    this.handleNewTurn(gameModel);
                 }
+            } else {
+                this.handlePhaseLogic(gameModel);
             }
         });
 
@@ -266,11 +283,34 @@ export class Board extends Phaser.Scene {
 
                 this.cameraController.followToken(playerToMove.token, 2.2, () => {
                     playerToMove.token.moveToCoords(pathCoordinates, () => {
-                        this.time.delayedCall(800, () => {
-                        });
+                        this.time.delayedCall(800, () => { });
+                        EventBus.emit('token-fin');
                     });
                 });
             }
+        });
+
+        EventBus.on('token-fin', () => {
+            this.time.delayedCall(400, () => { });
+            const gameModel = this.GamelogicManager.model;
+            if (gameModel.phase === 'management') {
+                console.log("Cámara detenida. Abriendo menú de gestión...");
+                this.interactWithTile(gameModel);
+            } else if (gameModel.phase === 'business') {
+                console.log("Cámara detenida: estoy en business pero he caido en propiedad de otro tío");
+                this.interactWithTile(gameModel);
+            }
+        });
+
+        EventBus.on('view-new-turn', async (gameModel: any) => {
+            const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
+            const isMe = gameModel.isMyTurn();
+            const bannerText = isMe ? "Tu turno" : `Turno de ${player.name}`;
+            const color = '#' + player.color.toString(16).padStart(6, '0');
+
+            this.hideUI();
+            await this.announceTurn(bannerText, color);
+            this.showUI();
         });
         
         // Evento para marcar quien compra propiedad 
@@ -345,6 +385,7 @@ export class Board extends Phaser.Scene {
                 // Actualizamos solo datos lógicos
                 existingPlayer.model.name = pData.name;
                 existingPlayer.model.balance = pData.balance;
+                existingPlayer.model.currentTileId = pData.currentTileId;
             }
         });
 
@@ -372,28 +413,33 @@ export class Board extends Phaser.Scene {
     }
 
     private handlePhaseLogic(gameModel: any) {
-        // const isMe = gameModel.isMyTurn();
+        const isMe = gameModel.isMyTurn();
+        console.log(`[Phase Check] Fase actual: "${gameModel.phase}" | ¿Es mi turno?: ${isMe}`);
         this.showUI();
-
         switch (gameModel.phase as WSTypes.Phase) {
             case 'roll_the_dices':
-                console.log("Enseño UI")
+                console.log("Enseño UI");
                 this.showUI();
-                const isMe = gameModel.isMyTurn();
+                //const isMe = gameModel.isMyTurn();
                 EventBus.emit('update-turn-controls', isMe);
                 break;
             case 'choose_square':
                 this.hideUI();
-                console.log("hola")
+                console.log("empieza choose_square");
                 break;
 
             case 'choose_fantasy':
                 break;
 
-            case 'auction':
+            case 'management':
+                console.log("empieza management");
                 break;
 
             case 'business':
+                break;
+
+            case 'auction':
+                console.log("Empieza subasta");
                 break;
 
             case 'liquidation':
@@ -407,6 +453,30 @@ export class Board extends Phaser.Scene {
 
             default:
                 break;
+        }
+    }
+
+    public interactWithTile(gameModel: any) {
+        console.log("--- FASE MANAGEMENT ---");
+        const isMe = gameModel.isMyTurn();
+        if (isMe) {
+            const activePlayerId = gameModel.getCurrentTurnPlayerId();
+            const activePlayerPair = this.players.find(p => p.model.id === activePlayerId);
+            
+            if (activePlayerPair) {
+                const currentTileId = activePlayerPair.model.currentTileId;
+                const currentTile = this.tiles.find(t => t.tileConfig.id === currentTileId);
+
+                if (currentTile) {
+                    console.log(`Disparando lógica para ID: ${currentTile.tileConfig.id}`);
+                    this.tileLogicManager.checkTileLogic(activePlayerPair.model, currentTile, this.players);
+                } else {
+                    console.error(`No se encontró la casilla física con ID: ${currentTile}`);
+                }
+            }
+            EventBus.emit('model-updated', this.GamelogicManager.model);
+        } else {
+            this.cameraController.resetView(4000);
         }
     }
     
@@ -628,11 +698,11 @@ export class Board extends Phaser.Scene {
     }
 
     // Marcador para cada casilla que compra un player 
-    private handlePurchase (data: { tileId: string, playerColor: string, playerId: string }) {
+    private handlePurchase (data: { tileId: string, playerColor: number, playerId: string }) {
         const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
         if (tile) {
             tile.tileConfig.ownerId = data.playerId;
-            const colorNum = parseInt(data.playerColor.startsWith('#')  ? data.playerColor.replace('#', '0x') : data.playerColor);
+            const colorNum = data.playerColor;
             
             if (tile instanceof PropertyTile || tile instanceof ServerTile || tile instanceof BridgeTile) {
                 tile.setOwnerMarker(colorNum);

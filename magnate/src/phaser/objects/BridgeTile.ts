@@ -22,6 +22,15 @@ export class BridgeTile extends Tile {
             .setPosition(1, -(h * 0.1));
             
         this.add(this.nameText);   
+
+        const priceText = this.scene.add.text(0, 170, `${config.price}M`, {
+            fontFamily: 'LTSuperior',
+            fontSize: '16px',
+            color: '#222222',
+            align: 'center',
+        }).setOrigin(0.5);
+        
+        this.add(priceText);
     }
     
     public setOwnerMarker(playerColor: number) {
