@@ -75,9 +75,9 @@ export class GameModel {
                     // En cuanto llega el username, creamos el PlayerModel con el nombre real y su color
                     const finalName = (data && data.username) ? data.username : "Jugador";
 					const playerColor = colorPalette[index % colorPalette.length];
-                    const player = new PlayerModel(playerId, finalName, playerColor);
+                    const playerMoney = new_state.money[playerId]
+                    const player = new PlayerModel(playerId, finalName, playerColor, playerMoney);
 
-                    player.balance = new_state.money[playerId];
                     player.currentTileId = String(new_state.positions[playerId]).padStart(3, '0');
                     player.jailRemainingTurns = new_state.jail_remaining_turns[playerId] || 0;
                     player.properties = new_state.property_relationships.filter(p => String(p.owner) === playerId).map(p => p.square);
@@ -183,6 +183,14 @@ export class GameModel {
         return String(this.active_turn_player);
     }
 
+    public setParkingMoney(money: number): void {
+        this.parking_money += money;
+    }
+    
+    public getParkingMoney(): number {
+        return this.parking_money;
+    }
+
 	//---- Funciones propiedades
 	public getProperty(propertyId: string): PropertyModel | undefined {
         return this.boardProperties[propertyId];
@@ -214,6 +222,7 @@ export class GameModel {
         // Quitar la propiedad al antiguo dueño si existía
         if (oldOwnerId && this.players[oldOwnerId]) {
             this.players[oldOwnerId].properties = this.players[oldOwnerId].properties.filter(id => id !== propertyId);
+            this.players[oldOwnerId].emitUpdate();
         }
 
         // Asignar el nuevo dueño en la propiedad
@@ -224,6 +233,7 @@ export class GameModel {
             if (!this.players[newOwnerId].properties.includes(propertyId)) {
                 this.players[newOwnerId].properties.push(propertyId);
             }
+            this.players[newOwnerId].emitUpdate();
         }
 	}
 
@@ -332,6 +342,17 @@ export class GameModel {
         
         // Clamp result between 0 and the remaining space until 5 (Hotel)
         return Math.max(0, Math.min(finalMax, 5 - targetProp.houseCount));
+    }
+
+    public canBuildOneMore(propId: string, playerId: string): boolean {
+        const prop = this.getProperty(propId);
+        if (!prop) return false;
+        return this.getMaxAddableHouses(propId, playerId, prop.buildPrice) > 0;
+    }
+
+    // Comprueba si se puede quitar una casa de esta propiedad
+    public canSellOneMore(propId: string): boolean {
+        return this.getMaxRemovableHouses(propId) > 0;
     }
 
     // Calculates how many houses you can sell following the uniform rule.

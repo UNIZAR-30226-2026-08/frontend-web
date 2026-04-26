@@ -11,11 +11,11 @@ import { JailTile } from '../objects/JailTile';
 import { ParkingTile } from '../objects/ParkingTile';
 import { TramTile } from '../objects/TramTile';
 import { StartTile } from '../objects/StartTile';
-import { IPropertyTile, IServerTile, ITramTile } from '../types/TileTypes';
 
 import { CornerData } from '@/components/layout/CornerLayout';
 import { GameLogicManager } from './GameLogicManager';
 import { propEffect } from 'framer-motion';
+import { CameraController } from '../utils/CameraController';
 
 const CORNER_VISUALS = new Map<Function, CornerData>([
     [GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar', sound: 'jail_door' }],
@@ -27,6 +27,7 @@ const CORNER_VISUALS = new Map<Function, CornerData>([
 interface IBoardScene extends Phaser.Scene {
     sendToSecretary(playerId: string): Promise<void>;
     showToast(message: string, duration?: number): void;
+    cameraController: CameraController;
 }
 
 export class TileLogicManager {
@@ -125,8 +126,15 @@ export class TileLogicManager {
         }
 
 		else if (tile instanceof StartTile) {
-            player.balance += 200;
-            player.emitUpdate(); // TODO: si pasan también se cobra
+            const myId = localStorage.getItem('myId');
+            if (String(player.id) === String(myId)) {
+                this.scene.time.delayedCall(1000, () => {
+                    console.log("Volviendo a la vista de origen...");
+                    this.scene.cameraController.resetView(1500); 
+                });
+            }
+            console.log(`Jugador ${player.name} ha caído en Salida. Balance +200`);
+
         }
 
         else if (tile instanceof JailTile) {

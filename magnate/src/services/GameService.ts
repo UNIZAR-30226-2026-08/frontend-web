@@ -143,7 +143,7 @@ export const GameService = ( ) => {
 
 	const actionTradeProposal = ( data : WSTypes.GameAskTrade ) => {
 		const message = {
-			"type" : "ActionChooseCard",
+			"type" : "ActionTradeProposal",
 			"destination_user" : data.destination_user,
 			"offered_money" : data.offered_money,
 			"asked_money" : data.asked_money,
@@ -155,7 +155,7 @@ export const GameService = ( ) => {
 
 	const actionTradeAnswer = ( data: WSTypes.GameAskTradeAnswer ) => {
 		const message = {
-			"type" : "ActionChooseCard",
+			"type" : "ActionTradeAnswer",
 			"choose" : data.accept
 		};
 		EventBus.emit('send-message', message);
@@ -256,14 +256,14 @@ export const GameService = ( ) => {
 	};
 
 	const routeResponse = ( data : WSTypes.GameResponse ) => {
-		
+		// response general
 		const responseBasic : WSTypes.GameInfoResponse = {
 			"money" : data.money,
 			"active_phase_player" : data.active_phase_player,
 			"active_turn_player" : data.active_turn_player,
-			"phase" : data.phase
+			"phase" : data.phase,
+			"parking_money": data.parking_money
 		};
-
 		EventBus.emit('report-response', responseBasic);
 
 		switch (data.type) {
@@ -380,13 +380,6 @@ export const GameService = ( ) => {
 				};
 				EventBus.emit('report-action-buy-square',reportBuySquare);
 				break;
-			// case "ActionSellSquare":
-			// 	const reportSellSquare : WSTypes.GameReportSquare = {
-			// 		"player": data.player,
-			// 		"square" : data.square
-			// 	};
-			// 	EventBus.emit('report-action-sell-square',reportSellSquare);
-			// 	break;
 			case "ActionBuild":
 				const reportBuild : WSTypes.GameReportHouses = {
 					"player": data.player,
@@ -429,7 +422,7 @@ export const GameService = ( ) => {
 				break;
 			case "ActionTradeAnswer":
 				const reportTradeAnswer : WSTypes.GameReportTradeAnswer = {
-					"player": data.player,
+					//"player": data.player,
 					"accept": data.choose
 				};
 				EventBus.emit('report-action-trade-answer',reportTradeAnswer);
@@ -498,20 +491,20 @@ export const GameService = ( ) => {
 		EventBus.on('enter-game', handleEnterGame);
 		EventBus.on('action-throw-dices', actionThrowDices);
 		EventBus.on('action-move-to', actionMoveTo);
-		EventBus.on('action-take-tram', actionTakeTram);
+		EventBus.on('action-take-tram', actionTakeTram); // Moverte a otra estacion de tranvía
 		EventBus.on('action-drop-purchase', actionDropPurchase); // Jugador no compra propiedad -> empieza subasta
 		EventBus.on('action-buy-square', actionBuySquare); // Comprar propiedad
-		EventBus.on('action-build', actionBuild);
-		EventBus.on('action-demolish', actionDemolish);
+		EventBus.on('action-build', actionBuild); // construir casa
+		EventBus.on('action-demolish', actionDemolish); // destruir casa
 		EventBus.on('action-choose-card', actionChooseCard);
 		EventBus.on('action-surrender', actionSurrender);
-		EventBus.on('action-trade-proposal', actionTradeProposal);
-		EventBus.on('action-trade-answer', actionTradeAnswer);
-		EventBus.on('action-mortgage-set', actionMortgageSet);
-		EventBus.on('action-mortgage-unset', actionMortgageUnset);
+		EventBus.on('action-trade-proposal', actionTradeProposal); // jugador manda propuesta a otro
+		EventBus.on('action-trade-answer', actionTradeAnswer); // jugador acepta/deniega la propuesta
+		EventBus.on('action-mortgage-set', actionMortgageSet); // hipotecar propiedad
+		EventBus.on('action-mortgage-unset', actionMortgageUnset); // deshipotecar
 		EventBus.on('action-pay-bail', actionPayBail);
 		EventBus.on('action-next-phase', actionNextPhase);
-		EventBus.on('action-bid', actionBid);
+		EventBus.on('action-bid', actionBid); // envíar puja cuando estamos en la subasta (solo se envía una puja por player)
 		EventBus.on('receive-response', routeResponse);
 		EventBus.on('receive-action', routeAction);
 

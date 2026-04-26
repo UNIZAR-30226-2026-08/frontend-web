@@ -8,6 +8,7 @@ export class GameLogicManager {
     private static instance: GameLogicManager;
 	private populated: boolean = false;
     public model: GameModel;
+    private lastPendingProposal: any = null;
 
     private constructor() {
         this.model = new GameModel();
@@ -103,7 +104,10 @@ export class GameLogicManager {
             if (data.money) {
                 Object.entries(data.money).forEach(([id, bal]) => {
                     const p = this.model.getPlayer(id);
-                    if (p) p.balance = Number(bal);
+                    if (p) {
+                        p.balance = Number(bal);
+                        p.emitUpdate();
+                    }
                 });
             }
             // Actualizar posiciones
@@ -124,8 +128,10 @@ export class GameLogicManager {
                 console.log(`Cambio de Fase: pasamos a ${data.phase}`);
                 this.updateHUDControls(data.phase);
             }
-            
-            console.log("Response general", this.model);
+            // EventBus.emit('model-updated', this.model);
+            console.log("Response general:", data);
+            console.log("Modelo actual:", this.model);
+
         });
 
         // ---------------------- COMPRA PROPIEDAD ----------------------
@@ -141,6 +147,12 @@ export class GameLogicManager {
                 this.model.setPropertyOwner(propId, playerId);
 
                 player.balance -= property.buyPrice; 
+
+                // EventBus.emit('view-animate-money', { 
+                //     playerId: playerId, 
+                //     amount: `-${property.buyPrice}M`,
+                //     numBill: 8
+                // });
 
                 EventBus.emit('property-bought', {
                     tileId: propId,
@@ -247,6 +259,162 @@ export class GameLogicManager {
             EventBus.emit('model-updated', this.model);
         });
 
+        // ---------------------- NEGOCIACIONES ----------------------
+        EventBus.on('report-action-trade-proposal', (data: WSTypes.GameReportTradeProposal) => {
+            console.log("Manager: Nueva propuesta de trato recibida", data);
+            const myId = localStorage.getItem('myId');
+            
+            if (String(data.destination_user) !== String(myId)) {
+                console.log("Manager: El trato no es para mí, ignoro el overlay.");
+                return; 
+            }
+
+            const offeringPlayer = this.model.getPlayer(String(data.player));
+            const askedPlayer = this.model.getPlayer(String(data.destination_user));
+
+            // Función para convertir IDs de propiedades en objetos para la UI
+            const mapProperties = (ids: string[]) => {
+                return ids.map(id => {
+                    const prop = this.model.getProperty(String(id).padStart(3, '0'));
+                    return {
+                        id: id,
+                        name: prop?.name || `Propiedad ${id}`,
+                        color: prop?.color || '#cbd5e1'
+                    };
+                });
+            };
+
+            const proposalData = {
+                offeringPlayer: {
+                    name: offeringPlayer?.name,
+                    color: offeringPlayer?.color
+                },
+                askedPlayer: {
+                    name: askedPlayer?.name,
+                    color: askedPlayer?.color
+                },
+                offeredMoney: data.offered_money,
+                askedMoney: data.asked_money,
+                offeredProperties: mapProperties(data.offered_properties || []),
+                askedProperties: mapProperties(data.asked_properties || []),
+            };
+            this.lastPendingProposal = data;
+            EventBus.emit('show-trade-request', proposalData);
+        });
+
+        EventBus.on('report-action-trade-answer', (data: any) => {
+            const accepted = data.accept;
+
+            if (accepted && this.lastPendingProposal) {
+                this.executeTradeTransfer(this.lastPendingProposal);
+                EventBus.emit('show-toast', { 
+                    message: "¡El trato se ha cerrado con éxito!", 
+                    duration: 4000 
+                });
+                this.lastPendingProposal = null;
+            } else {
+                EventBus.emit('show-toast', { 
+                    message: `La propuesta ha sido rechazada.`, 
+                    duration: 3000 
+                });
+                this.lastPendingProposal = null;
+            }
+            EventBus.emit('model-updated', this.model);
+        });
+
+        // Hipotecar
+        EventBus.on('report-action-mortgage-set', (data: any) => {
+            const propId = String(data.square).padStart(3, '0');
+            const prop = this.model.getProperty(propId);
+            if (prop) {
+                prop.isMortgaged = true;
+                prop.houseCount = 0;
+                EventBus.emit('model-updated', this.model);
+                EventBus.emit('update-tile-mortgage-visual', { tileId: propId, isMortgaged: true });
+            }
+        });
+
+        // Deshipotecar
+        EventBus.on('report-action-mortgage-unset', (data: any) => {
+            const propId = String(data.square).padStart(3, '0');
+            const prop = this.model.getProperty(propId);
+            if (prop) {
+                prop.isMortgaged = false;
+                EventBus.emit('model-updated', this.model);
+                EventBus.emit('update-tile-mortgage-visual', { tileId: propId, isMortgaged: false });
+            }
+        });
+
+        EventBus.on('report-action-build', (data: any) => {
+            const propId = String(data.square).padStart(3, '0');
+            const prop = this.model.getProperty(propId);
+            if (prop) {
+                prop.houseCount += data.houses; 
+                EventBus.emit('model-updated', this.model);
+                EventBus.emit('view-update-tile-construction', { 
+                    tileId: propId, 
+                    level: prop.houseCount 
+                });
+            }
+        });
+
+        EventBus.on('report-action-demolish', (data: any) => {
+            const propId = String(data.square).padStart(3, '0');
+            const prop = this.model.getProperty(propId);
+            if (prop) {
+                prop.houseCount -= data.houses;
+                EventBus.emit('model-updated', this.model);
+                EventBus.emit('view-update-tile-construction', { 
+                    tileId: propId, 
+                    level: prop.houseCount 
+                });
+            }
+        });
+
+        EventBus.on('report-action-surrender', (data: WSTypes.GameReportSender) => {
+            const playerId = String(data.player);
+            const player = this.model.getPlayer(playerId);
+
+            if (player) {
+                console.log(`Manager: Procesando bancarrota de ${player.name} (${playerId})`);
+
+                // Liberamos todas las propiedades que pertenecían a ese jugador
+                const playerPropertiesIds = [...player.properties];
+                
+                playerPropertiesIds.forEach(id => {
+                    const normalizedId = String(id).padStart(3, '0');
+                    this.model.setPropertyOwner(normalizedId, null);
+                    const prop = this.model.getProperty(normalizedId);
+                    
+                    if (prop) {
+                        prop.houseCount = 0;
+                        prop.isMortgaged = false;
+
+                        EventBus.emit('update-tile-owner-visual', {
+                            tileId: normalizedId,
+                            playerColor: null,
+                            playerId: null
+                        });
+                        EventBus.emit('view-update-tile-construction', { tileId: id, level: 0 });
+                        EventBus.emit('update-tile-mortgage-visual', { tileId: id, isMortgaged: false });
+                    }
+                });
+                
+                this.model.orderedPlayers = this.model.orderedPlayers.filter(id => id !== playerId);
+                // Eliminar ficha
+                EventBus.emit('view-remove-player', { playerId: playerId });
+                EventBus.emit('show-toast', { 
+                    message: `${player.name} se ha declarado en bancarrota`,
+                    duration: 4000 
+                });
+
+                delete this.model.players[playerId];
+                EventBus.emit('model-updated', this.model);
+                
+            }
+        });
+                        
+
 		EventBus.on('pause-game', () => {
 			this.model.isPaused = true;
             EventBus.emit('model-updated', this.model);
@@ -262,7 +430,7 @@ export class GameLogicManager {
         } else if (phase === 'business') {
             const tile = this.model.getPlayerPosition(this.model.myId);
             
-            // Si me muevo a otra casilla de tranvía 
+            // Si me muevo a otra casilla de tranvía, mo vuelvo a interactuar -> tienen que habilitarse los botones de business
             if (tile in ["010", "030", "100", "107"]) {
                 EventBus.emit('update-controls-state', {
                     roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
@@ -287,8 +455,67 @@ export class GameLogicManager {
             });
         } else if (phase === 'auction') {
             console.log("Empieza subastaaaa");
+        } else if (phase === 'proposal_acceptance') {
+            console.log("Enviando propuesta de trato al otro tío");
         }
     }
-}
 
-// se tienen que activar los botones: 
+    
+    // Procesa el intercambio de dinero y propiedades entre dos jugadores
+    private executeTradeTransfer(data: any) {
+        console.log("Entrando en actualizacion de tradeos:");
+        const senderId = String(data.player);
+        const receiverId = String(data.destination_user);
+    
+        const sender = this.model.getPlayer(senderId);
+        const receiver = this.model.getPlayer(receiverId);
+
+        if (!sender || !receiver) return;
+
+        // --- TRANSFERENCIA DE PROPIEDADES ---
+        const transferProperties = (propIds: string[], newOwnerId: string) => {
+            propIds.forEach(id => {
+                const normalizedId = String(id).padStart(3, '0');
+                
+                // actualizamos owners
+                this.model.setPropertyOwner(normalizedId, newOwnerId);
+
+                // actualizamos marcadores
+                const colorStr = this.model.getPlayerColor(newOwnerId);
+                const colorNum = parseInt(colorStr.replace('#', '0x'), 16);
+                
+                EventBus.emit('update-tile-owner-visual', {
+                    tileId: normalizedId,
+                    playerColor: colorNum,
+                    playerId: newOwnerId
+                });
+            });
+        };
+
+        if (data.offered_properties) transferProperties(data.offered_properties, receiverId);
+        if (data.asked_properties) transferProperties(data.asked_properties, senderId);
+
+        // --- TRANSFERENCIA DE DINERO ---
+        const moneyOffered = Number(data.offered_money || 0);
+        const moneyAsked = Number(data.asked_money || 0);
+
+        // Actualizar balances
+        sender.balance -= moneyOffered;
+        sender.balance += moneyAsked;
+
+        receiver.balance += moneyOffered;
+        receiver.balance -= moneyAsked;
+
+        // --- animaciones ---
+        if (moneyOffered > 0) {
+            EventBus.emit('view-animate-money', { playerId: senderId, numBill: 6, amount: `-${moneyOffered}M` });
+        }
+        if (moneyAsked > 0) {
+            EventBus.emit('view-animate-money', { playerId: receiverId, numBill: 6, amount: `-${moneyAsked}M` });
+        }
+
+        console.log(`[tradeando] Sincronización completa. ${sender.name}: ${sender.balance}M | ${receiver.name}: ${receiver.balance}M`);
+    }
+
+
+}

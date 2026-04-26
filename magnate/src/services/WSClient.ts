@@ -236,8 +236,9 @@ export const WSClient = ( ) => {
 					break;
 				case "game_state":
 					const gameStateData = data.game_state;
-
 					if (gameStateData && gameStateData.id === gameIdRef.current) {
+						console.log("--> ESTADO DEL JUEGO RECIBIDO:");
+       					console.log(gameStateData);
 						if (gameStateData.players && (playersIdsRef.current.length === 0)) {
 							playersIdsRef.current = gameStateData.players;
 						}
@@ -255,7 +256,6 @@ export const WSClient = ( ) => {
 							console.log(`WS: Acción recibida y emitida (${data.data.type}) del jugador ${data.data.player}`);
 						}
 					} else if (VERBOSE) {
-						//console.err("VERBOSE: game id or action sender do not align with current game.");
 						console.log("VERBOSE: No need to report my own actions");
 					}
 					break;

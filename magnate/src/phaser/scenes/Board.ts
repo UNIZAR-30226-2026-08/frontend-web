@@ -91,51 +91,6 @@ export class Board extends Phaser.Scene {
             const model = this.GamelogicManager.model;
             this.syncPlayers(model);
         }
-
-        // DEBUG: para animacion dinero  ----------------------------
-        const debugKeys = ['ONE', 'TWO', 'THREE', 'FOUR'];
-        debugKeys.forEach((key, index) => {
-            this.input.keyboard?.on(`keydown-${key}`, () => {
-                const id = `000${index + 1}`;
-                console.log(`[DEBUG] Test HUD Pos ${id}`);
-                this.animationManager.BillAnimation(id, 6, "+200M");
-            });
-        });
-
-        // DEBUG: para propuesta de tradeo ----------------------------
-        this.input.keyboard?.on('keydown-T', () => {
-            const player = this.players[0];
-            const player2 = this.players[1];
-            console.log("simulando propuesta...");
-            const offIds: string[] = [];
-            const askIds = ["013", "021", "023"];
-            
-            const mapProps = (ids: string[]) => ids.map(id => {
-                const tile = this.tiles.find(t => t.tileConfig.id === id);
-                return {
-                    id: id,
-                    name: tile?.tileConfig.name || `Propiedad ${id}`,
-                    color: (tile as any).tileConfig.color || '#cbd5e1' 
-                };
-            });
-
-            const mockProposal = {
-                offeringPlayer: {
-                    name: player.model.name,
-                    color: '#' + player.model.color.toString(16).padStart(6, '0')
-                },
-                askedPlayer: {
-                    name: player2.model.name,
-                    color: '#' + player2.model.color.toString(16).padStart(6, '0')
-                },
-                offeredMoney: 500,
-                askedMoney: 50,
-                offeredProperties: mapProps(offIds),
-                askedProperties: mapProps(askIds),
-            };
-
-            EventBus.emit('show-trade-request', mockProposal);
-        });
     }
 
     private initManagers() {
@@ -279,7 +234,7 @@ export class Board extends Phaser.Scene {
                         console.warn(`Tile ${tileId} not found on the board!`);
                         return null;
                     }
-                }).filter(coord => coord !== null);
+                }).filter((coord: { x: number, y: number } | null): coord is { x: number, y: number } => coord !== null);
 
                 this.cameraController.followToken(playerToMove.token, 2.2, () => {
                     playerToMove.token.moveToCoords(pathCoordinates, () => {
@@ -303,7 +258,14 @@ export class Board extends Phaser.Scene {
         });
 
         EventBus.on('view-new-turn', async (gameModel: any) => {
-            const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
+            const playerId = gameModel.getCurrentTurnPlayerId();
+            const player = gameModel.getPlayer(String(playerId));
+
+            if (!player) {
+                console.warn(`Manager: No se pudo anunciar turno. Jugador ${playerId} no encontrado.`);
+                return;
+            }
+
             const isMe = gameModel.isMyTurn();
             const bannerText = isMe ? "Tu turno" : `Turno de ${player.name}`;
             const color = '#' + player.color.toString(16).padStart(6, '0');
@@ -345,11 +307,10 @@ export class Board extends Phaser.Scene {
         });
 
         EventBus.on('execute-tram-travel', (data: {targetId: string, cost: number}) => {
-        	// const p = this.selectedPlayer; 
             const activePlayerId = this.GamelogicManager.model.getCurrentTurnPlayerId();
             const playerPair = this.players.find(p => p.model.id === activePlayerId);
             if (!playerPair) {
-                console.error("TRAM ERROR: No se encontró el objeto visual del jugador");
+                console.error("TRAM ERROR: no se ha encontrado la futura posicion");
                 return;
             }
 			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
@@ -361,7 +322,6 @@ export class Board extends Phaser.Scene {
             const path = [{ x: finalX, y: finalY }];
             
             playerPair.token.moveToCoords(path, () => {
-                // Efecto de llegada
                 this.tweens.add({
                     targets: playerPair.token,
                     y: finalY - 15,
@@ -369,27 +329,147 @@ export class Board extends Phaser.Scene {
                     ease: 'Back.easeOut',
                     duration: 400,
                     onComplete: () => {
-                        // 6. Actualizamos la posición LÓGICA
                         playerPair.model.currentTileId = data.targetId;
-                        this.GamelogicManager.model.updatePlayerPosition(activePlayerId, data.targetId);
-                        
+                        this.GamelogicManager.model.updatePlayerPosition(activePlayerId, data.targetId); 
                     }
                 });
             });
-
 
             const tramTiles = this.tiles.filter(t => t instanceof TramTile);
             tramTiles.forEach(tile => tile.disableInteractive());
         });
 
+        // inico de interfaz de tradeo
+        EventBus.on('start-trade', () => {
+            console.log("Manager: Iniciando proceso de intercambio...");
+
+            EventBus.emit('dark-mode', true); // oscurecemos todo
+            EventBus.emit('set-hud-clickable', true); // players clickables
+
+            EventBus.emit('show-selection-notice', { // mensaje tradeo
+                message: "Selecciona a un rival en el tablero para negociar",
+                type: 'player' 
+            });
+            // EventBus.emit('show-toast', { 
+            //     message: "Selecciona a un rival en el tablero para negociar",
+            //     duration: 7000 
+            // });
+
+            // EventBus.emit('start-selection-mode');
+        });
+
+        EventBus.on('show-trading-mode', (data: { sender: any, receiver: any }) => {
+            const gameModel = this.GamelogicManager.model;
+
+            const getDetailedPlayer = (basicPlayerData: any) => {
+                const fullModel = gameModel.getPlayer(basicPlayerData.id);
+                
+                const detailedProps = (fullModel?.properties || []).map(id => {
+                    const prop = gameModel.getProperty(id);
+                    return {
+                        id: id,
+                        name: prop?.name || `Propiedad ${id}`,
+                        color: prop?.color || '#cbd5e1'
+                    };
+                });
+
+                return {
+                    ...basicPlayerData, // id, name, color, balance
+                    properties: detailedProps
+                };
+            };
+            const fullSender = getDetailedPlayer(data.sender);
+            const fullReceiver = getDetailedPlayer(data.receiver);
+
+            console.log("Board: Abriendo tradeo con info de los players", { fullSender, fullReceiver });
+
+            EventBus.emit('open-trading-mode', {
+                sender: fullSender,
+                receiver: fullReceiver
+            });
+        });
+
+        // evento para enseñar animacion dinero
+        EventBus.on('view-animate-money', (data: { playerId: string, numBill?: number, amount: string }) => {
+            const bills = data.numBill ?? 6;
+            this.animationManager.BillAnimation(data.playerId, bills, data.amount);
+
+        });
+
+        // evento para actualizar marcadores
+        EventBus.on('update-tile-owner-visual', (data: { tileId: string, playerColor: number, playerId: string }) => {
+            this.handlePurchase(data);
+        });
+
+        
+        EventBus.on('start-administer', () => {
+            console.log("Manager: Iniciando adminitración...");
+            
+            const myId = this.GamelogicManager.model.myId;
+            const model = this.GamelogicManager.model;
+            EventBus.emit('dark-mode', true);
+            EventBus.emit('show-players-hud', true);
+            EventBus.emit('open-property-selection-mode', model, myId);
+        });
+
+        EventBus.on('update-tile-mortgage-visual', (data: { tileId: string, isMortgaged: boolean }) => {
+            const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
+            
+            if (tile && (tile instanceof PropertyTile || tile instanceof ServerTile || tile instanceof BridgeTile ) ) {
+                tile.updateMortgageVisual(data.isMortgaged);
+
+                if (data.isMortgaged && tile instanceof PropertyTile) {
+                    tile.clearBuildings();
+                }
+            }
+        });
+
+        EventBus.on('view-update-tile-construction', (data: { tileId: string, level: number }) => {
+            const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
+            if (tile && tile instanceof PropertyTile) {
+                tile.setConstructionLevel(data.level);
+            }
+        });
+
+        EventBus.on('view-remove-player', (data: { playerId: string }) => {
+            const playerIndex = this.players.findIndex(p => p.model.id === data.playerId);
+            
+            if (playerIndex !== -1) {
+                console.log(`Eliminando ficha del jugador ${data.playerId}`);
+                const { token } = this.players[playerIndex];
+                this.players.splice(playerIndex, 1);
+
+                this.tweens.add({
+                    targets: token,
+                    alpha: 0,
+                    scale: 0,
+                    duration: 800,
+                    ease: 'Back.easeIn',
+                    onComplete: () => {
+                        token.destroy();
+                    }
+                });
+            } 
+        });
+
         this.events.on('shutdown', () => { 
             EventBus.off('model-updated');
             EventBus.off('trigger-dice-roll', this.handleDiceRoll, this); });
+            EventBus.off('view-remove-player');
     }
 
     private syncPlayers(gameModel: any) {
         const orderedIds = gameModel.orderedPlayers || [];
         let newPlayersAdded = false;
+
+        this.players = this.players.filter(p => {
+            const stillExists = orderedIds.includes(p.model.id);
+            if (!stillExists) {
+                console.log(`Sync: Destruyendo ficha huérfana del jugador ${p.model.id}`);
+                p.token.destroy(); // Borrar objeto visual de Phaser
+            }
+            return stillExists;
+        });
         
         orderedIds.forEach((playerId: string, index: number) => {
             const pData = gameModel.players[playerId];
@@ -398,7 +478,7 @@ export class Board extends Phaser.Scene {
             const existingPlayer = this.players.find(p => p.model.id === playerId);
 
             if (!existingPlayer) {
-                this.createPlayer(playerId, pData.name, index);
+                this.createPlayer(playerId, pData.name, index, pData.balance);
                 newPlayersAdded = true;
             } else {
                 // Actualizamos solo datos lógicos
@@ -478,9 +558,9 @@ export class Board extends Phaser.Scene {
     public interactWithTile(gameModel: any) {
         console.log("--- FASE MANAGEMENT ---");
         const isMe = gameModel.isMyTurn();
+        const activePlayerId = gameModel.getCurrentTurnPlayerId();
+        const activePlayerPair = this.players.find(p => p.model.id === activePlayerId);
         if (isMe) {
-            const activePlayerId = gameModel.getCurrentTurnPlayerId();
-            const activePlayerPair = this.players.find(p => p.model.id === activePlayerId);
             
             if (activePlayerPair) {
                 const currentTileId = activePlayerPair.model.currentTileId;
@@ -494,8 +574,11 @@ export class Board extends Phaser.Scene {
                 }
             }
             EventBus.emit('model-updated', this.GamelogicManager.model);
-        } else {
-            this.cameraController.resetView(4000);
+        } else { // volvemos a la vista general mientras el playerActive está en management
+            this.time.delayedCall(1000, () => {
+                console.log("Volviendo a la vista de origen...");
+                this.cameraController.resetView(1500); 
+            });
         }
     }
     
@@ -528,7 +611,7 @@ export class Board extends Phaser.Scene {
         });
     }
 
-    createPlayer(id: string, name: string, colorIndex: number) {
+    createPlayer(id: string, name: string, colorIndex: number, balance: number) {
         const startTile = this.tiles[0];
         
         const cIndex = colorIndex % this.colorPalette.length;
@@ -542,7 +625,7 @@ export class Board extends Phaser.Scene {
         const finalX = startTile.x + offsetX;
         const finalY = startTile.y + offsetY;
 
-        const model = new PlayerModel(id, name, assignedColor);
+        const model = new PlayerModel(id, name, assignedColor, balance);
         const token = new PlayerToken(this, finalX, finalY, assignedColor);
 
         token.setDepth(200 + this.players.length);
@@ -717,15 +800,30 @@ export class Board extends Phaser.Scene {
     }
 
     // Marcador para cada casilla que compra un player 
-    private handlePurchase (data: { tileId: string, playerColor: number, playerId: string }) {
+    private handlePurchase (data: { tileId: string, playerColor: number | null | string, playerId: string }) {
         const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
-        if (tile) {
+
+        if (tile && (tile instanceof PropertyTile || tile instanceof ServerTile || tile instanceof BridgeTile)) {
             tile.tileConfig.ownerId = data.playerId;
-            const colorNum = data.playerColor;
             
-            if (tile instanceof PropertyTile || tile instanceof ServerTile || tile instanceof BridgeTile) {
+            if (data.playerId === null || data.playerColor === null) { // borrar marcadores
+                tile.clearOwnerMarker();
+            } else {
+                let colorNum = data.playerColor;
+                if (typeof colorNum === 'string') {
+                    colorNum = parseInt(colorNum.replace('#', '0x'), 16);
+                }
                 tile.setOwnerMarker(colorNum);
+                this.tweens.add({
+                    targets: tile,
+                    alpha: 0.5,
+                    duration: 150,
+                    yoyo: true,
+                    ease: 'Quad.easeInOut'
+                });
             }
+            
+            
         } else {
             console.warn("No se encontró la casilla con ID:", data.tileId);
         }

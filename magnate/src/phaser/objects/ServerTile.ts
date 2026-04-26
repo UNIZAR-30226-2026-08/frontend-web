@@ -4,6 +4,7 @@ import { IServerTile } from '../types/TileTypes';
 export class ServerTile extends Tile {
     private icon: Phaser.GameObjects.Image;
     private ownerMarker: Phaser.GameObjects.Polygon | null = null;
+    private mortgageGraphic: Phaser.GameObjects.Rectangle | null = null;
 
     constructor(scene: Phaser.Scene, config: IServerTile) {
         super(scene, config);
@@ -22,6 +23,14 @@ export class ServerTile extends Tile {
         }).setOrigin(0.5);
         
         this.add(priceText);
+    }
+
+    public clearOwnerMarker(): void {
+        if (this.ownerMarker) {
+            this.ownerMarker.destroy();
+            this.ownerMarker = null;
+            console.log(`Marcador borrado en casilla ${this.tileConfig.id}`);
+        }
     }
     
     public setOwnerMarker(playerColor: number) {
@@ -58,5 +67,30 @@ export class ServerTile extends Tile {
         this.sendToBack(marker);
         
         this.ownerMarker = marker as any;
+    }
+    
+
+    public updateMortgageVisual(isMortgaged: boolean) {
+        const width = this.tileConfig.width || 80;
+        const height = this.tileConfig.height || 120;
+
+        if (isMortgaged) {
+           
+            if (!this.mortgageGraphic) {
+                this.mortgageGraphic = this.scene.add.rectangle(0, 0, width - 2, height - 2, 0xff0000, 0.6);          
+                this.add(this.mortgageGraphic);
+            }
+            
+            this.mortgageGraphic.setVisible(true);
+            // this.nameText.setColor('#ffffff');
+            this.bringToTop(this.nameText);
+
+        } else {
+            if (this.mortgageGraphic) {
+                this.mortgageGraphic.setVisible(false);
+            }
+            this.nameText.setColor('#222222');
+            this.bringToTop(this.nameText);
+        }
     }
 }

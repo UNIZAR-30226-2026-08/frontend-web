@@ -4,12 +4,18 @@ import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
 import { PropertyAdminCardContent } from '@/components/layout/PropertyAdmin';
 import { Button } from '@/components/ui/button';
+import { GameLogicManager } from '@/phaser/managers/GameLogicManager';
 
 export const PropertyAdminOverlay = () => {
 	const { playSound } = useAudio();
+
+    const gameModel = GameLogicManager.getInstance().model;
+    const myId = gameModel.myId;
     const [propData, setPropData] = useState<any>(null);
+
     const [constructionLevel, setConstructionLevel] = useState<string>('base');
     const [isMortgaged, setIsMortgaged] = useState<boolean>(false);
+    const levels = ['base', 'house1', 'house2', 'house3', 'house4', 'hotel'];
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
@@ -17,52 +23,109 @@ export const PropertyAdminOverlay = () => {
         const handleShowProp = ({data}: any) => {
 			playSound('card_place_1');
             setPropData(data);
-            setConstructionLevel(data.constructionLevel || 'base'); // TODO: vendra del backend
-            setIsMortgaged(data.isMortgaged || false); // TODO: vendra del backend
+            console.log("administrando", data);
+
+            const currentLevel = levels[data.houseCount] || 'base';
+            setConstructionLevel(currentLevel);
+            setIsMortgaged(data.isMortgaged);
         };
 
         EventBus.on('open-property-management', handleShowProp);
-        return () => { EventBus.off('open-property-management', handleShowProp); EventBus.emit('dark-mode', false); };
+        return () => { 
+            EventBus.off('open-property-management', handleShowProp); 
+            EventBus.emit('dark-mode', false); 
+        };
     }, [playSound]);
 
     if (!propData) return null;
 
-    const levels: (keyof PropertyData['rent'])[] = ['base', 'house1', 'house2', 'house3', 'house4', 'hotel'];
-    const currentIndex = levels.indexOf(constructionLevel as any);
-    const totalCost = currentIndex * (propData.housePrice || 0);
+    const currentIndex = levels.indexOf(constructionLevel); // nivel actual
+    const diff = currentIndex - propData.houseCount;
+    const totalCost = diff * (propData.buildPrice || 0);
+    const isSpecial = propData.isSpecial;
     
     // Lógica para añadir casas
     const handleAddHouse = () => {
-        if (isMortgaged) return; // TODO: revisar qué hacer si está hipotecada
-        if (currentIndex < levels.length - 1) {
-			playSound('house_build');
-            setConstructionLevel(levels[currentIndex + 1]);
+        if (isMortgaged || currentIndex >= levels.length - 1) return;
+
+        const nextIndex = currentIndex + 1;
+        if (nextIndex >= levels.length) return;
+        const totalAddable = gameModel.getMaxAddableHouses(propData.id, myId, propData.buildPrice);
+        const potentialDiff = nextIndex - propData.houseCount;
+        if (potentialDiff <= totalAddable) {
+            playSound('house_build');
+            setConstructionLevel(levels[nextIndex]);
+        } else {
+            EventBus.emit('show-toast', { 
+                message: "Debes construir de forma uniforme en todo el grupo", 
+                duration: 3000 
+            });
         }
     };
 
     // Lógica para quitar casas
     const handleRemoveHouse = () => {
-        if (isMortgaged) return; // TODO: revisar qué hacer si está hipotecada
-        if (currentIndex > 0) {
-			playSound('house_down');
+        if (isMortgaged || currentIndex <= 0) return;
+
+        const maxRemovable = gameModel.getMaxRemovableHouses(propData.id);
+        if (currentIndex > 0 && Math.abs(diff) < maxRemovable) {
+            playSound('house_down');
             setConstructionLevel(levels[currentIndex - 1]);
+        } else {
+            EventBus.emit('show-toast', { 
+                message: "No puedes quitar más casas sin desequilibrar el grupo", 
+                duration: 3000 
+            });
         }
+      
     };
 
     // Lógica de Hipoteca
     const handleToggleMortgage = () => {
-		playSound('mortgage');
-        setIsMortgaged(!isMortgaged);
+        //  No se puede hipotecar si hay construcciones en el nivel actual o real
+        if (!isMortgaged) {
+            if (gameModel.canMortgage(propData.id, myId) && currentIndex === 0) {
+                playSound('mortgage');
+                setIsMortgaged(true);
+            } else {
+                EventBus.emit('show-toast', { 
+                    message: "No puedes hipotecar una propiedad con construcciones en el grupo", 
+                    duration: 3000 
+                });
+            }
+        } else {
+            playSound('mortgage');
+            setIsMortgaged(false);
+        }
     };
 
     const handleConfirm = () => {
-        EventBus.emit('execute-property-build', {
-            tileId: propData.id,
-            level: constructionLevel,
-            isMortgaged: isMortgaged
-        });
-        setPropData(null); 
+        const squareId = parseInt(propData.id);
+
+        if (isMortgaged !== propData.isMortgaged) {
+            console.log("Hipotecando propiedad",squareId);
+            const action = isMortgaged ? 'action-mortgage-set' : 'action-mortgage-unset';
+            EventBus.emit(action, { square: squareId });
+
+        } else if (diff > 0) {
+            EventBus.emit('action-build', { 
+                square: squareId, 
+                houses: diff
+            });
+        } else if (diff < 0) {
+            EventBus.emit('action-demolish', { 
+                square: squareId, 
+                houses: Math.abs(diff)
+            });
+        }
+
+        handleClose();
+    };
+
+    const handleClose = () => {
+        setPropData(null);
         EventBus.emit('dark-mode', false);
+        EventBus.emit('close-property-selection-mode');
     };
 
     return (
@@ -87,7 +150,17 @@ export const PropertyAdminOverlay = () => {
                         className={`px-9 py-8 bg-[var(--color-primary)] select-none text-white font-black uppercase rounded-full shadow-2xl 
                                 ${bouncyAnimation} transition-all`}>
                         <div className="flex flex-col items-center">
-                            <span className="text-sm opacity-80">
+                            <span className="text-xl">
+                                {diff === 0 && isMortgaged === propData.isMortgaged ? "ACEPTAR" : "CONFIRMAR"}
+                            </span>
+                            <span className="text-md opacity-80 lowercase font-medium uppercase">
+                                {isMortgaged && !propData.isMortgaged && `Recibirás ${propData.buyPrice/2}M`}
+                                {!isMortgaged && propData.isMortgaged && `Pagarás ${(propData.buyPrice/2)}M`}
+                                {!isMortgaged && !propData.isMortgaged && diff > 0 && `Pagarás ${totalCost}M`}
+                                {!isMortgaged && !propData.isMortgaged && diff < 0 && `Recibirás ${Math.abs(totalCost)/2}M`}
+                                {diff === 0 && isMortgaged === propData.isMortgaged && ""}
+                            </span>
+                            {/* <span className="text-sm opacity-80">
                                 {!isMortgaged && totalCost > 0 ? 'Pagar' : ''}
                             </span>
                             <span className="text-xl">
@@ -95,7 +168,7 @@ export const PropertyAdminOverlay = () => {
                                 {currentIndex === 0 && !isMortgaged && "Aceptar"}
                                 {currentIndex > 0 && !isMortgaged && currentIndex < 5 && `${currentIndex} CASAS - ${totalCost}€`}
                                 {currentIndex === 5  && !isMortgaged && `HOTEL - ${totalCost}€`}
-                            </span>
+                            </span> */}
                         </div>
                     </Button>
                 </div>    
@@ -103,21 +176,22 @@ export const PropertyAdminOverlay = () => {
             
             <div className="flex flex-col gap-4 ml-10">
                 <Button
-                    onClick={handleRemoveHouse}
-                    disabled={isMortgaged || constructionLevel === 'base'}
-                    size="icon"
-                    className={`bg-[var(--color-text)] select-none rounded-full flex items-center justify-center w-20 h-20 ${bouncyAnimation}`}>
-                    <img src="/icons/remove_house.svg" className="w-12 h-12" alt="Remove" />
-                </Button>
-                <Button
                     onClick={handleAddHouse}
-                    disabled={isMortgaged || constructionLevel === 'hotel'}
+                    disabled={isMortgaged || !gameModel.canBuildOneMore(propData.id, myId) || currentIndex === 5}
                     size="icon"
                     className={`bg-[var(--color-text)] select-none rounded-full flex items-center justify-center w-20 h-20 ${bouncyAnimation}`}>
                     <img src="/icons/add_house.svg" className="w-12 h-12" alt="Add" />
                 </Button>
                 <Button
+                    onClick={handleRemoveHouse}
+                    disabled={isMortgaged || !gameModel.canSellOneMore(propData.id) || currentIndex === 0}
+                    size="icon"
+                    className={`bg-[var(--color-text)] select-none rounded-full flex items-center justify-center w-20 h-20 ${bouncyAnimation}`}>
+                    <img src="/icons/remove_house.svg" className="w-12 h-12" alt="Remove" />
+                </Button>
+                <Button
                     onClick={handleToggleMortgage}
+                    disabled={currentIndex > 0}
                     size="icon"
                     className={`bg-[var(--color-text)] select-none rounded-full flex items-center justify-center w-20 h-20 ${bouncyAnimation}`}>
                     <img src="/icons/mortgage_property.svg" className="w-12 h-12" alt="Mortgage" />

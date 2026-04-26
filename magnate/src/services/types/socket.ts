@@ -125,6 +125,7 @@ export interface GameResponse {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
+	parking_money?: Number;
     // movement
 	path?: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
 	fantasy_event?: FantasyEventType;
@@ -214,6 +215,7 @@ export interface GameInfoResponse {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
+	parking_money?: Number;
 }
 
 export interface GameInfoMovement {
@@ -355,7 +357,7 @@ export interface GameReportFantasy {
 }
 
 export interface GameReportTradeAnswer {
-	player: string;	// user id of player who sent the action
+	//player: string;	// user id of player who sent the action
 	/** True if trade is accepted */
 	accept?: boolean; 
 }
