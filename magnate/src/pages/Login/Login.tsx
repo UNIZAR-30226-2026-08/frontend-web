@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { loginUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
 
-import logoImg from '@/assets/images/logo.png';
+// import logoImg from '@/assets/images/logo.png';
 import bgCity from '@/assets/bg_city.jpg';
 
 interface LoginProps {
@@ -54,8 +54,8 @@ export function Login({ onBack }: LoginProps) {
     };
 
     return (
-        <div className='flex justify-center items-center min-h-screen bg-[url(src/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat'
-            style={{ backgroundImage: `url(${bgCity})` }}>
+        <div className='flex justify-center items-center min-h-screen bg-cover bg-center bg-no-repeat'
+            style={{ backgroundImage: "url('/images/bg_city.jpg')" }}>
             <div className='absolute inset-0 bg-black/60 backdrop-blur-[8px]'></div>
             <div className="absolute top-8 left-8 z-50"> 
                     <Button
@@ -74,7 +74,7 @@ export function Login({ onBack }: LoginProps) {
             </div>
             <div className='relative w-full max-w-xl px-4 justify-center '>
                 <img 
-                    src={logoImg} 
+                    src="/images/logo.png"
                     alt="Logo Magnate" 
                     className="w-full h-full mb-28" 
                 />

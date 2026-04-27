@@ -17,7 +17,7 @@ const ModeContent = ({ mode, gridImageUrl }) => (_jsxs(_Fragment, { children: [_
  * @return complete Lobby page
  */
 export function Lobby() {
-    const gridImageUrl = "src/assets/bg_city_white.jpg";
+    const gridImageUrl = "images/bg_city_white.jpg";
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     const navigate = useNavigate();
     const [imOwner, setImOwner] = useState(true); // TODO - check who is owner in logs

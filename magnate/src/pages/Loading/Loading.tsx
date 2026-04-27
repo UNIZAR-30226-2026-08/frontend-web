@@ -35,7 +35,8 @@ export function Loading({ onBack }: LoadingProps) {
 	}, [navigate]);
 
     return (
-        <div className='flex justify-center items-center min-h-screen bg-[url(@/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat relative'>
+        <div className='flex justify-center items-center min-h-screen bg-cover bg-center bg-no-repeat relative'
+            style={{ backgroundImage: "url('/images/bg_city.jpg')" }}>
             <div className='absolute inset-0 bg-black/60 backdrop-blur-[8px]'></div>
                 <div className="absolute top-8 left-8 z-50"> 
                     <Button
@@ -54,7 +55,7 @@ export function Loading({ onBack }: LoadingProps) {
                 </div>
             <div className='relative z-10 flex flex-col items-center justify-center min-h-screen'>
                 <img 
-                    src="/src/assets/images/logo.png" 
+                    src="images/logo.png" 
                     alt="Logo" 
                     className="w-full max-w-2xl h-auto" 
                 />

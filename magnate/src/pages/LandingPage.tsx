@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useAudio } from "@/context/AudioContext";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import logoImg from '@/assets/images/logo.png';
-import bgCity from '@/assets/bg_city.jpg';
+// import logoImg from '@/assets/images/logo.png';
+// import bgCity from '@/assets/bg_city.jpg';
 
 const AuthButton = ({ title, sub, onClick }: { title: string; sub?: string; onClick: () => void }) => (
   <Button
@@ -46,7 +46,7 @@ export function LandingPage() {
       
       <div
         className="absolute inset-0 bg-cover bg-center opacity-30"
-        style={{  backgroundImage: `url(${bgCity})` }}
+        style={{  backgroundImage: "url('/images/bg_city.jpg')" }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--color-background)]/80 to-[var(--color-background)]" />
 
@@ -54,7 +54,7 @@ export function LandingPage() {
         
         <div className="flex flex-col items-center w-full">
           <img
-            src={logoImg}
+            src="/images/logo.png"
             alt="MAGNATE LOGO"
             className="w-[90%] max-w-[500px] md:max-w-[850px] lg:max-w-[1000px] h-auto object-contain drop-shadow-[0_20px_50px_rgba(255,255,255,0.1)]"
           />

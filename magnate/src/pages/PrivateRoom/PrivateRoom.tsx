@@ -37,8 +37,8 @@ export function PrivateRoom () {
 	const navigate = useNavigate();
 
     const backgroundImageUrls = {
-        join: "/src/assets/images/join.png", 
-        host: "/src/assets/images/host.png",
+        join: "images/join.png", 
+        host: "images/host.png",
     };
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     const modes = [

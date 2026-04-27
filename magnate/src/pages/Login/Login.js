@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 // @ts-ignore 
 import { loginUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
-import logoImg from '@/assets/images/logo.png';
-import bgCity from '@/assets/bg_city.jpg';
 export function Login({ onBack }) {
     const navigate = useNavigate();
     const { login } = useAuth();
@@ -39,7 +37,7 @@ export function Login({ onBack }) {
             }
         });
     };
-    return (_jsxs("div", { className: 'flex justify-center items-center min-h-screen bg-[url(src/assets/bg_city.jpg)] bg-cover bg-center bg-no-repeat', style: { backgroundImage: `url(${bgCity})` }, children: [_jsx("div", { className: 'absolute inset-0 bg-black/60 backdrop-blur-[8px]' }), _jsx("div", { className: "absolute top-8 left-8 z-50", children: _jsx(Button, { variant: "ghost", onClick: onBack || (() => navigate('/')), "aria-label": "Go back", sound: "button_back", className: "z-60 bg-[var(--color-black)] hover:bg-[var(--color-black)] rounded-full flex items-center justify-center ml-2 w-20 h-20 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.25)] transform-gpu transition-transform duration-200 ease-in-out hover:scale-110", children: _jsx("img", { src: "/icons/back-arrow1.svg", className: "w-12 h-12 sm:w-16 sm:h-16 block select-none", alt: "Back" }) }) }), _jsxs("div", { className: 'relative w-full max-w-xl px-4 justify-center ', children: [_jsx("img", { src: logoImg, alt: "Logo Magnate", className: "w-full h-full mb-28" }), _jsxs("form", { onSubmit: handleSubmit, className: "space-y-6", children: [_jsxs("div", { className: "space-y-2 relative flex items-center ", children: [_jsx(Input, { ref: usernameRef, required: true, onInvalid: (e) => {
+    return (_jsxs("div", { className: 'flex justify-center items-center min-h-screen bg-cover bg-center bg-no-repeat', style: { backgroundImage: "url('/images/bg_city.jpg')" }, children: [_jsx("div", { className: 'absolute inset-0 bg-black/60 backdrop-blur-[8px]' }), _jsx("div", { className: "absolute top-8 left-8 z-50", children: _jsx(Button, { variant: "ghost", onClick: onBack || (() => navigate('/')), "aria-label": "Go back", sound: "button_back", className: "z-60 bg-[var(--color-black)] hover:bg-[var(--color-black)] rounded-full flex items-center justify-center ml-2 w-20 h-20 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.25)] transform-gpu transition-transform duration-200 ease-in-out hover:scale-110", children: _jsx("img", { src: "/icons/back-arrow1.svg", className: "w-12 h-12 sm:w-16 sm:h-16 block select-none", alt: "Back" }) }) }), _jsxs("div", { className: 'relative w-full max-w-xl px-4 justify-center ', children: [_jsx("img", { src: "/images/logo.png", alt: "Logo Magnate", className: "w-full h-full mb-28" }), _jsxs("form", { onSubmit: handleSubmit, className: "space-y-6", children: [_jsxs("div", { className: "space-y-2 relative flex items-center ", children: [_jsx(Input, { ref: usernameRef, required: true, onInvalid: (e) => {
                                             const target = e.target;
                                             if (target.validity.valueMissing) {
                                                 target.setCustomValidity("El nombre de usuario es obligatorio");

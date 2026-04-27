@@ -33,7 +33,7 @@ const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, sub?: stri
 
 export function Home() {
   const navigate = useNavigate();
-  const gridImageUrl = "src/assets/bg_city_white.jpg";
+  const gridImageUrl = "/images/bg_city_white.jpg";
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const gridButtonEffect = `
@@ -61,7 +61,7 @@ export function Home() {
 
       <div className="flex items-center justify-between px-12 py-6 z-10 flex-shrink-0">
         <img
-          src="/src/assets/images/logo.png"
+          src="/images/logo.png"
           alt="Logo Magnate"
           className="w-[600px] h-auto object-contain"
         />
