@@ -13,7 +13,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Users } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { useItemData } from '@/context/ItemContext';
+// @ts-ignore 
 import { fetchUserPieces } from '@/api/shopServices';
+// @ts-ignore 
 import { fetchProfile, changeUserPiece, fetchGamesPlayed, fetchGameSummary } from '@/api/userServices';
 
 const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
@@ -89,23 +91,23 @@ export function Profile() {
 
     useEffect(() => {
         if (token) {
-            fetchProfile(token, (data) => {
+            fetchProfile(token, (data: any) => {
                 setProfile(data);
                 const currentId = data.user_piece || data.custom_id || 1;
                 setSkinId(currentId);
                 setSelectedSkinId(currentId);
             });
             
-            fetchUserPieces(token, (data) => {
+            fetchUserPieces(token, (data: any) => {
                 if (data && Array.isArray(data)) setUserSkins(data);
                 else if (data && typeof data === 'object') setUserSkins(Object.values(data));
             });
 
-            fetchGamesPlayed(token, async (data) => {
+            fetchGamesPlayed(token, async (data: any) => {
                 if (data?.games) {
                     let fetchedGames: any[] = [];
                     for (let id of data.games) {
-                        await fetchGameSummary(token, id, (summary) => {
+                        await fetchGameSummary(token, id, (summary: any) => {
                             const finalMoney = summary.final_money || {};
                             const playersEntries = Object.entries(finalMoney);
 

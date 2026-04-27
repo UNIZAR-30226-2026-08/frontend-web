@@ -28,18 +28,19 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchProfile } from "@/api/userServices";
 import { AuctionResults } from './AuctionResults';
 import { TradeMessage } from '@/components/layout/TradeMessage';
+import { PlayerModel } from '@/phaser/models/PlayerModel';
 
-interface PlayerInitData {
-    id: string;
-    name: string;
-    color: string;
-    balance: number;
-}
+// interface PlayerInitData {
+//     id: string;
+//     name: string;
+//     color: string;
+//     balance: number;
+// }
 
 export const PhaserGame = () => {
     const gameRef = useRef<Phaser.Game | null>(null);
 	const { token } = useAuth();
-    const [players, setPlayers] = useState<PlayerInitData[]>([]);
+    const [players, setPlayers] = useState<PlayerModel[]>([]);
     const [windowSize, setWindowSize] = useState({ 
         width: typeof window !== 'undefined' ? window.innerWidth : 1920, 
         height: typeof window !== 'undefined' ? window.innerHeight : 1080 
@@ -91,7 +92,7 @@ export const PhaserGame = () => {
     }, [windowSize.height]);
 
     useEffect(() => {
-        const handleSetupPlayers = (playerList: PlayerInitData[]) => {
+        const handleSetupPlayers = (playerList: PlayerModel[]) => {
             setPlayers(playerList);
             EventBus.emit('players-received');
         };

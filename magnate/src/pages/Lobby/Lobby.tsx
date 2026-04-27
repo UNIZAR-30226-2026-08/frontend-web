@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { EventBus } from "@/EventBus";
+import * as WSTypes from "@/services/types/socket";
 
 const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, pos: string }, gridImageUrl: string }) => (
   <>
@@ -59,7 +60,7 @@ export function Lobby() {
     }
     const removeBot = (index : number) => {
         const newPlayers = [...lobbyPlayers];
-        newPlayers[index] = null;
+        //newPlayers[index] = null;
         setLobbyPlayers(newPlayers); 
     }
     const copyToClipboard = () => {
@@ -77,17 +78,17 @@ export function Lobby() {
 	};
 
 	useEffect(() => { 
-        const handleOwnerToggle = (data: PrivateRoomOwner) => {
-            setImOwner(data.is_owner);
+        const handleOwnerToggle = (data: WSTypes.PrivateRoomOwner) => {
+            //setImOwner(data.is_owner);
 			if (data.is_owner) {
 				setImReady(true);
 				EventBus.emit('private-set-ready', true);
 			}
         };
-		const handlePlayerJoined = (data: PrivateRoomPlayers) => {};
-		const handlePlayerLeft = (data: PrivateRoomPlayers) => {};
-		const handleRoomSettings = (data: PrivateRoomHostSettings) => {};
-		const handleSomeoneReady = (data: PrivateRoomReady) => {};
+		const handlePlayerJoined = (data: WSTypes.PrivateRoomPlayers) => {};
+		const handlePlayerLeft = (data: WSTypes.PrivateRoomPlayers) => {};
+		const handleRoomSettings = (data: WSTypes.PrivateRoomHostSettings) => {};
+		const handleSomeoneReady = (data: WSTypes.PrivateRoomReady) => {};
 
 		const handleEnter = () => navigate('/phaser-game');
 

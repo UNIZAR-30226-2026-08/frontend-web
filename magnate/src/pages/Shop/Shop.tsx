@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
+// @ts-ignore 
 import { fetchShopItems, buyItem, fetchUserPieces } from '@/api/shopServices';
 import { useItemData } from '@/context/ItemContext'; 
 

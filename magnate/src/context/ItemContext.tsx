@@ -1,9 +1,30 @@
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback, ReactNode} from 'react';
 
-const ItemContext = createContext();
+interface Item {
+  id: string | number;
+  name: string;
+  icon: string;
+}
 
-export const ItemProvider = ({ children }) => {
-  const [itemData, setItemData] = useState({ token: [], emoji: [] });
+interface ItemData {
+  token: Item[];
+  emoji: Item[];
+}
+
+interface ItemContextType {
+  itemData: ItemData;
+  loading: boolean;
+  getItemInfo: (id: string | number) => { name: string; url: string } | null;
+}
+
+const ItemContext = createContext<ItemContextType | undefined>(undefined);
+
+interface ItemProviderProps {
+  children: ReactNode;
+}
+
+export const ItemProvider = ({ children }: ItemProviderProps) => {
+  const [itemData, setItemData] = useState<ItemData>({ token: [], emoji: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,7 +40,7 @@ export const ItemProvider = ({ children }) => {
       .catch((err) => console.error("Error loading JSON:", err));
   }, []);
 
-  const getItemInfo = useCallback((id : any) => {
+  const getItemInfo = useCallback((id : string | number) => {
     const token = itemData.token.find(t => t.id === id);
     if (token) {
       return { name: token.name, url: `/skins/${token.icon}` };

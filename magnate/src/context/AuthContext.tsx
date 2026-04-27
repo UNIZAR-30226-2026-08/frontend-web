@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+// @ts-ignore 
 import { refreshToken } from '@/api/authServices'; 
 
 interface AuthContextType {

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input"
 import { EventBus } from "@/EventBus";
 import { useAuth } from "@/context/AuthContext";
+// @ts-ignore 
 import { generatePrivateCode, checkPrivateCode } from "@/api/lobbyServices";
 
 const ModeContent = ({ mode }: { mode: any }) => (
@@ -99,8 +100,8 @@ export function PrivateRoom () {
 
 			// room does not exist
 			if (!checkPrivateCode(token, roomCode)) { // /lobby/check-code// !data.exists
-				codeRef.current.setCustomValidity("No hay ninguna sala activa con ese código");
-				codeRef.current.reportValidity();
+				codeRef.current?.setCustomValidity("No hay ninguna sala activa con ese código");
+				codeRef.current?.reportValidity();
 				return;
 			} else {
 				EventBus.emit('private-connect', roomCode);

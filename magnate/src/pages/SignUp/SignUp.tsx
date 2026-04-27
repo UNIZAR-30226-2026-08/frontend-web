@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+// @ts-ignore 
 import { registerUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
 
@@ -57,8 +58,8 @@ export function SignUp({ onBack }: SignUpProps) {
         registerUser(
             { username, password, password2: confirmPassword },
             (data : any) => {
-                if (data && data.tokens) {
-                    login(data.tokens.access, data.tokens.refresh);
+                if (data && data.tokens && data.user && data.user.pk) {
+                    login(data.tokens.access, data.tokens.refresh, String(data.user.pk));
                 }
                 navigate('/home');
             },
