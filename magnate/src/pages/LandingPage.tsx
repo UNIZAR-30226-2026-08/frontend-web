@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAudio } from "@/context/AudioContext";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-// import logoImg from '@/assets/images/logo.png';
-// import bgCity from '@/assets/bg_city.jpg';
+
 
 const AuthButton = ({ title, sub, onClick }: { title: string; sub?: string; onClick: () => void }) => (
   <Button

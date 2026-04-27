@@ -24,6 +24,8 @@ export class GameModel {
     public players: Record<string, PlayerModel> = {};
 	public orderedPlayers: string[] = [];
 
+    public currentFantasyEvent: { type: string, value: number | null } | null = null;
+
     public updateState(new_state: GameState) { 
 		this.active_phase_player = new_state.active_phase_player;
         this.active_turn_player = new_state.active_turn_player;
@@ -31,6 +33,10 @@ export class GameModel {
         this.streak = new_state.streak;
         this.parking_money = new_state.parking_money;
         this.current_turn = new_state.current_turn;
+
+        if (this.phase !== 'choose_fantasy') { // si salimos de la fase, limpiamos
+            this.currentFantasyEvent = null;
+        }
 
 		// Players
 		this.orderedPlayers.forEach((playerId) => {
@@ -334,7 +340,6 @@ export class GameModel {
         // Strict building (Uniform). You can't have more than +1 house than the minimum in the street
         const maxByRule = (minOtherHouses + 1) - targetProp.houseCount;
 
-        // Money check (Example: 50M per house, adjust to your board.json)
         const money = this.getPlayerBalance(playerId);
         const maxByMoney = Math.floor(money / housePrice);
 
@@ -374,4 +379,19 @@ export class GameModel {
         return Math.max(0, Math.min(maxByRule, targetProp.houseCount));
     }
 
+    // para cartas fantasía
+    public setFantasyEvent(type: string, value: number | null = null): void {
+        this.currentFantasyEvent = {
+            type: type,
+            value: value
+        };
+    }
+
+    public getFantasyEvent() {
+        return this.currentFantasyEvent;
+    }
+
+    public clearFantasyEvent(): void {
+        this.currentFantasyEvent = null;
+    }
 }

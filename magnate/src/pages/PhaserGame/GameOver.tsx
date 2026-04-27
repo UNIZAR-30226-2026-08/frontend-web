@@ -166,7 +166,9 @@ export function GameOver() {
 
                 <div className="mt-12 flex justify-center">
                     <Button 
-                        onClick={() => { EventBus.emit('handle-leave-game'); navigate('/home'); }}
+                        onClick={() => { 
+                            EventBus.emit('handle-leave-game');
+                            navigate('/home'); }}
                         className={`bg-[var(--color-primary)] text-white px-7 py-7 rounded-full font-black uppercase text-[20px] ${bouncyAnimation}`}>
                         Continuar
                     </Button>

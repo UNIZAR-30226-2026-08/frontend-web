@@ -4,37 +4,76 @@ import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
 import { FantasyCardContent } from '@/components/layout/FantasyLayout';
 import { useAudio } from '@/context/AudioContext';
+import fantasyData from '../../../public/data/fantasyCard.json';
 export const FantasyOverlay = () => {
     const [cardData, setCardData] = useState(null);
     const [isRevealed, setIsRevealed] = useState(false);
+    const [hasChosen, setHasChosen] = useState(false);
+    const [resultData, setResultData] = useState(null);
     const { playSound } = useAudio();
     useEffect(() => {
         const handle = (data) => {
-            setCardData(data);
+            console.log("Dentro de overlay fantasy:", data);
+            const details = fantasyData.fantasy.find(c => c.type === data.type && (data.value === null || c.value === data.value));
+            if (details) {
+                setCardData({ ...data, ...details });
+            }
+            else {
+                console.error("No se encontró la información para la carta:", data);
+                setCardData(data);
+            }
             setIsRevealed(false);
+            setHasChosen(false);
+            setResultData(null);
             playSound('fantasy');
         };
-        EventBus.on('show-fantasy-card', handle);
-        return () => { EventBus.off('show-fantasy-card', handle); };
+        const handleResult = (result) => {
+            console.log("Dentro de overlay fantasy resultadosss:", result);
+            const details = fantasyData.fantasy.find(c => c.type === result.type && (result.value === null || c.value === result.value));
+            setResultData(details);
+            // Esperamos un poco para que el jugador lea la carta antes de cerrar
+            setTimeout(() => {
+                EventBus.emit('close-overlay');
+                setCardData(null);
+            }, 2500);
+        };
+        EventBus.on('show-fantasy-overlay', handle);
+        EventBus.on('fantasy-card-result-applied', handleResult);
+        return () => {
+            EventBus.off('show-fantasy-overlay', handle);
+            EventBus.off('fantasy-card-result-applied', handleResult);
+        };
     }, [playSound]);
     if (!cardData)
         return null;
-    const closeOverlay = () => {
-        EventBus.emit('close-overlay');
-        setCardData(null);
-    };
-    const handleAction = () => {
-        if (!isRevealed) {
-            setIsRevealed(true);
-            playSound('card_slide');
+    const handleSelect = (isRevealedChoice) => {
+        if (hasChosen)
+            return;
+        setHasChosen(true);
+        EventBus.emit('action-choose-card', { revealed: isRevealedChoice });
+        if (isRevealedChoice) {
+            // Caso Izquierda:
+            playSound('card_place_1');
+            setTimeout(() => {
+                EventBus.emit('close-overlay');
+                setCardData(null);
+            }, 300);
         }
         else {
-            closeOverlay();
+            // Caso Derecha: revelar carta
+            setIsRevealed(true);
+            playSound('card_slide');
+            setTimeout(() => {
+                EventBus.emit('close-overlay');
+                setCardData(null);
+            }, 2500);
         }
     };
-    return (_jsxs("div", { className: "fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-sm", children: [_jsx("div", { className: "absolute inset-0 backdrop-blur-sm animate-in fade-in duration-300" }), _jsxs("div", { className: "relative z-10 flex flex-row gap-12 animate-in fade-in zoom-in duration-300 scale-90 md:scale-100", children: [_jsx("div", { className: `transition-all duration-300 ${isRevealed ? 'grayscale blur-[2px] scale-95' : 'hover:scale-110'}`, onClick: () => {
-                            playSound('card_place_1');
-                            closeOverlay();
-                        }, children: _jsx(GameCard, { isFlipped: true, front: _jsx(FantasyCardContent, { data: cardData }), back: _jsx(FantasyCardContent, { isBack: true }) }) }), _jsx("div", { className: "absolute -inset-4 bg-white/10 rounded-xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" }), _jsx("div", { className: `flex flex-col items-center gap-4 cursor-pointer transition-all duration-300 [perspective:1000px]
-                                    ${!isRevealed ? 'hover:scale-105 hover:drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]' : ''}`, onClick: handleAction, children: _jsx("div", { className: "flex flex-col items-center gap-4", children: _jsx(GameCard, { isFlipped: isRevealed, onClick: handleAction, front: _jsx(FantasyCardContent, { data: cardData }), back: _jsx(FantasyCardContent, { isBack: true }) }) }) })] })] }));
+    return (_jsxs("div", { className: "fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-sm", children: [_jsx("div", { className: "absolute inset-0 backdrop-blur-sm animate-in fade-in duration-300" }), _jsxs("div", { className: "relative z-10 flex flex-row gap-12 animate-in fade-in zoom-in duration-300 scale-90 md:scale-100", children: [_jsx("div", { className: `transition-all duration-300 
+                         ${isRevealed ? 'grayscale blur-[2px] scale-95' : 'hover:scale-110'}
+                         ${hasChosen && !isRevealed ? 'pointer-events-none' : ''}`, onClick: () => handleSelect(true), children: _jsx(GameCard, { isFlipped: true, front: _jsx(FantasyCardContent, { data: cardData }), back: _jsx(FantasyCardContent, { isBack: true }) }) }), _jsx("div", { className: "absolute -inset-4 bg-white/10 rounded-xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" }), _jsx("div", { className: `flex flex-col items-center gap-4 cursor-pointer transition-all duration-300 [perspective:1000px]
+                                    ${!isRevealed && !hasChosen ? 'hover:scale-105 hover:drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]' : ''}
+                                    ${hasChosen && isRevealed ? 'pointer-events-none' : ''}`, onClick: () => handleSelect(false), children: _jsx("div", { className: "flex flex-col items-center gap-4", children: _jsx(GameCard, { isFlipped: isRevealed, 
+                                // onClick={handleAction}
+                                front: _jsx(FantasyCardContent, { data: resultData || { title: "Revelando...", description: "Esperando al destino" } }), back: _jsx(FantasyCardContent, { isBack: true }) }) }) })] })] }));
 };

@@ -10,6 +10,7 @@ import { GoToJailTile } from '../objects/GoToJailTile';
 import { JailTile } from '../objects/JailTile';
 import { ParkingTile } from '../objects/ParkingTile';
 import { TramTile } from '../objects/TramTile';
+import { VisitTile } from '../objects/VisitTile';
 import { PlayerModel } from '../models/PlayerModel';
 import { PlayerToken } from '../objects/PlayerToken';
 import { EventBus } from '@/EventBus';
@@ -157,6 +158,9 @@ export class Board extends Phaser.Scene {
             else if (config.type === TileType.TRAM) {
                 tile = new TramTile(this, config);
             }
+            else if (config.type === TileType.VISIT) {
+                tile = new VisitTile(this, config);
+            }
             else {
                 tile = new Tile(this, config);
             }
@@ -213,14 +217,23 @@ export class Board extends Phaser.Scene {
         EventBus.on('token-fin', () => {
             this.time.delayedCall(400, () => { });
             const gameModel = this.GamelogicManager.model;
-            if (gameModel.phase === 'management') {
-                console.log("Cámara detenida. Abriendo menú de gestión...");
+            console.log(`[Token Fin] Verificando fase: ${gameModel.phase}`);
+            if (gameModel.phase === 'choose_fantasy') {
                 this.interactWithTile(gameModel);
             }
-            else if (gameModel.phase === 'business') {
-                console.log("Cámara detenida: estoy en business pero he caido en propiedad de otro tío");
+            else if (gameModel.phase === 'management' || gameModel.phase === 'business') {
                 this.interactWithTile(gameModel);
             }
+            // if (gameModel.phase === 'management') {
+            //     console.log("Cámara detenida. Abriendo menú de gestión...");
+            //     this.interactWithTile(gameModel);
+            // } else if (gameModel.phase === 'business') {
+            //     console.log("Cámara detenida: estoy en business pero he caido en propiedad de otro tío");
+            //     this.interactWithTile(gameModel);
+            // } else if (gameModel.phase === 'choose_fantasy') {
+            //     console.log("Cámara detenida: estoy en choose_fantasy");
+            //     this.interactWithTile(gameModel);
+            // }
         });
         EventBus.on('view-new-turn', async (gameModel) => {
             const playerId = gameModel.getCurrentTurnPlayerId();
@@ -338,6 +351,15 @@ export class Board extends Phaser.Scene {
         // evento para actualizar marcadores
         EventBus.on('update-tile-owner-visual', (data) => {
             this.handlePurchase(data);
+        });
+        // evento para animación del dinero del Parking
+        EventBus.on('collect-parking-money', (data) => {
+            const tile = this.tiles.find(t => t.tileConfig.id === data.currentTileId);
+            const myId = this.GamelogicManager.model.myId;
+            if (tile) {
+                this.pendingParkingData = { tile: tile, playerId: myId };
+                console.log("Parking: Animación lista", data.currentTileId);
+            }
         });
         EventBus.on('start-administer', () => {
             console.log("Manager: Iniciando adminitración...");
@@ -481,7 +503,7 @@ export class Board extends Phaser.Scene {
         }
     }
     interactWithTile(gameModel) {
-        console.log("--- FASE MANAGEMENT ---");
+        console.log("--- INTERACTUAR CON LA CASILLA ---");
         const isMe = gameModel.isMyTurn();
         const activePlayerId = gameModel.getCurrentTurnPlayerId();
         const activePlayerPair = this.players.find(p => p.model.id === activePlayerId);
@@ -577,46 +599,6 @@ export class Board extends Phaser.Scene {
             EventBus.emit('play-secretary-animation');
         });
     }
-    // // TODO: Esto es solo para probar el movimiento (async !!!!!)
-    // private async handlePlayerClick(playerId: string) {
-    //     const p = this.players.find(pair => pair.model.id === playerId);
-    //     if (!p) return;
-    //     this.selectedPlayer = p;
-    //     const currentIndex = this.tiles.findIndex(t => t.tileConfig.id === p.model.currentTileId);
-    //     const hopIndex = (currentIndex + 1) % this.tiles.length;
-    //     const hopTile = this.tiles[hopIndex];
-    //     // DEBUG: pasa por 'todas' las casillas
-    //     const nextIndex = (currentIndex + 3) % this.tiles.length;
-    //     const targetTile = this.tiles[nextIndex];
-    //     const nextTileId = targetTile.tileConfig.id;
-    //     const othersCount = this.players.filter(other => 
-    //         other.model.id !== playerId && 
-    //         other.model.currentTileId === nextTileId
-    //     ).length;
-    //     let finalX = targetTile.x;
-    //     let finalY = targetTile.y;
-    //     if (othersCount > 0) {
-    //         const spacing = 22;
-    //         finalX += (othersCount % 2 === 0) ? spacing : -spacing;
-    //         finalY += (othersCount > 1) ? spacing : -spacing;
-    //     }
-    //     const path = [
-    //         { x: hopTile.x, y: hopTile.y },
-    //         { x: finalX, y: finalY }
-    //     ];
-    //     this.hideUI();
-    //     const cssColor = '#' + p.model.color.toString(16).padStart(6, '0');
-    //     // await this.playSecretaryCutscene();
-    //     await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
-    //     this.cameraController.followToken(p.token, 2.2, () => {
-    //         p.model.move(nextTileId);
-    //         p.token.moveToCoords(path, () => {
-    //             this.time.delayedCall(800, () => {
-    //                 this.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
-    //             });
-    //         });
-    //     });
-    // }
     async sendToSecretary(playerId) {
         const p = this.players.find(pair => pair.model.id === playerId);
         const jailTile = this.tiles.find(t => t instanceof JailTile);

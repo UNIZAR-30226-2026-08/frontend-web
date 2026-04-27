@@ -6,9 +6,6 @@ import { Input } from "@/components/ui/input";
 import { registerUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
 
-import logoImg from '@/assets/images/logo.png';
-import bgCity from '@/assets/bg_city.jpg';
-
 interface SignUpProps {
     onBack?: () => void;
 }

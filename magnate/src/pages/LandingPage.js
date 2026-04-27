@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useAudio } from "@/context/AudioContext";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-// import logoImg from '@/assets/images/logo.png';
-// import bgCity from '@/assets/bg_city.jpg';
 const AuthButton = ({ title, sub, onClick }) => (_jsxs(Button, { onClick: onClick, className: "group relative w-full md:w-[400px] h-24 md:h-32 rounded-full border-4 border-white shadow-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary)] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 p-0", children: [_jsx("div", { className: "absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" }), _jsxs("div", { className: "relative z-10 flex flex-col items-center justify-center h-full w-full", children: [_jsx("span", { className: "text-3xl sm:text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white leading-none drop-shadow-md", children: title }), sub && (_jsx("span", { className: "text-[10px] sm:text-xs md:text-sm font-bold uppercase tracking-[0.3em] text-white/80 mt-1 md:mt-2", children: sub }))] })] }));
 export function LandingPage() {
     const navigate = useNavigate();

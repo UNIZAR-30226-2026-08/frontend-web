@@ -11,6 +11,7 @@ export enum TileType {
     PARKING = 'parking',
     GO_TO_JAIL = 'go_to_jail',
     TRAM = 'tram',
+    VISIT = 'visit',
 }
 
 // Interface for a tile on the board
@@ -74,6 +75,10 @@ export interface IGoToJailTile extends ITile {
     icon?: string;
 }
 
+export interface IVisitTile extends ITile {
+    type: TileType.VISIT;
+}
+
 export interface IParkingTile extends ITile {
     type: TileType.PARKING;
     icon?: string;
@@ -87,4 +92,4 @@ export interface ITramTile extends ITile {
 }
 
 
-export type TileConfig = IPropertyTile | IFantasyTile | IBridgeTile | IServerTile | IStartTile | ITramTile | IGoToJailTile | IJailTile | IParkingTile  ;
+export type TileConfig = IPropertyTile | IFantasyTile | IBridgeTile | IServerTile | IStartTile | ITramTile | IGoToJailTile | IJailTile | IParkingTile | IVisitTile  ;

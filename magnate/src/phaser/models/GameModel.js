@@ -19,6 +19,7 @@ export class GameModel {
     boardProperties = {}; // Record es como un diccionario https://typescriptutorial.com/es/diccionarios/
     players = {};
     orderedPlayers = [];
+    currentFantasyEvent = null;
     updateState(new_state) {
         this.active_phase_player = new_state.active_phase_player;
         this.active_turn_player = new_state.active_turn_player;
@@ -26,6 +27,9 @@ export class GameModel {
         this.streak = new_state.streak;
         this.parking_money = new_state.parking_money;
         this.current_turn = new_state.current_turn;
+        if (this.phase !== 'choose_fantasy') { // si salimos de la fase, limpiamos
+            this.currentFantasyEvent = null;
+        }
         // Players
         this.orderedPlayers.forEach((playerId) => {
             this.setPlayerBalance(playerId, new_state.money[playerId] || 0);
@@ -279,7 +283,6 @@ export class GameModel {
         }
         // Strict building (Uniform). You can't have more than +1 house than the minimum in the street
         const maxByRule = (minOtherHouses + 1) - targetProp.houseCount;
-        // Money check (Example: 50M per house, adjust to your board.json)
         const money = this.getPlayerBalance(playerId);
         const maxByMoney = Math.floor(money / housePrice);
         const finalMax = Math.min(maxByRule, maxByMoney);
@@ -312,5 +315,18 @@ export class GameModel {
         // You can't have less than -1 house than the maximum in the street
         const maxByRule = targetProp.houseCount - (maxOtherHouses - 1);
         return Math.max(0, Math.min(maxByRule, targetProp.houseCount));
+    }
+    // para cartas fantasía
+    setFantasyEvent(type, value = null) {
+        this.currentFantasyEvent = {
+            type: type,
+            value: value
+        };
+    }
+    getFantasyEvent() {
+        return this.currentFantasyEvent;
+    }
+    clearFantasyEvent() {
+        this.currentFantasyEvent = null;
     }
 }

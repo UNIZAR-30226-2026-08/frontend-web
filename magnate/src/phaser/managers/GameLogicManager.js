@@ -28,6 +28,36 @@ export class GameLogicManager {
             }
             EventBus.emit('model-updated', this.model);
         });
+        // Response general
+        EventBus.on('report-response', (data) => {
+            const isNewTurn = this.model.active_turn_player !== data.active_turn_player;
+            const isNewPhase = this.model.phase !== data.phase;
+            this.model.active_phase_player = data.active_phase_player;
+            this.model.active_turn_player = data.active_turn_player;
+            this.model.phase = data.phase;
+            // Actualizar dinero
+            this.updateBalances(data.money);
+            // Actualizar posiciones
+            if (data.positions) {
+                Object.entries(data.positions).forEach(([id, pos]) => {
+                    this.model.updatePlayerPosition(String(id), String(pos).padStart(3, '0'));
+                });
+            }
+            if (isNewTurn) {
+                console.log(`Cambio de Turno: turno del jugador ${data.active_turn_player}`);
+                EventBus.emit('view-new-turn', this.model);
+                setTimeout(() => {
+                    this.updateHUDControls(data.phase);
+                }, 2800);
+            }
+            else if (isNewPhase) {
+                console.log(`Cambio de Fase: pasamos a ${data.phase}`);
+                this.updateHUDControls(data.phase);
+            }
+            EventBus.emit('model-updated', this.model);
+            console.log("Response general:", data);
+            console.log("Modelo actual:", this.model);
+        });
         EventBus.on('report-response-throw-dices', (data) => {
             // TODO: --- inicio dados
             console.log("Manager: Rolling dices...", data);
@@ -37,6 +67,9 @@ export class GameLogicManager {
                 dice_bus: data.dice_bus,
                 destinations: data.destinations || []
             });
+            if (data.fantasy_event) { // para guardar proximo  evento fantasía
+                this.model.setFantasyEvent(data.fantasy_event.fantasy_type, data.fantasy_event.value);
+            }
             if (data.destinations?.length === 1) {
                 console.log("Manager: Square forced, waiting for dice to land...");
                 EventBus.once('dice-roll-complete', () => {
@@ -59,6 +92,9 @@ export class GameLogicManager {
         });
         EventBus.on('report-response-choose-square', (data) => {
             console.log("Manager: Square chosen...", data);
+            if (data.fantasy_event) { // para guardar proximo evento fantasía
+                this.model.setFantasyEvent(data.fantasy_event.fantasy_type, data.fantasy_event.value);
+            }
             const movingPlayerId = String(data.active_turn_player);
             if (data.path && data.path.length > 0) {
                 const finalDestination = data.path[data.path.length - 1];
@@ -88,42 +124,11 @@ export class GameLogicManager {
                 isSender: isSender
             });
         });
-        EventBus.on('report-response', (data) => {
-            const isNewTurn = this.model.active_turn_player !== data.active_turn_player;
-            const isNewPhase = this.model.phase !== data.phase;
-            this.model.active_phase_player = data.active_phase_player;
-            this.model.active_turn_player = data.active_turn_player;
-            this.model.phase = data.phase;
-            // Actualizar dinero
-            if (data.money) {
-                Object.entries(data.money).forEach(([id, bal]) => {
-                    const p = this.model.getPlayer(id);
-                    if (p) {
-                        p.balance = Number(bal);
-                        p.emitUpdate();
-                    }
-                });
+        EventBus.on('report-response-movement', (data) => {
+            console.log("Manager: Movimiento", data);
+            if (data.fantasy_event) {
+                this.model.setFantasyEvent(data.fantasy_event.fantasy_type, data.fantasy_event.value);
             }
-            // Actualizar posiciones
-            if (data.positions) {
-                Object.entries(data.positions).forEach(([id, pos]) => {
-                    this.model.updatePlayerPosition(String(id), String(pos).padStart(3, '0'));
-                });
-            }
-            if (isNewTurn) {
-                console.log(`Cambio de Turno: turno del jugador ${data.active_turn_player}`);
-                EventBus.emit('view-new-turn', this.model);
-                setTimeout(() => {
-                    this.updateHUDControls(data.phase);
-                }, 2800);
-            }
-            else if (isNewPhase) {
-                console.log(`Cambio de Fase: pasamos a ${data.phase}`);
-                this.updateHUDControls(data.phase);
-            }
-            // EventBus.emit('model-updated', this.model);
-            console.log("Response general:", data);
-            console.log("Modelo actual:", this.model);
         });
         // ---------------------- COMPRA PROPIEDAD ----------------------
         EventBus.on('report-action-buy-square', (data) => {
@@ -234,6 +239,7 @@ export class GameLogicManager {
         EventBus.on('report-action-trade-proposal', (data) => {
             console.log("Manager: Nueva propuesta de trato recibida", data);
             const myId = localStorage.getItem('myId');
+            this.lastPendingProposal = data;
             if (String(data.destination_user) !== String(myId)) {
                 console.log("Manager: El trato no es para mí, ignoro el overlay.");
                 return;
@@ -254,11 +260,11 @@ export class GameLogicManager {
             const proposalData = {
                 offeringPlayer: {
                     name: offeringPlayer?.name,
-                    color: offeringPlayer?.color
+                    color: offeringPlayer ? this.model.getPlayerColor(offeringPlayer.id) : '#ffffff'
                 },
                 askedPlayer: {
                     name: askedPlayer?.name,
-                    color: askedPlayer?.color
+                    color: askedPlayer ? this.model.getPlayerColor(askedPlayer.id) : '#cbd5e1'
                 },
                 offeredMoney: data.offered_money,
                 askedMoney: data.asked_money,
@@ -270,6 +276,8 @@ export class GameLogicManager {
         });
         EventBus.on('report-action-trade-answer', (data) => {
             const accepted = data.accept;
+            console.log("Manager: ¿Trato aceptado?", accepted);
+            console.log("lastPendingProposal", this.lastPendingProposal);
             if (accepted && this.lastPendingProposal) {
                 this.executeTradeTransfer(this.lastPendingProposal);
                 EventBus.emit('show-toast', {
@@ -278,7 +286,7 @@ export class GameLogicManager {
                 });
                 this.lastPendingProposal = null;
             }
-            else {
+            else if (!accepted) {
                 EventBus.emit('show-toast', {
                     message: `La propuesta ha sido rechazada.`,
                     duration: 3000
@@ -294,6 +302,7 @@ export class GameLogicManager {
             if (prop) {
                 prop.isMortgaged = true;
                 prop.houseCount = 0;
+                this.updateBalances(data.money);
                 EventBus.emit('model-updated', this.model);
                 EventBus.emit('update-tile-mortgage-visual', { tileId: propId, isMortgaged: true });
             }
@@ -304,10 +313,12 @@ export class GameLogicManager {
             const prop = this.model.getProperty(propId);
             if (prop) {
                 prop.isMortgaged = false;
+                this.updateBalances(data.money);
                 EventBus.emit('model-updated', this.model);
                 EventBus.emit('update-tile-mortgage-visual', { tileId: propId, isMortgaged: false });
             }
         });
+        // CONSTRUIR Y DEMOLER CASAS
         EventBus.on('report-action-build', (data) => {
             const propId = String(data.square).padStart(3, '0');
             const prop = this.model.getProperty(propId);
@@ -332,6 +343,35 @@ export class GameLogicManager {
                 });
             }
         });
+        // fantasía
+        // Si se ha elegido la carta vista, actualiza; si se ha elegido la oculta 
+        EventBus.on('report-response-choose-fantasy', (data) => {
+            console.log("Manager: resultado de fantasía recibido", data);
+            // actualizar dinero
+            this.updateBalances(data.money);
+            // actualizar posiciones
+            if (data.positions) {
+                Object.entries(data.positions).forEach(([id, pos]) => {
+                    const playerId = String(id);
+                    const newPos = String(pos).padStart(3, '0');
+                    // Si la posición cambió, forzamos teletransporte en la vista
+                    if (this.model.getPlayerPosition(playerId) !== newPos) {
+                        this.model.updatePlayerPosition(playerId, newPos);
+                        // TODO: falta mover token
+                    }
+                });
+            }
+            if (data.fantasy_result && data.fantasy_result.fantasy_event) {
+                const event = data.fantasy_result.fantasy_event;
+                EventBus.emit('fantasy-card-result-applied', {
+                    type: event.fantasy_type,
+                    value: event.value,
+                    cost: event.card_cost
+                });
+            }
+            EventBus.emit('model-updated', this.model);
+        });
+        // BANCARROTA
         EventBus.on('report-action-surrender', (data) => {
             const playerId = String(data.player);
             const player = this.model.getPlayer(playerId);
@@ -404,11 +444,28 @@ export class GameLogicManager {
             });
         }
         else if (phase === 'auction') {
-            console.log("Empieza subastaaaa");
+            console.log("Empieza subastaaaa!!");
+            EventBus.emit('update-controls-state', {
+                roll: false, administer: false, trade: false, finishTurn: false, bankrupt: true
+            });
         }
         else if (phase === 'proposal_acceptance') {
             console.log("Enviando propuesta de trato al otro tío");
         }
+        else if (phase === 'choose_fantasy') {
+            console.log("Manager: empieza fantasía");
+        }
+    }
+    updateBalances(moneyMap) {
+        if (!moneyMap)
+            return;
+        Object.entries(moneyMap).forEach(([id, bal]) => {
+            const p = this.model.getPlayer(id);
+            if (p) {
+                p.balance = Number(bal);
+                p.emitUpdate();
+            }
+        });
     }
     // Procesa el intercambio de dinero y propiedades entre dos jugadores
     executeTradeTransfer(data) {
@@ -443,17 +500,30 @@ export class GameLogicManager {
         const moneyOffered = Number(data.offered_money || 0);
         const moneyAsked = Number(data.asked_money || 0);
         // Actualizar balances
-        sender.balance -= moneyOffered;
-        sender.balance += moneyAsked;
-        receiver.balance += moneyOffered;
-        receiver.balance -= moneyAsked;
-        // --- animaciones ---
-        if (moneyOffered > 0) {
-            EventBus.emit('view-animate-money', { playerId: senderId, numBill: 6, amount: `-${moneyOffered}M` });
+        const senderChange = moneyAsked - moneyOffered;
+        if (senderChange !== 0) {
+            this.syncPlayerMoney(senderId, senderChange);
         }
-        if (moneyAsked > 0) {
-            EventBus.emit('view-animate-money', { playerId: receiverId, numBill: 6, amount: `-${moneyAsked}M` });
+        const receiverChange = moneyOffered - moneyAsked;
+        if (receiverChange !== 0) {
+            this.syncPlayerMoney(receiverId, receiverChange);
         }
+        EventBus.emit('model-updated', this.model);
         console.log(`[tradeando] Sincronización completa. ${sender.name}: ${sender.balance}M | ${receiver.name}: ${receiver.balance}M`);
+    }
+    syncPlayerMoney(playerId, amount, showAnimation = true) {
+        const player = this.model.getPlayer(playerId);
+        if (!player || amount === 0)
+            return;
+        this.model.updatePlayerBalance(playerId, amount);
+        console.log("balance del player", this.model.getPlayerBalance(playerId));
+        player.emitUpdate();
+        if (showAnimation) {
+            EventBus.emit('view-animate-money', {
+                playerId: playerId,
+                amount: `${amount > 0 ? '+' : ''}${amount}M`,
+                numBill: amount
+            });
+        }
     }
 }

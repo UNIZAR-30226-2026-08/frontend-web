@@ -22,7 +22,7 @@ export const FantasyCardContent = ({ data, isBack }: { data?: any, isBack?: bool
                         </h2>
                         
                         <p className="text-center text-xs font-medium italic text-[var(--color-secondary)]/60 mt-4 px-2">
-                            Puedes desvelar esta carta por <span className="text-[var(--color-secondary)] px-1 rounded">0€</span>, 
+                            Puedes desvelar esta carta por <span className="text-[var(--color-secondary)] px-1 rounded">0M</span>, 
                             pero si lo haces, ya no podrás elegir la otra carta.
                         </p>
                         
@@ -55,11 +55,11 @@ export const FantasyCardContent = ({ data, isBack }: { data?: any, isBack?: bool
                         {data.description}
                     </p>
 
-                    {data.price !== undefined && data.price !== 0 && (
+                    {data.card_cost !== undefined && (
                         <div className="mt-auto pt-3 border-t-2 w-full border-dashed border-gray-300">
                                 <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5 tracking-widest">Valor de Compra</p>
                                 <span className="text-3xl font-black text-[var(--color-secondary)] leading-none">
-                                    {data.buyPrice}M
+                                    {data.card_cost}M
                                 </span>
                         </div>
                     )}

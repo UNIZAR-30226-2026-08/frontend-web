@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { EventBus } from '@/EventBus';
 export class PlayerToken extends Phaser.GameObjects.Container {
+    isMoving = false;
     constructor(scene, x, y, color) {
         super(scene, x, y);
         const shadow = scene.add.ellipse(3, 3, 40, 40, 0x000000, 0.3);
@@ -15,6 +16,7 @@ export class PlayerToken extends Phaser.GameObjects.Container {
             onComplete?.();
             return;
         }
+        this.isMoving = true;
         const nextTarget = path.shift();
         // Trigger the React Audio Context via EventBus
         EventBus.emit('play-sfx', 'player_token_hop');
@@ -25,6 +27,7 @@ export class PlayerToken extends Phaser.GameObjects.Container {
             duration: 200,
             ease: 'Linear',
             onComplete: () => {
+                this.isMoving = false;
                 this.moveToCoords(path, onComplete);
             }
         });

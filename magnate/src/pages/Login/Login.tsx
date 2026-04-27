@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { loginUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
 
-// import logoImg from '@/assets/images/logo.png';
-import bgCity from '@/assets/bg_city.jpg';
 
 interface LoginProps {
     onBack?: () => void;

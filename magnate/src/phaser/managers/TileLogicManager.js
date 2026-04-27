@@ -1,4 +1,3 @@
-import * as Phaser from 'phaser';
 import { EventBus } from '@/EventBus';
 import { PropertyTile } from '../objects/PropertyTile';
 import { FantasyTile } from '../objects/FantasyTile';
@@ -25,18 +24,18 @@ export class TileLogicManager {
         const gameModel = GameLogicManager.getInstance().model;
         const config = tile.tileConfig;
         if (tile instanceof FantasyTile) {
-            // TODO: Vendrá del backend
-            const cartasFantasia = [
-                { title: "Concurso de Postales EINA", description: "Ganaste el concurso anual de postales navideñas de la EINA. Tu premio: 150€.", price: 130 },
-                { title: "Destino EINA", description: "Ya eres un matemático que solo tiene que ir a la EINA. Avanza a la casilla de salida.", price: 100 }
-            ];
-            const cartaAleatoria = Phaser.Utils.Array.GetRandom(cartasFantasia);
-            // Evento hacia react
-            EventBus.emit('show-fantasy-card', {
-                ...cartaAleatoria,
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0')
-            });
+            console.log("He caido en una carta fantasía");
+            const currentFantasy = gameModel.currentFantasyEvent;
+            const myId = localStorage.getItem('myId');
+            if (currentFantasy && String(player.id) === String(myId)) {
+                EventBus.emit('show-fantasy-overlay', {
+                    type: currentFantasy.type,
+                    value: currentFantasy.value,
+                });
+            }
+            else {
+                console.warn("Error: tileLogicManager está en fantasía y no hay carta");
+            }
         }
         else if (tile instanceof PropertyTile) {
             const idProp = String(tile.tileConfig.id).padStart(3, '0');

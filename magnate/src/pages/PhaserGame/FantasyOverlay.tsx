@@ -3,36 +3,81 @@ import { EventBus } from '@/EventBus';
 import { GameCard } from '@/components/ui/gameCard';
 import { FantasyCardContent } from '@/components/layout/FantasyLayout';
 import { useAudio } from '@/context/AudioContext';
+import fantasyData from '../../../public/data/fantasyCard.json';
 
 export const FantasyOverlay = () => {
     const [cardData, setCardData] = useState<any>(null);
     const [isRevealed, setIsRevealed] = useState(false);
+    const [hasChosen, setHasChosen] = useState(false);
+    const [resultData, setResultData] = useState<any>(null);
 
 	const { playSound } = useAudio();
 
     useEffect(() => {
         const handle = (data: any) => { 
-            setCardData(data); 
+            console.log("Dentro de overlay fantasy:", data);
+            const details = fantasyData.fantasy.find(c => 
+                c.type === data.type && (data.value === null || c.value === data.value)
+            );
+            if (details) {
+                setCardData({ ...data, ...details }); 
+            } else {
+                console.error("No se encontró la información para la carta:", data);
+                setCardData(data);
+            }
+            
             setIsRevealed(false); 
-			playSound('fantasy');
+            setHasChosen(false);
+            setResultData(null);
+            playSound('fantasy');
         };
-        EventBus.on('show-fantasy-card', handle);
-        return () => { EventBus.off('show-fantasy-card', handle); };
+
+        const handleResult = (result: any) => {
+            console.log("Dentro de overlay fantasy resultadosss:", result);
+            const details = fantasyData.fantasy.find(c => 
+                c.type === result.type && (result.value === null || c.value === result.value)
+            );
+            
+            setResultData(details);
+
+            // Esperamos un poco para que el jugador lea la carta antes de cerrar
+            setTimeout(() => {
+                EventBus.emit('close-overlay');
+                setCardData(null);
+            }, 2500); 
+        };
+        EventBus.on('show-fantasy-overlay', handle);
+        EventBus.on('fantasy-card-result-applied', handleResult);
+        return () => { 
+            EventBus.off('show-fantasy-overlay', handle); 
+            EventBus.off('fantasy-card-result-applied', handleResult);
+        };
     }, [playSound]);
 
     if (!cardData) return null;
 
-    const closeOverlay = () => {
-        EventBus.emit('close-overlay');
-        setCardData(null);
-    };
+    const handleSelect = (isRevealedChoice: boolean) => {
+        if (hasChosen) return;
 
-    const handleAction = () => {
-        if (!isRevealed) {
-            setIsRevealed(true);
-			playSound('card_slide'); 
+        setHasChosen(true);
+        
+        EventBus.emit('action-choose-card', { revealed: isRevealedChoice });
+
+        if (isRevealedChoice) {
+            // Caso Izquierda:
+            playSound('card_place_1');
+            setTimeout(() => {
+                EventBus.emit('close-overlay');
+                setCardData(null);
+            }, 300);
         } else {
-            closeOverlay();
+            // Caso Derecha: revelar carta
+            setIsRevealed(true);
+            playSound('card_slide');
+            setTimeout(() => {
+                EventBus.emit('close-overlay');
+                setCardData(null);
+            }, 2500);
         }
     };
 
@@ -42,13 +87,11 @@ export const FantasyOverlay = () => {
         
                 <div className="relative z-10 flex flex-row gap-12 animate-in fade-in zoom-in duration-300 scale-90 md:scale-100">
                 
-                    {/* CARTA FRONT -> TODO: si ha pulsado la oculta, ya no puede volver a pulsar esta */} 
-                    <div className={`transition-all duration-300 ${isRevealed ? 'grayscale blur-[2px] scale-95' : 'hover:scale-110'}`}
-                        onClick={() => {
-								playSound('card_place_1');
-								closeOverlay();
-						}
-						}>
+                    {/* CARTA FRONT */} 
+                    <div className={`transition-all duration-300 
+                         ${isRevealed ? 'grayscale blur-[2px] scale-95' : 'hover:scale-110'}
+                         ${hasChosen && !isRevealed ? 'pointer-events-none' : ''}`}
+                        onClick={() => handleSelect(true)}>
                         <GameCard 
                             isFlipped={true}
                             front={<FantasyCardContent data={cardData} />}
@@ -59,14 +102,15 @@ export const FantasyOverlay = () => {
                 
                     {/* CARTA INTERACTIVA */}
                     <div className={`flex flex-col items-center gap-4 cursor-pointer transition-all duration-300 [perspective:1000px]
-                                    ${!isRevealed ? 'hover:scale-105 hover:drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]' : ''}`}
-                                    onClick={handleAction} >
+                                    ${!isRevealed && !hasChosen ? 'hover:scale-105 hover:drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]' : ''}
+                                    ${hasChosen && isRevealed ? 'pointer-events-none' : ''}`}
+                                    onClick={() => handleSelect(false) } >
                         <div className="flex flex-col items-center gap-4">
 
                             <GameCard 
                                 isFlipped={isRevealed}
-                                onClick={handleAction}
-                                front={<FantasyCardContent data={cardData} />}
+                                // onClick={handleAction}
+                                front={<FantasyCardContent data={resultData || { title: "Revelando...", description: "Esperando al destino" }} />}
                                 back={<FantasyCardContent isBack={true} />}
                             />
                         </div>

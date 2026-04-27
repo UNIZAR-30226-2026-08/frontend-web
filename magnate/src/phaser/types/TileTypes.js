@@ -11,4 +11,5 @@ export var TileType;
     TileType["PARKING"] = "parking";
     TileType["GO_TO_JAIL"] = "go_to_jail";
     TileType["TRAM"] = "tram";
+    TileType["VISIT"] = "visit";
 })(TileType || (TileType = {}));

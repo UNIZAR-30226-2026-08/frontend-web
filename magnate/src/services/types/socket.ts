@@ -20,12 +20,6 @@ export type FantasyEventType = 'winPlainMoney'
 | 'reviveProperty'
 | 'earthquake';
 
-export interface FantasyCardDesc {
-	type: FantasyEventType;
-	value?: number;
-	cost: number;
-}
-
 export type Phase =  //GamePhase in backend doc
 		'roll_the_dices'
 | 'choose_square'
@@ -77,6 +71,12 @@ export type gameResponseType = 'Response'
 export type BotLevel = 'very_easy' | 'easy' | 'medium' | 'hard' | 'very_hard' 
 | 'expert';
 
+export interface FantasyCardDesc {
+	fantasy_type: FantasyEventType;
+	value?: number;
+	card_cost: number;
+}
+
 // TODO mejorar librería websocket
 // Nico: ConnState: internal state of the WS client (en vdd interesa para
 // permitir o no ciertas operaciones)
@@ -97,7 +97,7 @@ export interface GameAction {
 	offered_properties?: string[];  // tile id of property location
 	asked_properties?: string[];	// tile id of property location
 	// trade answer
-	choose?: boolean; 	// True if trade is accepted
+	accept?: boolean; 	// True if trade is accepted
 }
 
 export interface GameActionReport { 
@@ -117,7 +117,7 @@ export interface GameActionReport {
 	offered_properties?: string[];  // tile id of property location
 	asked_properties?: string[];	// tile id of property location
 	// trade answer
-	choose?: boolean; 	// True if trade is accepted
+	accept?: boolean; 	// True if trade is accepted
 }
 
 export interface GameResponse {
@@ -218,6 +218,7 @@ export interface GameInfoResponse {
 	active_turn_player: number;
 	phase: Phase;
 	parking_money?: Number;
+	fantasy_event?: FantasyEventType;
 }
 
 export interface GameInfoMovement {
@@ -249,7 +250,10 @@ export interface GameInfoFantasy {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
-	fantasy_result?: FantasyCardDesc; // see above
+	fantasy_result: {
+        fantasy_event?: FantasyCardDesc;
+        result: any;
+    };
 	positions?: Record<string, string>; // userid, tileid
 }
 
