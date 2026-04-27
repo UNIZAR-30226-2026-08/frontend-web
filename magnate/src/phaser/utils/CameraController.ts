@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser';
 import { Tile } from '../objects/Tile';
-
+import { EventBus } from '@/EventBus';
 
 export class CameraController {
     private scene: Phaser.Scene;
@@ -13,10 +13,6 @@ export class CameraController {
         // Cámara principal, es la que ya existe por defecto
         this.mainCam = scene.cameras.main;
         this.mainCam.setBounds(-100, -100, 10000, 10000);
-        
-        // cámara que estará en el origen
-        //this.uiCam = scene.cameras.add(0, 0, 1920, 1080);
-        //this.uiCam.setScroll(0, 0); // fijar posición, nunca se desplaza
     }
 
     public followToken(token: any, zoom: number = 2.2, onArrived?: () => void) {
@@ -30,13 +26,14 @@ export class CameraController {
 
         this.scene.tweens.add({
             targets: this.mainCam,
-            // rotation: - radians,
+
             duration: duration,
             ease: 'Cubic.easeInOut'
         });
 
         this.mainCam.once('camerapancomplete', () => {
             this.mainCam.startFollow(token, true, 0.08, 0.08);
+            EventBus.emit('camera-ready');
             if (onArrived) { onArrived(); }
         });
     }
@@ -60,7 +57,6 @@ export class CameraController {
         this.mainCam.zoomTo(1, duration, "Cubic.easeInOut");
         this.scene.tweens.add({
             targets: this.mainCam,
-            //rotation: 0,
             duration: duration,
             ease: 'Cubic.easeInOut'
         });

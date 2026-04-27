@@ -48,6 +48,18 @@ export const TradeRequestOverlay = () => {
         return () => { EventBus.off('show-trade-request', handleShow); };
     }, []);
 
+    const handleAnswer = (accepted: boolean) => {
+        if (!proposal) return;
+
+        EventBus.emit('action-trade-answer', {
+            // tradeId: proposal.id,
+            accept: accepted
+        });
+
+        setIsOpen(false);
+        setProposal(null);
+    };
+
     if (!isOpen || !proposal) return null;
 
     const SummaryZone = ({ money, properties, isPositive }: any) => {
@@ -117,16 +129,13 @@ export const TradeRequestOverlay = () => {
                     </div>
 
                     <div className="p-10 flex gap-4 justify-center">
-                        <Button onClick={() => setIsOpen(false)}
+                        <Button onClick={() => handleAnswer(false)}
 								sound="trade_turned_down"
                                 className={`w-[160px] h-[60px] bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black uppercase text-[16px] 
                                         rounded-full border border-red-500/20 transition-all ${bouncyAnimation}`}>
                                 Rechazar
                         </Button>
-                        <Button onClick={() => {
-                                // TODO: actualizar propiedades
-                                setIsOpen(false);
-                            }}
+                        <Button onClick={() => handleAnswer(true)}
 							sound="trade_accepted"
                             className={`w-[160px] h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[16px] 
                                             rounded-full ${bouncyAnimation}`}>

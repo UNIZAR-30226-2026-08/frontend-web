@@ -71,6 +71,7 @@ export type gameResponseType = 'Response'
 | 'ResponseThrowDices'
 | 'ResponseChooseSquare'
 | 'ResponseChooseFantasy'
+| 'ResponseBonus'
 | 'ResponseAuction';
 
 export type BotLevel = 'very_easy' | 'easy' | 'medium' | 'hard' | 'very_hard' 
@@ -125,6 +126,7 @@ export interface GameResponse {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
+	parking_money?: Number;
     // movement
 	path?: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
 	fantasy_event?: FantasyEventType;
@@ -139,10 +141,12 @@ export interface GameResponse {
 	fantasy_result?: FantasyCardDesc; // see above
 	positions? : Record<string, string>; // userid, tileid
 	// auction 
+	auction?: AuctionData;
 	winner? : string;	// user id
 	final_amount?: number;	// deprecated? well I'm not passing these
 	is_tie?: boolean;		// deprecated? well I'm not passing these
 	bids?: Record<string, number>; // userid, money bidded
+	bonuses?: Record<string, BonusData>;
 }
 
 export interface PrivateCommand {
@@ -177,22 +181,22 @@ export interface PrivateAction {
  * DATA TYPES FOR DEVELOPERS
  */
 export interface PrivateRoomHostSettings {
-	bot_level: BotLevel;
-	target_players: number;
+	bot_level?: BotLevel;
+	target_players?: number;
 }
 
 export interface PrivateRoomOwner {
-	is_owner : boolean;
+	is_owner?: boolean;
 }
 
 export interface PrivateRoomReady {
-	user: string;
-	is_ready: boolean;
+	user?: string;
+	is_ready?: boolean;
 }
 
 export interface PrivateRoomPlayers {
-	user: string;
-	players: Waiters[];
+	user?: string;
+	players?: Waiters[];
 }
 
 export interface Waiters {
@@ -213,6 +217,7 @@ export interface GameInfoResponse {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
+	parking_money?: Number;
 }
 
 export interface GameInfoMovement {
@@ -220,8 +225,8 @@ export interface GameInfoMovement {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
-	path: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
-	fantasy_event: FantasyEventType;
+	path?: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
+	fantasy_event?: FantasyEventType;
 }
 
 export interface GameInfoThrowDices {
@@ -229,14 +234,14 @@ export interface GameInfoThrowDices {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
-	path: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
-	fantasy_event: FantasyEventType;
-	dice1: number;
-	dice2: number;
-	dice_bus: number;
-	destinations: string[];	// list of possible tiles to choose
-	triple: boolean;
-	streak: number;	// nº of consecutive doubles (1 if first one)
+	path?: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
+	fantasy_event?: FantasyEventType;
+	dice1?: number;
+	dice2?: number;
+	dice_bus?: number;
+	destinations?: string[];	// list of possible tiles to choose
+	triple?: boolean;
+	streak?: number;	// nº of consecutive doubles (1 if first one)
 }
 
 export interface GameInfoFantasy {
@@ -244,8 +249,16 @@ export interface GameInfoFantasy {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
-	fantasy_result: FantasyCardDesc; // see above
-	positions : Record<string, string>; // userid, tileid
+	fantasy_result?: FantasyCardDesc; // see above
+	positions?: Record<string, string>; // userid, tileid
+}
+
+export interface AuctionData {
+    id?: number;
+    square?: string | number;
+    winner?: string | number;
+    final_amount?: number;
+    bids?: Record<string, number>;
 }
 
 export interface GameInfoAuction {
@@ -253,8 +266,21 @@ export interface GameInfoAuction {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
-	winner : string;				// user id
-	bids: Record<string, number>; 	// userid, money bidded
+	auction: AuctionData;
+}
+
+export interface BonusData {
+    display_name: string;
+    bonus_amount: number;
+    winners: (string | number)[]; // IDs de los jugadores que ganan este bono
+}
+
+export interface GameInfoBonus {
+	money : Record<string, number>; // Dict userid: number
+	active_phase_player: number;
+    active_turn_player: number;
+    phase: Phase;
+	bonuses: Record<string, BonusData>;
 }
 
 /* 
@@ -266,6 +292,8 @@ export interface PropertyInfo {
 	houses: number;	// nº of houses
 	mortgage: boolean;
 	group: number;
+	name: string;
+	color: string;
 }
 
 export interface GameState {
@@ -329,37 +357,38 @@ export interface GameReportSender {
 
 export interface GameReportSquare {
 	player: string;	// user id of player who sent the action
-	square: string;
+	square?: string;
 }
 
 export interface GameReportHouses {
 	player: string;	// user id of player who sent the action
-	square: string;
-	houses: number;
+	square?: string;
+	houses?: number;
 }
 
 export interface GameReportFantasy {
 	player: string;	// user id of player who sent the action
 	/** True if revealed card is chosen */
-	revealed: boolean; 
+	revealed?: boolean; 
 }
 
 export interface GameReportTradeAnswer {
-	player: string;	// user id of player who sent the action
+	//player: string;	// user id of player who sent the action
 	/** True if trade is accepted */
-	accept: boolean; 
+	accept?: boolean; 
 }
 
 export interface GameReportBid {
 	player: string;	// user id of player who sent the action
-	money: number;
+	money?: number;
 }
 
 export interface GameReportTradeProposal {
 	player: string;	// user id of player who sent the action
-	destination_user: string;	// userid
-	offered_money:	number;
-	asked_money: number;
-	offered_properties: string[];  // tile id of property location
-	asked_properties: string[];	// tile id of property location
+	destination_user?: string;	// userid
+	offered_money?:	number;
+	asked_money?: number;
+	offered_properties?: string[];  // tile id of property location
+	asked_properties?: string[];	// tile id of property location
 }
+

@@ -4,15 +4,16 @@ export class PlayerModel {
     public id: string;
     public name: string;
     public color: number;
-    public balance: number = 0; // TODO: No se yo lo de hardcodear este número
+    public balance: number;
     public properties: string[] = [];
     public currentTileId: string = "000"; 
     public jailRemainingTurns: number = 0;
 
-    constructor(id: string, name: string, color: number) {
+    constructor(id: string, name: string, color: number, balance: number) {
         this.id = id;
         this.name = name;
         this.color = color;
+        this.balance = balance;
     }
 
     public move(targetTileId: string) {

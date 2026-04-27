@@ -75,10 +75,10 @@ export const PlayerHUD = ({
                         </div>
 
                         <div className="bg-black/30 backdrop-blur-md px-2.5 py-1.5 rounded-lg flex items-baseline gap-0.5 border border-white/10 shadow-inner">
-                            <span className="text-[10px] text-yellow-400 font-bold">$</span>
                             <span className="text-xl font-mono font-black tabular-nums tracking-tighter">
                                 {balance.toLocaleString()}
                             </span>
+                            <span className="text-[12px] text-yellow-400 font-bold">M</span>
                         </div>
                     </div>
 

@@ -24,7 +24,10 @@ import { SecretaryAnimation } from './SecretaryAnimation';
 import { JailOverlay } from './JailOverlay';
 
 import { useAuth } from "@/context/AuthContext";
+// @ts-ignore 
 import { fetchProfile } from "@/api/userServices";
+import { AuctionResults } from './AuctionResults';
+import { TradeMessage } from '@/components/layout/TradeMessage';
 
 interface PlayerInitData {
     id: string;
@@ -128,11 +131,18 @@ export const PhaserGame = () => {
             <PropertyOverlay />
             <CornerOverlay />
             <ServiceOverlay />
+            
             <AuctionOverlay />
+            <AuctionResults />
+            
             <TradingOverlay />
+            <TradeMessage />
             <TradeRequestOverlay />
+            
             <TramOverlay />
+            
             <PropertyAdminOverlay />
+            
             <GameOver />
             <JailOverlay/>
         </div>

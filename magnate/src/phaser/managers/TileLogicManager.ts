@@ -11,9 +11,11 @@ import { JailTile } from '../objects/JailTile';
 import { ParkingTile } from '../objects/ParkingTile';
 import { TramTile } from '../objects/TramTile';
 import { StartTile } from '../objects/StartTile';
-import { IPropertyTile, IServerTile, ITramTile } from '../types/TileTypes';
 
 import { CornerData } from '@/components/layout/CornerLayout';
+import { GameLogicManager } from './GameLogicManager';
+import { propEffect } from 'framer-motion';
+import { CameraController } from '../utils/CameraController';
 
 const CORNER_VISUALS = new Map<Function, CornerData>([
     [GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar', sound: 'jail_door' }],
@@ -25,6 +27,7 @@ const CORNER_VISUALS = new Map<Function, CornerData>([
 interface IBoardScene extends Phaser.Scene {
     sendToSecretary(playerId: string): Promise<void>;
     showToast(message: string, duration?: number): void;
+    cameraController: CameraController;
 }
 
 export class TileLogicManager {
@@ -35,7 +38,9 @@ export class TileLogicManager {
     }
 
     public checkTileLogic(player: PlayerModel, tile: Tile, allPlayers: { model: PlayerModel, token: any }[]) {
-        
+        const gameModel = GameLogicManager.getInstance().model;
+        const config = tile.tileConfig;
+       
         if (tile instanceof FantasyTile) {
             // TODO: Vendrá del backend
             const cartasFantasia = [
@@ -54,70 +59,64 @@ export class TileLogicManager {
         }
         
 		else if (tile instanceof PropertyTile) {
-            const propConfig = tile.tileConfig as IPropertyTile;
-            // TODO: Vendrá del backend?
-            const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800};
-            const playersData = allPlayers.map(p => ({
-                id: p.model.id,
-                name: p.model.name,
-                color: '#' + p.model.color.toString(16).padStart(6, '0'),
-            }));
-            console.log("EL dueño es;", propConfig.ownerId);
-            console.log("Soy el jugador con id:", player.id);
-            EventBus.emit('show-property-card', {
-                id: propConfig.id,
-                name: propConfig.name,
-                headerColor: propConfig.color || '#FFFFFF', 
-                price: 100,
-                rent: rentValues,
-                mortgage: 100,
-                housePrice: 20,
-                players: playersData, // Para los resultados de la subasta
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
-				isMortgaged: false, 		// Pruebecitas TODO JULIA
-				constructionLevel: 'house1',	// Pruebecitas TODO JULIA
-                ownerId: propConfig.ownerId,
-                playerId: player.id
-            });
+            
+            const idProp = String(tile.tileConfig.id).padStart(3, '0');
+            const propModel = gameModel.getProperty(idProp);
+            
+            if(propModel) {
+                EventBus.emit('show-property-card', {
+                    id: propModel.id,
+                    name: propModel.name,
+                    color:propModel.color,
+                    buyPrice: propModel.buyPrice,
+                    buildPrice: propModel.buildPrice,
+                    rentPrices: propModel.rentPrices, 
+                    ownerId: propModel.ownerId,
+                    player: player,
+                    isMortgaged: propModel.isMortgaged,
+                    currentRent: propModel.getCurrentRent()
+                });
+            }
         }
 
+
 		else if (tile instanceof ServerTile) {
-			const rent = {one:50,all:100}
-			const tileConfig = tile.tileConfig as IServerTile;
-			EventBus.emit('show-service-card', {
-                id: tileConfig.id,
-				title: tileConfig.name,
-				typeName: 'Servidor',
-				image:'images/server.png', // TODO override tileConfig.icon
-				price: 80,
-				rent: rent,
-				mortgage: 100,
-				isMortgaged: false,	// Pruebecitas TODO JULIA
-				isAvailable: true,
-				hasAll: 'all',
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
-			});
+            const idService = String(tile.tileConfig.id).padStart(3, '0');
+            const serviceModel = gameModel.getProperty(idService);
+            
+            if(serviceModel) {
+                console.log(serviceModel);
+                EventBus.emit('show-service-card', {
+                    id: serviceModel.id,
+                    name: serviceModel.name,
+                    typeName: 'Servidor',
+                    image:'images/server.png',
+                    buyPrice: serviceModel.buyPrice,
+                    rentPrices: serviceModel.rentPrices,
+                    isMortgaged: serviceModel.isMortgaged,
+                    ownerId: serviceModel.ownerId,
+                    player: player,
+                });
+            }
 		}
 
 		else if (tile instanceof BridgeTile) {
-			const rent = {one:50,all:100}
-			const tileConfig = tile.tileConfig as IServerTile;
-			EventBus.emit('show-service-card', {
-                id: tileConfig.id,
-				title: tileConfig.name,
-				typeName: 'Puente',
-				image:'icons/bridge.svg', // TODO override tileConfig.icon
-				price: 80,
-				rent: rent,
-				mortgage: 100,
-				isMortgaged: false,	// Pruebecitas TODO JULIA
-				isAvailable: true,
-				hasAll: 'one',
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0'),
-			});
+			const idService = String(tile.tileConfig.id).padStart(3, '0');
+            const serviceModel = gameModel.getProperty(idService);
+
+            if(serviceModel) {
+                EventBus.emit('show-service-card', {
+                    id: serviceModel.id,
+                    name: serviceModel.name,
+                    typeName: 'Puente',
+                    image:'icons/bridge.svg',
+                    buyPrice: serviceModel.buyPrice,
+                    rentPrices: serviceModel.rentPrices,
+                    isMortgaged: serviceModel.isMortgaged,
+                    ownerId: serviceModel.ownerId,
+                    player: player,
+                });
+            }
 		}
 
         else if (tile instanceof GoToJailTile) {
@@ -127,8 +126,15 @@ export class TileLogicManager {
         }
 
 		else if (tile instanceof StartTile) {
-            player.balance += 200;
-            player.emitUpdate(); // TODO: si pasan también se cobra
+            const myId = localStorage.getItem('myId');
+            if (String(player.id) === String(myId)) {
+                this.scene.time.delayedCall(1000, () => {
+                    console.log("Volviendo a la vista de origen...");
+                    this.scene.cameraController.resetView(1500); 
+                });
+            }
+            console.log(`Jugador ${player.name} ha caído en Salida. Balance +200`);
+
         }
 
         else if (tile instanceof JailTile) {

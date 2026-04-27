@@ -59,7 +59,7 @@ export const FantasyCardContent = ({ data, isBack }: { data?: any, isBack?: bool
                         <div className="mt-auto pt-3 border-t-2 w-full border-dashed border-gray-300">
                                 <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5 tracking-widest">Valor de Compra</p>
                                 <span className="text-3xl font-black text-[var(--color-secondary)] leading-none">
-                                    {data.price}€
+                                    {data.buyPrice}M
                                 </span>
                         </div>
                     )}

@@ -6,6 +6,7 @@ import { Phase, GameState } from "@/services/types/socket"
 // @ts-ignore 
 import { fetchUserNamePiece } from '@/api/userServices'; 
 import boardConfig from '../../../public/data/board.json';
+import moneyConfig from '../../../public/data/money.json';
 
 export class GameModel {
     public gameId: string = "";
@@ -43,7 +44,8 @@ export class GameModel {
 		});
 
 		new_state.property_relationships.forEach((propInfo) => {
-			const propId = String(propInfo.square);
+			const propId = String(propInfo.square).padStart(3, '0');
+            
 			this.setPropertyOwner(propId, propInfo.owner ? String(propInfo.owner) : null);
 			this.setPropertyHouses(propId, propInfo.houses || 0);
 			this.setPropertyMortgaged(propId, propInfo.mortgage || false);
@@ -73,10 +75,10 @@ export class GameModel {
                     // En cuanto llega el username, creamos el PlayerModel con el nombre real y su color
                     const finalName = (data && data.username) ? data.username : "Jugador";
 					const playerColor = colorPalette[index % colorPalette.length];
-                    const player = new PlayerModel(playerId, finalName, playerColor);
+                    const playerMoney = new_state.money[playerId]
+                    const player = new PlayerModel(playerId, finalName, playerColor, playerMoney);
 
-                    player.balance = new_state.money[playerId];
-                    player.currentTileId = new_state.positions[playerId];
+                    player.currentTileId = String(new_state.positions[playerId]).padStart(3, '0');
                     player.jailRemainingTurns = new_state.jail_remaining_turns[playerId] || 0;
                     player.properties = new_state.property_relationships.filter(p => String(p.owner) === playerId).map(p => p.square);
                     
@@ -88,9 +90,51 @@ export class GameModel {
         });
 		await Promise.all(peticiones);
 
-		new_state.property_relationships.forEach((propInfo) => {
-			this.boardProperties[propInfo.square] = new PropertyModel(propInfo);
-		});
+        boardConfig.tiles.forEach((tile: any) => {
+            // Solo procesamos casillas de tipo propiedad, servidor o puente
+            if (!["property", "server", "bridge"].includes(tile.type)) return;
+
+            const propId = String(tile.id).padStart(3, '0');
+            const model = new PropertyModel(propId);
+            model.name = tile.name;
+            const moneyData = moneyConfig.tiles.find((t: any) => t.id === propId);
+            if (moneyData) {
+                model.setMoneyData(moneyData);
+            }
+
+            // Asignación de grupos y colores
+            if (tile.type === "server") {
+                model.group = 13;
+            } else if (tile.type === "bridge") {
+                model.group = 14;
+            } else {
+                model.group = tile.group;
+                const groupData = boardConfig.groups.find((g: any) => g.group === tile.group);
+                if (groupData) {
+                    model.color = groupData.color;
+                }
+            }
+
+            this.boardProperties[propId] = model;
+        });
+
+		new_state.property_relationships.forEach((p: any) => {
+            const propId = String(p.square).padStart(3, '0');
+            const property = this.boardProperties[propId];
+            
+            if (property) {
+                property.ownerId = p.owner ? String(p.owner) : null;
+                property.houseCount = p.houses || 0;
+                property.isMortgaged = p.mortgage || false;
+
+                // Actualizar la lista de propiedades del jugador
+                if (property.ownerId && this.players[property.ownerId]) {
+                    if (!this.players[property.ownerId].properties.includes(propId)) {
+                        this.players[property.ownerId].properties.push(propId);
+                    }
+                }
+            }
+        });
     }
 
 	// ---- FUNCIONES PLAYERS ----
@@ -107,6 +151,17 @@ export class GameModel {
 
 	public getPlayer(playerId: string): PlayerModel | undefined {
         return this.players[playerId];
+    }
+
+    public getPlayerName(playerId: string): string {
+        const player = this.players[playerId];
+        return player ? player.name : `Jugador ${playerId}`;
+    }
+
+    public getPlayerColor(playerId: string): string {
+        const player = this.players[playerId];
+        if (!player) return '#ffffff';
+        return `#${player.color.toString(16).padStart(6, '0')}`;
     }
 
 	public getPlayerBalance(playerId: string): number {
@@ -126,6 +181,14 @@ export class GameModel {
 	
 	public getCurrentTurnPlayerId(): string {
         return String(this.active_turn_player);
+    }
+
+    public setParkingMoney(money: number): void {
+        this.parking_money += money;
+    }
+    
+    public getParkingMoney(): number {
+        return this.parking_money;
     }
 
 	//---- Funciones propiedades
@@ -149,7 +212,6 @@ export class GameModel {
         const owner = this.getPropertyOwnerId(propertyId);
         return owner !== null && owner !== "";
     }
-
 	// ---- Modificaciones
 	public setPropertyOwner(propertyId: string, newOwnerId: string | null): void {
 		const property = this.getProperty(propertyId);
@@ -160,6 +222,7 @@ export class GameModel {
         // Quitar la propiedad al antiguo dueño si existía
         if (oldOwnerId && this.players[oldOwnerId]) {
             this.players[oldOwnerId].properties = this.players[oldOwnerId].properties.filter(id => id !== propertyId);
+            this.players[oldOwnerId].emitUpdate();
         }
 
         // Asignar el nuevo dueño en la propiedad
@@ -170,6 +233,7 @@ export class GameModel {
             if (!this.players[newOwnerId].properties.includes(propertyId)) {
                 this.players[newOwnerId].properties.push(propertyId);
             }
+            this.players[newOwnerId].emitUpdate();
         }
 	}
 
@@ -205,8 +269,16 @@ export class GameModel {
 	public updatePlayerPosition(playerId: string, newTileId: string): void {
         const player = this.getPlayer(playerId);
         if (player) {
-            player.currentTileId = newTileId;
+            player.currentTileId = String(newTileId).padStart(3, '0');
         }
+    }
+
+    public getCountOwnedInGroup(groupId: number, playerId: string): number {
+        if (!playerId) return 0;
+
+        return Object.values(this.boardProperties).filter(
+            prop => prop.group === groupId && prop.ownerId === playerId
+        ).length;
     }
 
 
@@ -270,6 +342,17 @@ export class GameModel {
         
         // Clamp result between 0 and the remaining space until 5 (Hotel)
         return Math.max(0, Math.min(finalMax, 5 - targetProp.houseCount));
+    }
+
+    public canBuildOneMore(propId: string, playerId: string): boolean {
+        const prop = this.getProperty(propId);
+        if (!prop) return false;
+        return this.getMaxAddableHouses(propId, playerId, prop.buildPrice) > 0;
+    }
+
+    // Comprueba si se puede quitar una casa de esta propiedad
+    public canSellOneMore(propId: string): boolean {
+        return this.getMaxRemovableHouses(propId) > 0;
     }
 
     // Calculates how many houses you can sell following the uniform rule.

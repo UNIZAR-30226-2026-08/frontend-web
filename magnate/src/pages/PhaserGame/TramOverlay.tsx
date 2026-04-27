@@ -64,13 +64,17 @@ export const TramOverlay = () => {
 
     const confirmTramTravel = () => {
 		console.log("dentro de tram travel");
-        const cost = (selectedTram.id === currentTileId) ? 0 : 50; // TODO Check cost
+        const cost = (selectedTram.id === currentTileId) ? 0 : 30;
 		console.log(selectedTram.id)
         
         EventBus.emit('execute-tram-travel', {
 			targetId: selectedTram.id, 
             cost: cost 
 		});
+
+        EventBus.emit('action-take-tram', {
+            square: selectedTram.id
+        });
         
 		setIsOpen(false);
 		setSelectedTram(null);
@@ -112,7 +116,7 @@ export const TramOverlay = () => {
                                         </span>
                                         {selectedTram.id !== currentTileId && (
                                             <span className="text-[12px] opacity-80 font-bold tracking-tighter">
-                                                Coste: 50M
+                                                Coste: 30M
                                             </span>
                                         )}
                                     </div>

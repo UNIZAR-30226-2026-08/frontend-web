@@ -89,20 +89,24 @@ export const ControlsHUD = () => {
 
     const handleAdministerClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.blur();
-        EventBus.emit('dark-mode', true);
-        EventBus.emit('show-players-hud', true);
-        EventBus.emit('open-property-selection-mode');
+        EventBus.emit('start-administer');
+        // EventBus.emit('dark-mode', true);
+        // EventBus.emit('show-players-hud', true);
+        // EventBus.emit('open-property-selection-mode');
     };
 
     const handleTradeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.blur();
-        EventBus.emit('dark-mode', true);
-        EventBus.emit('set-hud-clickable', true);
-        EventBus.emit('start-selection-mode');
+        EventBus.emit('start-trade');
+        // EventBus.emit('dark-mode', true);
+        // EventBus.emit('set-hud-clickable', true);
+        // EventBus.emit('start-selection-mode');
     };
 
     const handleFinishTurnClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         console.log('Finish Turn clicked!');
+        EventBus.emit('request-next-phase');
+        // EventBus.emit('action-next-phase');
         // TODO: EventBus.emit('trigger-finish-turn')
         e.currentTarget.blur();
     };
@@ -110,10 +114,16 @@ export const ControlsHUD = () => {
     const handleBankruptClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setIsBankruptOpen(true);
         e.currentTarget.blur();
+        
     };
 
     const handleConfirmBankrupt = () => {
-        EventBus.emit('trigger-bankruptcy');
+        console.log("Enviando rendición al servidor...");
+        EventBus.emit('action-surrender');
+        // emito evento y me voy
+        EventBus.emit('handle-leave-game');
+        window.location.href = '/home';
+        //EventBus.emit('trigger-bankruptcy');
         setIsBankruptOpen(false);
     };
 
