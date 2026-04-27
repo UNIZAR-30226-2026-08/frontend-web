@@ -317,6 +317,16 @@ export const GameService = ( ) => {
 				};
 				EventBus.emit('report-response-choose-fantasy',responseChooseFantasy);
 				break;
+			case "ResponseBonus":
+				const responseBonus: WSTypes.GameInfoBonus = {
+					"money": data.money,
+					"active_phase_player": data.active_phase_player,
+					"active_turn_player": data.active_turn_player,
+					"phase": data.phase,
+					"bonuses": data.bonuses || {}, // Aquí vienen los ganadores y cantidades
+				};
+				EventBus.emit('show-final-results', responseBonus);
+				break;
 			case "ResponseAuction":
 				const auctionInfo :  WSTypes.AuctionData = {
 					"square": data.auction?.square,
@@ -497,13 +507,13 @@ export const GameService = ( ) => {
 		EventBus.on('action-build', actionBuild); // construir casa
 		EventBus.on('action-demolish', actionDemolish); // destruir casa
 		EventBus.on('action-choose-card', actionChooseCard);
-		EventBus.on('action-surrender', actionSurrender);
+		EventBus.on('action-surrender', actionSurrender); // alguien se declara en bancarrota
 		EventBus.on('action-trade-proposal', actionTradeProposal); // jugador manda propuesta a otro
 		EventBus.on('action-trade-answer', actionTradeAnswer); // jugador acepta/deniega la propuesta
 		EventBus.on('action-mortgage-set', actionMortgageSet); // hipotecar propiedad
 		EventBus.on('action-mortgage-unset', actionMortgageUnset); // deshipotecar
 		EventBus.on('action-pay-bail', actionPayBail);
-		EventBus.on('action-next-phase', actionNextPhase);
+		EventBus.on('action-next-phase', actionNextPhase); // se pulsa botón de siguiente fase
 		EventBus.on('action-bid', actionBid); // envíar puja cuando estamos en la subasta (solo se envía una puja por player)
 		EventBus.on('receive-response', routeResponse);
 		EventBus.on('receive-action', routeAction);

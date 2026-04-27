@@ -105,7 +105,8 @@ export const ControlsHUD = () => {
 
     const handleFinishTurnClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         console.log('Finish Turn clicked!');
-        EventBus.emit('action-next-phase');
+        EventBus.emit('request-next-phase');
+        // EventBus.emit('action-next-phase');
         // TODO: EventBus.emit('trigger-finish-turn')
         e.currentTarget.blur();
     };

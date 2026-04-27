@@ -10,5 +10,5 @@
 	"num_paid_rents": {"title": "Pagafantas", "description": "Más alquileres pagados"},
 	"num_trades": {"title": "El mercante", "description": "Más intercambios realizados"},
 	"num_mortgages": {"title": "El especulador", "description": "Más propiedades hipotecadas"},
-	"end_game": {"title": "Finalistas", "description": "Ha llegado al final de la partida"},
+	"end_game": {"title": "Finalistas", "description": "Ha llegado al final de la partida"}
 }

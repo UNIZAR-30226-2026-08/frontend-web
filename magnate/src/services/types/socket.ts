@@ -71,6 +71,7 @@ export type gameResponseType = 'Response'
 | 'ResponseThrowDices'
 | 'ResponseChooseSquare'
 | 'ResponseChooseFantasy'
+| 'ResponseBonus'
 | 'ResponseAuction';
 
 export type BotLevel = 'very_easy' | 'easy' | 'medium' | 'hard' | 'very_hard' 
@@ -145,6 +146,7 @@ export interface GameResponse {
 	final_amount?: number;	// deprecated? well I'm not passing these
 	is_tie?: boolean;		// deprecated? well I'm not passing these
 	bids?: Record<string, number>; // userid, money bidded
+	bonuses?: Record<string, BonusData>;
 }
 
 export interface PrivateCommand {
@@ -265,6 +267,20 @@ export interface GameInfoAuction {
 	active_turn_player: number;
 	phase: Phase;
 	auction: AuctionData;
+}
+
+export interface BonusData {
+    display_name: string;
+    bonus_amount: number;
+    winners: (string | number)[]; // IDs de los jugadores que ganan este bono
+}
+
+export interface GameInfoBonus {
+	money : Record<string, number>; // Dict userid: number
+	active_phase_player: number;
+    active_turn_player: number;
+    phase: Phase;
+	bonuses: Record<string, BonusData>;
 }
 
 /* 

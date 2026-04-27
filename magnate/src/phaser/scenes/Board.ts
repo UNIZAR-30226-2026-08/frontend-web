@@ -27,7 +27,6 @@ import { GameLogicManager } from '../managers/GameLogicManager';
 import { EventManager } from '../managers/EventManager';
 
 import * as WSTypes from "@/services/types/socket";
-import { is } from '@react-three/fiber/dist/declarations/src/core/utils';
 
 export class Board extends Phaser.Scene {
     
@@ -452,6 +451,25 @@ export class Board extends Phaser.Scene {
             } 
         });
 
+        EventBus.on('request-next-phase', () => {
+            const model = this.GamelogicManager.model;
+            const myId = model.myId;
+            const me = model.getPlayer(myId);
+
+            // balance negativo?
+            if (me && me.balance < 0) {
+                EventBus.emit('show-toast', {
+                    message: "No puedes pasar turno con saldo negativo.",
+                    type: 'error'
+                });
+                return;
+            }
+
+            // si balance ok, emitimos la evento
+            EventBus.emit('action-next-phase');
+
+        });
+
         this.events.on('shutdown', () => { 
             EventBus.off('model-updated');
             EventBus.off('trigger-dice-roll', this.handleDiceRoll, this); });
@@ -506,12 +524,11 @@ export class Board extends Phaser.Scene {
         this.hideUI();
 
         await this.announceTurn(bannerText, playerColor);
-
         // Después de enseñar banner, empieza la fase
         this.handlePhaseLogic(gameModel);
     }
 
-    private handlePhaseLogic(gameModel: any) {
+    private handlePhaseLogic(gameModel: any) { // TODO: pensar que hacer con esta función
         const isMe = gameModel.isMyTurn();
         console.log(`[Phase Check] Fase actual: "${gameModel.phase}" | ¿Es mi turno?: ${isMe}`);
         this.showUI();
@@ -519,7 +536,6 @@ export class Board extends Phaser.Scene {
             case 'roll_the_dices':
                 console.log("Enseño UI");
                 this.showUI();
-                //const isMe = gameModel.isMyTurn();
                 EventBus.emit('update-turn-controls', isMe);
                 break;
             case 'choose_square':
@@ -631,9 +647,9 @@ export class Board extends Phaser.Scene {
         token.setDepth(200 + this.players.length);
 
         // TODO: Esto es solo para probar el movimiento
-        token.on('pointerdown', () => {
-            this.handlePlayerClick(id);
-        });
+        // token.on('pointerdown', () => {
+        //     this.handlePlayerClick(id);
+        // });
 
         this.players.push({ model, token });
     }
@@ -673,63 +689,58 @@ export class Board extends Phaser.Scene {
         });
     }
 
-    // TODO: Esto es solo para probar el movimiento (async !!!!!)
-    private async handlePlayerClick(playerId: string) {
-        const p = this.players.find(pair => pair.model.id === playerId);
-        if (!p) return;
+    // // TODO: Esto es solo para probar el movimiento (async !!!!!)
+    // private async handlePlayerClick(playerId: string) {
+    //     const p = this.players.find(pair => pair.model.id === playerId);
+    //     if (!p) return;
         
-        this.selectedPlayer = p;
+    //     this.selectedPlayer = p;
     
-        const currentIndex = this.tiles.findIndex(t => t.tileConfig.id === p.model.currentTileId);
+    //     const currentIndex = this.tiles.findIndex(t => t.tileConfig.id === p.model.currentTileId);
 
-        const hopIndex = (currentIndex + 1) % this.tiles.length;
-        const hopTile = this.tiles[hopIndex];
+    //     const hopIndex = (currentIndex + 1) % this.tiles.length;
+    //     const hopTile = this.tiles[hopIndex];
 
-        // DEBUG: pasa por 'todas' las casillas
-        const nextIndex = (currentIndex + 3) % this.tiles.length;
-        const targetTile = this.tiles[nextIndex];
-        const nextTileId = targetTile.tileConfig.id;
-
-        // DEBUG: va a la casilla dependiendo del tipo
-        // const targetIndex = this.tiles.findIndex(t => t instanceof JailTile);
-        // const targetTile = this.tiles[targetIndex];
-        // const nextTileId = targetTile.tileConfig.id;
+    //     // DEBUG: pasa por 'todas' las casillas
+    //     const nextIndex = (currentIndex + 3) % this.tiles.length;
+    //     const targetTile = this.tiles[nextIndex];
+    //     const nextTileId = targetTile.tileConfig.id;
         
-        const othersCount = this.players.filter(other => 
-            other.model.id !== playerId && 
-            other.model.currentTileId === nextTileId
-        ).length;
+    //     const othersCount = this.players.filter(other => 
+    //         other.model.id !== playerId && 
+    //         other.model.currentTileId === nextTileId
+    //     ).length;
 
-        let finalX = targetTile.x;
-        let finalY = targetTile.y;
+    //     let finalX = targetTile.x;
+    //     let finalY = targetTile.y;
 
-        if (othersCount > 0) {
-            const spacing = 22;
-            finalX += (othersCount % 2 === 0) ? spacing : -spacing;
-            finalY += (othersCount > 1) ? spacing : -spacing;
-        }
+    //     if (othersCount > 0) {
+    //         const spacing = 22;
+    //         finalX += (othersCount % 2 === 0) ? spacing : -spacing;
+    //         finalY += (othersCount > 1) ? spacing : -spacing;
+    //     }
 
-        const path = [
-            { x: hopTile.x, y: hopTile.y },
-            { x: finalX, y: finalY }
-        ];
+    //     const path = [
+    //         { x: hopTile.x, y: hopTile.y },
+    //         { x: finalX, y: finalY }
+    //     ];
 
-        this.hideUI();
+    //     this.hideUI();
 
-        const cssColor = '#' + p.model.color.toString(16).padStart(6, '0');
+    //     const cssColor = '#' + p.model.color.toString(16).padStart(6, '0');
 
-        // await this.playSecretaryCutscene();
-        await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
+    //     // await this.playSecretaryCutscene();
+    //     await this.announceTurn(p.model.name, cssColor); // Ojo con el await, que hace falta
 
-        this.cameraController.followToken(p.token, 2.2, () => {
-            p.model.move(nextTileId);
-            p.token.moveToCoords(path, () => {
-                this.time.delayedCall(800, () => {
-                    this.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
-                });
-            });
-        });
-    }
+    //     this.cameraController.followToken(p.token, 2.2, () => {
+    //         p.model.move(nextTileId);
+    //         p.token.moveToCoords(path, () => {
+    //             this.time.delayedCall(800, () => {
+    //                 this.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
+    //             });
+    //         });
+    //     });
+    // }
 
     public async sendToSecretary(playerId: string) {
         const p = this.players.find(pair => pair.model.id === playerId);
@@ -779,12 +790,10 @@ export class Board extends Phaser.Scene {
         if (diceData.dice_bus !== undefined && diceData.dice_bus !== null) {
             values.push(diceData.dice_bus);
         }
-
         let formattedDestinations: string[] = [];
         if (diceData.destinations) {
             formattedDestinations = diceData.destinations.map(d => String(d).padStart(3, '0'));
         }
-
         const isMyTurn = this.GamelogicManager.model.isMyTurn();
 
         this.hideUI();
@@ -796,7 +805,6 @@ export class Board extends Phaser.Scene {
             formattedDestinations,
             isMyTurn
         );
-
     }
 
     // Marcador para cada casilla que compra un player 
@@ -822,8 +830,6 @@ export class Board extends Phaser.Scene {
                     ease: 'Quad.easeInOut'
                 });
             }
-            
-            
         } else {
             console.warn("No se encontró la casilla con ID:", data.tileId);
         }

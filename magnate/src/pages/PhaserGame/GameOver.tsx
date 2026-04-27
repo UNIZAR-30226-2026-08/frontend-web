@@ -3,69 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { EventBus } from '@/EventBus';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion'; // Para movimiento
-
-const BONUS_STEPS = [ // TODO: vendrá del backend o en json
-    { id: 'properties', label: 'Más casas construidas' },
-    { id: 'tiles', label: 'Más casillas recorridas' },
-    { id: 'cash', label: 'Más alquileres pagados' }
-];
+import bonusConfig from '../../../public/data/finalCategories.json';
+import { GameLogicManager } from '@/phaser/managers/GameLogicManager';
 
 export function GameOver() {
     const [players, setPlayers] = useState<any[]>([]);
+    const [bonusSequence, setBonusSequence] = useState<any[]>([]);
     const [stepIndex, setStepIndex] = useState(-1);
     const [isVisible, setIsVisible] = useState(false);
 
 	const navigate = useNavigate();
-
-    // --- LÓGICA DEBUG ---
-    useEffect(() => {
-        const handleDebugKey = (e: KeyboardEvent) => {
-            if (e.key.toLowerCase() === 'g') {
-                const mockData = [ // TODO: vendrá del backend
-                    { id: '001', name: 'Juls', color: '#f94144', basePoints: 600, bonuses: { properties: 400, tiles: 200, cash: 300 } },
-                    { id: '002', name: 'Nico', color: '#f9c74f', basePoints: 800, bonuses: { properties: 100, tiles: 400, cash: 100 } },
-                    { id: '003', name: 'lucas', color: '#90be6d', basePoints: 400, bonuses: { properties: 750, tiles: 100, cash: 50 } },
-                    { id: '004', name: 'ma', color: '#2c7da0', basePoints: 400, bonuses: { properties: 100, tiles: 100, cash: 50 } }
-                ];
-                EventBus.emit('show-final-results', mockData);
-            }
-        };
-        window.addEventListener('keydown', handleDebugKey);
-        return () => window.removeEventListener('keydown', handleDebugKey);
-    }, []);
-
-    // --- RECIBIR DATOS ---
-    useEffect(() => {
-        const handleResults = (data: any[]) => {
-            setPlayers(data.map(p => ({ ...p, currentPoints: p.basePoints })));
-            setIsVisible(true);
-            setTimeout(() => setStepIndex(0), 2500); 
-        };
-
-        EventBus.on('show-final-results', handleResults);
-        return () => { EventBus.off('show-final-results'); };
-    }, []);
-
-    // --- SECUENCIA DE BONUS ---
-    useEffect(() => {
-        if (stepIndex >= 0 && stepIndex < BONUS_STEPS.length) {
-            const bonusId = BONUS_STEPS[stepIndex].id;
-
-            setPlayers(prev => prev.map(p => ({
-                ...p,
-                currentPoints: p.currentPoints + (p.bonuses[bonusId] || 0)
-            })));
-
-            const timer = setTimeout(() => setStepIndex(prev => prev + 1), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [stepIndex]);
-
-    if (!isVisible) return null;
-
-    const sortedPlayers = [...players].sort((a, b) => b.currentPoints - a.currentPoints);
-    const maxPoints = Math.max(...players.map(p => p.currentPoints), 1000);
-    
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     const stripedBackgroundStyle = { 
         backgroundImage: `
@@ -79,63 +26,147 @@ export function GameOver() {
         backgroundSize: 'cover'
     };
 
+    useEffect(() => {
+        const handleResults = (data: any) => { // ojo del backend solo recibimos el bonuses, el resto está vacio
+            const model = GameLogicManager.getInstance().model;
+            if (!model) return;
+
+            const initialPlayers = model.orderedPlayers.map((id: string) => {
+                const p = model.getPlayer(id);
+                const currentBalance = p?.balance || 0;
+
+                return {
+                    id: String(id),
+                    name: p?.name || `Jugador ${id}`,
+                    color: p?.color ? `#${p.color.toString(16).padStart(6, '0')}` : "#222222",
+                    currentPoints: currentBalance * 0.75,
+                    baseBalance: currentBalance
+                };
+            });
+
+            const sequence = Object.entries(data.bonuses || {}).map(([key, info]: [string, any]) => {
+                const config = (bonusConfig as any)[key];
+                return {
+                    id: key,
+                    label: config?.title || info.display_name,
+                    description: config?.description || "",
+                    amount: info.bonus_amount,
+                    winners: info.winners.map(String)
+                };
+            });
+
+            setPlayers(initialPlayers);
+            setBonusSequence(sequence);
+            setIsVisible(true);
+            
+            setTimeout(() => setStepIndex(0), 2000);
+        };
+
+        EventBus.on('show-final-results', handleResults);
+        return () => { EventBus.off('show-final-results'); };
+    }, []);
+
+    useEffect(() => {
+        if (stepIndex >= 0 && stepIndex < bonusSequence.length) {
+            const currentBonus = bonusSequence[stepIndex];
+
+            setPlayers(prev => prev.map(p => {
+                if (currentBonus.winners.includes(p.id)) {
+                    return { ...p, currentPoints: p.currentPoints + currentBonus.amount };
+                }
+                return p;
+            }));
+
+            const timer = setTimeout(() => setStepIndex(prev => prev + 1), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [stepIndex, bonusSequence]);
+
+    if (!isVisible) return null;
+
+    const sortedPlayers = [...players].sort((a, b) => b.currentPoints - a.currentPoints);
+    const maxPoints = Math.max(...players.map(p => p.currentPoints), 1) || 1000;
+    const isFinished = stepIndex >= bonusSequence.length;
+
     return (
         <div className="fixed inset-0 z-[1000] backdrop-blur-sm flex items-center justify-center p-6" >
             <div className="rounded-[60px] w-full max-w-2xl p-12 shadow-[0_0_50px_rgba(0,0,0,0.8)] border-2 border-white"
                 style = {stripedBackgroundStyle}>
-                
-                <div className="text-center mb-4">
-                    <span className="text-[14px] font-bold uppercase tracking-widest text-slate-400">
-                        {stepIndex < BONUS_STEPS.length ? "Calculando puntuación..." : "Partida Finalizada"}
-                    </span>
-                    <h1 className="text-[35px] font-black italic uppercase text-slate-900 mt-2">
-                        {stepIndex >= 0 && stepIndex < BONUS_STEPS.length 
-                            ? BONUS_STEPS[stepIndex].label 
-                            : "Resultados"}
-                    </h1>
-                </div>
+                {/* Cabecera */}
+                <div className="text-center mb-8 h-[120px] flex flex-col justify-center">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={stepIndex}
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -20, opacity: 0 }}
+                            transition={{ duration: 0.4 }} >
+                            <span className="text-[12px] font-bold uppercase tracking-[0.2em] text-slate-500 block mb-1">
+                                {!isFinished ? "Calculando puntuación..." : "Partida Finalizada"}
+                            </span>
 
+                            <h1 className="text-[38px] font-black italic uppercase text-slate-900 leading-tight">
+                                {!isFinished ? bonusSequence[stepIndex]?.label : "Resultados Finales"}
+                            </h1>
+
+                            {!isFinished && bonusSequence[stepIndex]?.description && (
+                                <p className="text-slate-500 font-medium text-[20px] mt-2">
+                                    {bonusSequence[stepIndex].description}
+                                </p>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+                
                 <div className="space-y-10 relative">
                     <AnimatePresence>
-                        {sortedPlayers.map((player, index) => {
-                            const widthPercentage = (player.currentPoints / maxPoints) * 100;
-                            
-                            return (
-                                <motion.div key={player.id} className="relative" layout 
-                                    transition={{ type: "spring", stiffness: 200, damping: 50 }}>
-
-                                    <div className="flex justify-between items-center mb-3">
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-[22px] font-black text-slate-400">#{index + 1}</span>
-                                            <span className="text-[22px] font-extrabold text-slate-800">{player.name}</span>
+                        {players.length > 0 ? (
+                            sortedPlayers.map((player, index) => {
+                                const safeMaxPoints = maxPoints <= 0 ? 1 : maxPoints;
+                                const widthPercentage = (player.currentPoints / safeMaxPoints) * 100;
+                                
+                                return (
+                                    <motion.div 
+                                        key={player.id} 
+                                        layout 
+                                        className="relative"
+                                        transition={{ type: "spring", stiffness: 200, damping: 50 }}>
+                                        <div className="flex justify-between items-center mb-3">
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-[22px] font-black text-slate-400">#{index + 1}</span>
+                                                <span className="text-[22px] font-extrabold text-slate-800">{player.name}</span>
+                                            </div>
+                                            <span className="text-[22px] font-black tabular-nums text-slate-800">
+                                                <AnimatedCounter value={Math.floor(player.currentPoints)} />
+                                                <small className="text-[18px] text-slate-400"> M</small>
+                                            </span>
                                         </div>
-                                        <span className="text-[22px] font-black tabular-nums text-slate-800">
-                                            <AnimatedCounter value={player.currentPoints} />
-                                            <small className="text-[18px] text-slate-400"> M</small>
-                                        </span>
-                                    </div>
-                                    
-                                    <div className="h-10 w-full bg-slate-300 rounded-full p-1.5 shadow-inner border-2 ">
-                                        <motion.div 
-                                            className="h-full rounded-full relative overflow-hidden"
-                                            animate={{ width: `${widthPercentage}%` }}
-                                            transition={{ duration: 1, ease: "easeOut" }}
-                                            style={{ backgroundColor: player.color }}>
-                                            <div className="absolute inset-0 bg-white/20 skew-x-[-20deg] translate-x-[-50%] animate-pulse" />
-                                        </motion.div>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
+                                        
+                                        <div className="h-10 w-full bg-slate-300 rounded-full p-1.5 shadow-inner border-2 border-white/50">
+                                            <motion.div 
+                                                className="h-full rounded-full relative overflow-hidden"
+                                                initial={{ width: "0%" }}
+                                                animate={{ width: `${Math.max(widthPercentage, 2)}%` }}
+                                                transition={{ duration: 1, ease: "easeOut" }}
+                                                style={{ backgroundColor: player.color }}
+                                            >
+                                                <div className="absolute inset-0 bg-white/20 skew-x-[-20deg] translate-x-[-50%] animate-pulse" />
+                                            </motion.div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })
+                        ) : ( // por si algo no va bien sale esto
+                            <div className="flex justify-center items-center h-20 text-slate-400 italic">
+                                Cargando estadísticas...
+                            </div>
+                        )}
                     </AnimatePresence>
                 </div>
 
                 <div className="mt-12 flex justify-center">
                     <Button 
-                        onClick={() => {
-								// window.location.reload(); 
-								navigate('/home'); 
-						}}
+                        onClick={() => { EventBus.emit('handle-leave-game'); navigate('/home'); }}
                         className={`bg-[var(--color-primary)] text-white px-7 py-7 rounded-full font-black uppercase text-[20px] ${bouncyAnimation}`}>
                         Continuar
                     </Button>

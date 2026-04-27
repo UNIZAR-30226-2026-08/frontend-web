@@ -13,13 +13,8 @@ const HUD_POSITIONS: Record<string, { x: number, y: number }> = {
 };
 
 export class AnimationManager {
-    //private dynamicHudPositions: Map<string, { x: number, y: number }> = new Map();
-    constructor(private scene: Phaser.Scene) {
-        // EventBus.on('update-hud-anchor', (data: { playerId: string, x: number, y: number }) => {
-        //     this.dynamicHudPositions.set(data.playerId, { x: data.x, y: data.y });
-        //     console.log(`Posición HUD actualizada para ${data.playerId}:`, data.x, data.y);
-        // });
-    }
+
+    constructor(private scene: Phaser.Scene) {}
 
     
     // Animación monedas (para parking)
@@ -59,46 +54,42 @@ export class AnimationManager {
     public BillAnimation(playerId: string, count: number = 6, textAmount?: string) {
 		const { playSound } = useAudio();
 
-        // const hudPos = this.dynamicHudPositions.get(playerId) || { 
-        //     x: this.scene.scale.width - 150, 
-        //     y: this.scene.scale.height / 2 
-        // };
-        
-        // const isNegative = textAmount?.startsWith('-');
-        // const color = isNegative ? '#ff4d4d' : '#22c55e';
+        const hudPos = HUD_POSITIONS[playerId] || { x: this.scene.scale.width - 100, y: this.scene.scale.height / 2 };
+        const isNegative = textAmount?.startsWith('-');
+        const color = isNegative ? '#ff4d4d' : '#22c55e';
 
-        // for (let i = 0; i < count; i++) {
-        //     this.scene.time.delayedCall(i * 100, () => {
-        //         // Creamos el billete
-        //         const bill = new BillToken(this.scene, hudPos.x, hudPos.y, 70, 40);
+        for (let i = 0; i < count; i++) {
+            this.scene.time.delayedCall(i * 100, () => {
+                // Creamos el billete
+                const bill = new BillToken(this.scene, hudPos.x, hudPos.y, 70, 40);
                 
-        //         bill.setScrollFactor(0);
-        //         bill.setDepth(6000);
-        //         bill.setAlpha(1);
-        //         bill.setScale(0.5);
+                bill.setScrollFactor(0);
+                bill.setDepth(6000);
+                bill.setAlpha(1);
+                bill.setScale(0.5);
 
-		// 		playSound('money_win');
+				playSound('money_win');
 
-        //         this.scene.tweens.add({
-        //             targets: bill,
-        //             x: bill.x - Phaser.Math.Between(150, 250),
-        //             y: bill.y + Phaser.Math.Between(-100, 100),
-        //             scale: 1.2,
-        //             angle: Phaser.Math.Between(-20, 20),
-        //             duration: 1000,
-        //             ease: 'Cubic.easeOut',
-        //             onComplete: () => {
-        //                 this.scene.tweens.add({
-        //                     targets: bill,
-        //                     alpha: 0,
-        //                     y: bill.y + 50,
-        //                     duration: 500,
-        //                     onComplete: () => bill.destroy()
-        //                 });
-        //             }
-        //         });
-        //     });
-        // }
+                this.scene.tweens.add({
+                    targets: bill,
+                    x: bill.x - Phaser.Math.Between(150, 250),
+                    y: bill.y + Phaser.Math.Between(-100, 100),
+                    scale: 1.2,
+                    angle: Phaser.Math.Between(-20, 20),
+                    duration: 1000,
+                    ease: 'Cubic.easeOut',
+                    onComplete: () => {
+                        this.scene.tweens.add({
+                            targets: bill,
+                            alpha: 0,
+                            y: bill.y + 50,
+                            duration: 500,
+                            onComplete: () => bill.destroy()
+                        });
+                    }
+                });
+            });
+        }
         
         if (textAmount) { // Cantidad de dinero que se muestra
 			if (textAmount.startsWith('-')) {
