@@ -343,6 +343,8 @@ export interface GameAskFantasy {
 export interface GameAskTradeAnswer {
 	/** True if trade is accepted */
 	accept: boolean; 
+	player: string;
+	game: string;
 }
 
 export interface GameAskBid {
@@ -380,7 +382,7 @@ export interface GameReportFantasy {
 }
 
 export interface GameReportTradeAnswer {
-	//player: string;	// user id of player who sent the action
+	player: string;	// user id of player who sent the action
 	/** True if trade is accepted */
 	accept?: boolean; 
 }
@@ -391,8 +393,9 @@ export interface GameReportBid {
 }
 
 export interface GameReportTradeProposal {
+	game: string;
 	player: string;	// user id of player who sent the action
-	destination_user?: string;	// userid
+	destination_user?: number;	// userid
 	offered_money?:	number;
 	asked_money?: number;
 	offered_properties?: string[];  // tile id of property location

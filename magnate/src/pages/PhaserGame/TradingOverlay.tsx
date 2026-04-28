@@ -158,7 +158,7 @@ export const TradingOverlay = () => {
         // Estructura para ActionTradeProposal
         const tradePayload = {
             player: sender.id,
-            destination_user: receiver.id,
+            destination_user: Number(receiver.id),
             offered_money: myOffer.money,
             offered_properties: myOffer.properties.map(p => p.id),
             asked_money: theirOffer.money,
@@ -243,6 +243,7 @@ export const TradingOverlay = () => {
                             <TradeZone 
                                 title="Tu Dinero"
                                 offer={myOffer}
+                                maxMoney={sender.balance}
                                 playerProperties={sender.properties}
                                 onAdd={() => startSelection('me')} 
                                 onMoneyChange={(v: number) => setMyOffer({...myOffer, money: v})}
@@ -270,6 +271,7 @@ export const TradingOverlay = () => {
                             <TradeZone 
                                 title={`Oferta de ${receiver.name}`}
                                 offer={theirOffer} 
+                                maxMoney={receiver.balance}
                                 playerProperties={receiver.properties}
                                 onAdd={() => startSelection('them')} 
                                 onMoneyChange={(v: number) => setTheirOffer({...theirOffer, money: v})}
@@ -292,7 +294,7 @@ export const TradingOverlay = () => {
     );
 };
 
-const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], onRemoveProperty, showProperties}: any) => {
+const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], onRemoveProperty, showProperties, maxMoney}: any) => {
     
     const hasProperties = playerProperties && playerProperties.length > 0;
     const paperStyle = {
@@ -311,7 +313,7 @@ const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], 
 
             <div className="relative group">
                 <Input 
-                    placeholder="0"
+                    placeholder={`Máx: ${maxMoney}M`}
                     className="w-full bg-white border-2 border-slate-400 rounded-[30px] py-8 px-7 text-xl font-bold text-slate-900 outline-none 
                     focus:border-slate-700 transition-all placeholder:text-slate-400 shadow-sm"
                     value={offer.money || ''}

@@ -157,7 +157,9 @@ export const GameService = ( ) => {
 	const actionTradeAnswer = ( data: WSTypes.GameAskTradeAnswer ) => {
 		const message = {
 			"type" : "ActionTradeAnswer",
-			"accept" : data.accept
+			"accept" : data.accept, 
+			"player": data.player,
+			"game": data.game
 		};
 		EventBus.emit('send-message', message);
 	};
@@ -433,21 +435,22 @@ export const GameService = ( ) => {
 				break;
 			case "ActionTradeProposal":
 				const reportTradeProposal : WSTypes.GameReportTradeProposal = {
+					"game": data.game,
 					"player": data.player,
-					"destination_user": data.destination_user,
+					"destination_user": Number(data.destination_user),
 					"offered_money": data.offered_money,
 					"asked_money": data.asked_money,
 					"offered_properties": data.offered_properties,
 					"asked_properties": data.asked_properties
 				};
-				EventBus.emit('report-action-trade-proposal',reportTradeProposal);
+				EventBus.emit('report-action-trade-proposal', reportTradeProposal);
 				break;
 			case "ActionTradeAnswer":
 				const reportTradeAnswer : WSTypes.GameReportTradeAnswer = {
-					//"player": data.player,
+					"player": data.player,
 					"accept": data.accept
 				};
-				EventBus.emit('report-action-trade-answer',reportTradeAnswer);
+				EventBus.emit('report-action-trade-answer', reportTradeAnswer);
 				break;
 			case "ActionMortgageSet":
 				const reportMortgageSet : WSTypes.GameReportSquare = {

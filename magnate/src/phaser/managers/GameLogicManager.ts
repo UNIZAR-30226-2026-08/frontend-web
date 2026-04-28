@@ -326,7 +326,7 @@ export class GameLogicManager {
                 return ids.map(id => {
                     const prop = this.model.getProperty(String(id).padStart(3, '0'));
                     return {
-                        id: id,
+                        id: Number(id),
                         name: prop?.name || `Propiedad ${id}`,
                         color: prop?.color || '#cbd5e1'
                     };
@@ -349,14 +349,17 @@ export class GameLogicManager {
                 offeredProperties: mapProperties(data.offered_properties || []),
                 askedProperties: mapProperties(data.asked_properties || []),
             };
-            this.lastPendingProposal = data;
+            console.log("Información de la ultima propuesta guardada:", this.lastPendingProposal);
+            console.log("Emitiendo mensaje de proposalData", proposalData);
             EventBus.emit('show-trade-request', proposalData);
         });
 
         EventBus.on('report-action-trade-answer', (data: any) => {
+            console.log("action-trade-answer", data);
             const accepted = data.accept;
+            const player = data.player;
             console.log("Manager: ¿Trato aceptado?", accepted);
-            console.log("lastPendingProposal",  this.lastPendingProposal);
+            console.log("ultima propuesta", this.lastPendingProposal);
             
             if (accepted && this.lastPendingProposal) {
                 this.executeTradeTransfer(this.lastPendingProposal);
@@ -637,53 +640,63 @@ export class GameLogicManager {
         // }
     }
 
+//     - "fantasy_event": FantasyEvent	    - See above
+//     - "result": Dictionary | null		- Depends on "fantasy_event"
+// 			null for: WIN_PLAIN_MONEY, WIN_RATIO_MONEY, LOSE_PLAIN_MONEY, LOSE_RATIO_MONEY, SHARE_MONEY_ALL, EVERYBODY_SENDS_YOU_MONEY,
+//					GET_PARKING_MONEY, GO_TO_JAIL, EVERYBODY_TO_JAIL, SHUFFLE_POSITIONS, MOVE_ANYWHERE_RANDOM, MAGNETISM, GO_TO_START
+//			{"square": custom_id} for: BREAK_OPPONENT_HOUSE, BREAK_OWN_HOUSE, FREE_HOUSE, RECEIVE_PROPERTY
+//			{"squares": [custom_id, ...]} for: EARTHQUAKE
+// 			{"target_player": pk} for: MOVE_OPPONENT_ANYWHERE_RANDOM, SEND_TO_JAIL
+//			{"doubled": bool} for: DOUBLE_OR_NOTHING
     private handleFantasyEventEffect(type: WSTypes.FantasyEventType, value: any, result: any) {
         const myId = this.model.myId;
         const activePlayerId = String(this.model.active_turn_player);
         const activePlayer = this.model.getPlayer(activePlayerId);
 
-        console.log(`Efecto Fantasía: ${type} con valor:`, value);
+        console.log("Efecto fantasía tipo: ", type);
+        console.log("Efecto fantasía valor: ", value);
+        console.log("Efecto fantasía result: ", result);
 
         switch (type) {
-            // --- EVENTOS DE DINERO ---
+            // --- EVENTOS DE DINERO --- // TODO: REVISAR si actualizar dinero
             // case 'winPlainMoney':
             // case 'winRatioMoney':
             // case 'losePlainMoney':
             // case 'loseRatioMoney':
-
             // case 'getParkingMoney':
+            // case 'shareMoneyAll': 
+            // case 'everybodySendsYouMoney':
 
-            case 'shareMoneyAll': // Todos reciben dinero
-                Object.keys(this.model.players).forEach(id => {
-                    this.syncPlayerMoney(id, Number(value));
-                });
-                break;
-
-            case 'everybodySendsYouMoney':
-                // Todos pierden X y tú ganas X * cantidad de jugadores
-                Object.keys(this.model.players).forEach(id => {
-                    if (id !== activePlayerId) {
-                        this.syncPlayerMoney(id, -Number(value));
-                        this.syncPlayerMoney(activePlayerId, Number(value));
-                    }
-                });
-                break;
-
-            // --- EVENTOS DE MOVIMIENTO ---
+            // --- EVENTOS DE MOVIMIENTO : carcel ---
             case 'goToJail':
-            case 'sendToJail':
                 if (activePlayer) activePlayer.jailRemainingTurns = 3;
                 break;
-
+            
+            case 'sendToJail':
+                const victimId = String(result?.target_player);
+                const victim = this.model.getPlayer(victimId);
+                if (victim) victim.jailRemainingTurns = 3;
+                break;
+            
+            case 'everybodyToJail':
+                Object.values(this.model.players).forEach(p => {
+                    p.jailRemainingTurns = 3;
+                });
+                break;
+            
+            // --- EVENTOS DE MOVIMIENTO ---
             case 'goToStart':
             case 'moveAnywhereRandom':
             case 'magnetism':
+            case 'shufflePositions':
                 break;
 
             // --- EVENTOS DE PROPIEDADES ---
             case 'breakOpponentHouse':
             case 'breakOwnHouse':
-                const propToBreak = this.model.getProperty(String(value).padStart(3, '0'));
+                const targetSquare = result?.square;
+                if (!targetSquare) return;
+                const propToBreak = this.model.getProperty(String(targetSquare).padStart(3, '0'));
                 if (propToBreak && propToBreak.houseCount > 0) {
                     propToBreak.houseCount--;
                     EventBus.emit('view-update-tile-construction', { 
@@ -692,23 +705,42 @@ export class GameLogicManager {
                     });
                 }
                 break;
-
+            case 'freeHouse':
+                const targetSquareId = result?.square;
+                if (!targetSquareId) return;
+                const propToBuild = this.model.getProperty(String(targetSquareId).padStart(3, '0'));
+                if (propToBuild && propToBuild.houseCount < 5) {
+                    propToBuild.houseCount++;
+                    EventBus.emit('view-update-tile-construction', { 
+                        tileId: propToBuild.id, 
+                        level: propToBuild.houseCount 
+                    });
+                }
+                break;
+            
             case 'earthquake':
-                // Quitar casas de todas las propiedades del tablero
-                Object.values(this.model.boardProperties).forEach(prop => {
-                    if (prop.houseCount > 0) {
+                const affectedSquares = result?.squares || [];
+                affectedSquares.forEach((id: any) => {
+                    const prop = this.model.getProperty(String(id).padStart(3, '0'));
+                    if (prop) {
                         prop.houseCount = 0;
                         EventBus.emit('view-update-tile-construction', { tileId: prop.id, level: 0 });
                     }
                 });
                 break;
-
             case 'reviveProperty':
-                // Quitar hipoteca de una propiedad
                 const propToFix = this.model.getProperty(String(value).padStart(3, '0'));
                 if (propToFix) {
                     propToFix.isMortgaged = false;
                     EventBus.emit('update-tile-mortgage-visual', { tileId: propToFix.id, isMortgaged: false });
+                }
+                break;
+            
+            case 'doubleOrNothing':
+                if (result?.doubled) {
+                    console.log("¡Suerte! El dinero se ha duplicado");
+                } else {
+                    console.log("Mala suerte, lo has perdido todo (en este evento)");
                 }
                 break;
 

@@ -68,6 +68,7 @@ export class Board extends Phaser.Scene {
         this.createBackground();
         this.createBoard();
         this.setupEventBus();
+        console.log("BOARD CREATE: Comprobando jugadores iniciales", this.GamelogicManager.model.orderedPlayers);
         // Check if GameLogicManager already has data
         if (this.GamelogicManager && this.GamelogicManager.model.orderedPlayers.length > 0) {
             this.syncPlayers(this.GamelogicManager.model);
@@ -417,8 +418,30 @@ export class Board extends Phaser.Scene {
         this.events.on('shutdown', () => {
             EventBus.off('model-updated');
             EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
+            EventBus.off('view-animate-path');
+            EventBus.off('token-fin');
+            EventBus.off('view-new-turn');
+            EventBus.off('property-bought');
+            EventBus.off('close-overlay');
+            EventBus.off('dark-mode');
+            EventBus.off('execute-tram-travel');
+            EventBus.off('start-trade');
+            EventBus.off('show-trading-mode');
+            EventBus.off('view-animate-money');
+            EventBus.off('update-tile-owner-visual');
+            EventBus.off('collect-parking-money');
+            EventBus.off('start-administer');
+            EventBus.off('update-tile-mortgage-visual');
+            EventBus.off('view-update-tile-construction');
+            EventBus.off('view-remove-player');
+            EventBus.off('request-next-phase');
+            this.tweens.killAll();
+            this.time.removeAllEvents();
+            this.tiles.forEach(tile => tile.destroy());
+            this.players.forEach(p => p.token.destroy());
+            this.tiles = [];
+            this.players = [];
         });
-        EventBus.off('view-remove-player');
     }
     syncPlayers(gameModel) {
         const orderedIds = gameModel.orderedPlayers || [];

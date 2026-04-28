@@ -22,47 +22,7 @@ const TradeHeader = ({ player, isSender, isMe }: { player: any, isSender: boolea
     </div>
 );
 
-export const TradeRequestOverlay = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [proposal, setProposal] = useState<any>(null);
-
-    const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
-    const stripedBackgroundStyle = { backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
-            repeating-linear-gradient(
-                -45deg,
-                #ffffff,
-                #ffffff 20px,
-                #f3f4f6 20px,
-                #f3f4f6 40px )`,
-        backgroundSize: 'cover'
-    };
-
-    useEffect(() => {
-        const handleShow = (data: any) => {
-            setProposal(data);
-            setIsOpen(true);
-        };
-        EventBus.on('show-trade-request', handleShow);
-        
-        return () => { EventBus.off('show-trade-request', handleShow); };
-    }, []);
-
-    const handleAnswer = (accepted: boolean) => {
-        if (!proposal) return;
-
-        EventBus.emit('action-trade-answer', {
-            //tradeId: proposal.id,
-            accept: accepted
-        });
-
-        setIsOpen(false);
-        setProposal(null);
-    };
-
-    if (!isOpen || !proposal) return null;
-
-    const SummaryZone = ({ money, properties, isPositive }: any) => {
+const SummaryZone = ({ money, properties, isPositive }: any) => {
         const validProperties = properties?.filter((p: any) => p && p.name && p.name.trim() !== "") || [];
 
         return (
@@ -95,6 +55,50 @@ export const TradeRequestOverlay = () => {
             </div>
         );
     };
+
+export const TradeRequestOverlay = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [proposal, setProposal] = useState<any>(null);
+
+    const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+    const stripedBackgroundStyle = { backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
+            repeating-linear-gradient(
+                -45deg,
+                #ffffff,
+                #ffffff 20px,
+                #f3f4f6 20px,
+                #f3f4f6 40px )`,
+        backgroundSize: 'cover'
+    };
+    
+    useEffect(() => {
+        const handleShow = (data: any) => {
+            console.log("Entrando en request de tradeo", data);
+            setProposal(data);
+            setIsOpen(true);
+        };
+
+        EventBus.on('show-trade-request', handleShow);
+        return () => { 
+            EventBus.off('show-trade-request', handleShow); 
+        };
+    }, []);
+
+    const handleAnswer = (accepted: boolean) => {
+        if (!proposal) return;
+        console.log("en trade request, la propuesta ha sido:", accepted);
+        
+        EventBus.emit('action-trade-answer', {
+            accept: accepted,
+            player: proposal.offeringPlayer.id
+        });
+
+        setIsOpen(false);
+        setProposal(null);
+    };
+
+    if (!isOpen || !proposal) return null;
 
     return (
         <div className="fixed inset-0 z-[1000] bg-black/10 backdrop-blur-sm flex items-center justify-center p-6 select-none animate-in fade-in duration-300">

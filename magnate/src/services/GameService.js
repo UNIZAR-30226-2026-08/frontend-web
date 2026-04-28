@@ -134,7 +134,9 @@ export const GameService = () => {
     const actionTradeAnswer = (data) => {
         const message = {
             "type": "ActionTradeAnswer",
-            "accept": data.accept
+            "accept": data.accept,
+            "player": data.player,
+            "game": data.game
         };
         EventBus.emit('send-message', message);
     };
@@ -401,8 +403,9 @@ export const GameService = () => {
                 break;
             case "ActionTradeProposal":
                 const reportTradeProposal = {
+                    "game": data.game,
                     "player": data.player,
-                    "destination_user": data.destination_user,
+                    "destination_user": Number(data.destination_user),
                     "offered_money": data.offered_money,
                     "asked_money": data.asked_money,
                     "offered_properties": data.offered_properties,
@@ -412,7 +415,7 @@ export const GameService = () => {
                 break;
             case "ActionTradeAnswer":
                 const reportTradeAnswer = {
-                    //"player": data.player,
+                    "player": data.player,
                     "accept": data.accept
                 };
                 EventBus.emit('report-action-trade-answer', reportTradeAnswer);
