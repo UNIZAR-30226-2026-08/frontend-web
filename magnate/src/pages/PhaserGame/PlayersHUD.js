@@ -10,6 +10,9 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [canClick, setCanClick] = useState(false);
     useEffect(() => {
+        const handleSinglePlayerUpdate = (updatedPlayer) => {
+            setPlayersList(prev => prev.map(p => p.id === updatedPlayer.id ? { ...p, ...updatedPlayer } : p));
+        };
         const handleModelUpdate = (gameModel) => {
             if (!gameModel || !gameModel.players)
                 return;
@@ -28,12 +31,14 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
         const handleShow = () => { setIsVisible(true); };
         const handleDarkMode = (active) => { setIsDarkMode(active); };
         const handleSetClickable = (active) => { setCanClick(active); };
+        EventBus.on('player-updated', handleSinglePlayerUpdate);
         EventBus.on('model-updated', handleModelUpdate);
         EventBus.on('hide-players-hud', handleHide);
         EventBus.on('show-players-hud', handleShow);
         EventBus.on('dark-mode', handleDarkMode);
         EventBus.on('set-hud-clickable', handleSetClickable);
         return () => {
+            EventBus.off('player-updated', handleSinglePlayerUpdate);
             EventBus.off('model-updated', handleModelUpdate);
             EventBus.off('hide-players-hud', handleHide);
             EventBus.off('show-players-hud', handleShow);

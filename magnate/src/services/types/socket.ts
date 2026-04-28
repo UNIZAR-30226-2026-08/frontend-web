@@ -127,6 +127,7 @@ export interface GameResponse {
 	active_turn_player: number;
 	phase: Phase;
 	parking_money?: Number;
+	
     // movement
 	path?: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
 	fantasy_event?: FantasyEventType;
@@ -219,6 +220,7 @@ export interface GameInfoResponse {
 	phase: Phase;
 	parking_money?: Number;
 	fantasy_event?: FantasyEventType;
+	positions?: Record<string, string>;
 }
 
 export interface GameInfoMovement {
@@ -348,6 +350,7 @@ export interface GameAskBid {
 }
 
 export interface GameAskTrade {
+	player: string;
 	destination_user: string;	// userid
 	offered_money:	number;
 	asked_money: number;

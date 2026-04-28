@@ -21,11 +21,24 @@ export class PlayerModel {
         this.emitUpdate(); // TODO: Todavía hay que ver si lo vamos a hacer así
     }
 
+    public updateFrom(data: any) {
+        this.name = data.name ?? this.name;
+        this.balance = data.balance ?? this.balance;
+        this.properties = data.properties ? [...data.properties] : this.properties;
+        this.currentTileId = data.currentTileId ?? this.currentTileId;
+        this.jailRemainingTurns = data.jailRemainingTurns ?? this.jailRemainingTurns;
+        
+        this.emitUpdate();
+    }
+
     public emitUpdate() {
+        const hexColor = `#${this.color.toString(16).padStart(6, '0')}`;
         EventBus.emit('player-updated', {
             id: this.id,
+            name: this.name,
             balance: this.balance,
             properties: [...this.properties],
+            color: hexColor,
             jailTurnCount: this.jailRemainingTurns
         });
     }

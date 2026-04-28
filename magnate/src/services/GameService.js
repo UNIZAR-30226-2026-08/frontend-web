@@ -122,6 +122,7 @@ export const GameService = () => {
     const actionTradeProposal = (data) => {
         const message = {
             "type": "ActionTradeProposal",
+            "player": data.player,
             "destination_user": data.destination_user,
             "offered_money": data.offered_money,
             "asked_money": data.asked_money,
@@ -233,7 +234,8 @@ export const GameService = () => {
             "active_turn_player": data.active_turn_player,
             "phase": data.phase,
             "parking_money": data.parking_money,
-            "fantasy_event": data.fantasy_event
+            "fantasy_event": data.fantasy_event,
+            "positions": data.positions
         };
         EventBus.emit('report-response', responseBasic);
         switch (data.type) {

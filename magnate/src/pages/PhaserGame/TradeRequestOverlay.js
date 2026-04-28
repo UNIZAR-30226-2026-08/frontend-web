@@ -29,7 +29,7 @@ export const TradeRequestOverlay = () => {
         if (!proposal)
             return;
         EventBus.emit('action-trade-answer', {
-            // tradeId: proposal.id,
+            //tradeId: proposal.id,
             accept: accepted
         });
         setIsOpen(false);

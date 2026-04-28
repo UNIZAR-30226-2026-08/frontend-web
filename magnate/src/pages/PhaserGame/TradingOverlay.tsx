@@ -157,6 +157,7 @@ export const TradingOverlay = () => {
 
         // Estructura para ActionTradeProposal
         const tradePayload = {
+            player: sender.id,
             destination_user: receiver.id,
             offered_money: myOffer.money,
             offered_properties: myOffer.properties.map(p => p.id),

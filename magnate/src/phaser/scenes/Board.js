@@ -70,8 +70,7 @@ export class Board extends Phaser.Scene {
         this.setupEventBus();
         // Check if GameLogicManager already has data
         if (this.GamelogicManager && this.GamelogicManager.model.orderedPlayers.length > 0) {
-            const model = this.GamelogicManager.model;
-            this.syncPlayers(model);
+            this.syncPlayers(this.GamelogicManager.model);
         }
     }
     initManagers() {
@@ -168,18 +167,21 @@ export class Board extends Phaser.Scene {
         });
         this.eventManager = new EventManager(this, this.tiles, this.players);
     }
+    // --- EVENT BUS  ---
     setupEventBus() {
         EventBus.on('model-updated', async (gameModel) => {
             // Sincronizamos quién está en la partida (Crear/Actualizar nombres)
             this.syncPlayers(gameModel);
-            // TODO: aquí hacer funciones para actualizar propiedades y movimientos
+            this.syncPropertiesOwnership(gameModel);
+            this.syncBuildingsAndMortgages(gameModel);
+            this.syncPlayerPositions(gameModel);
             const currentTurnId = gameModel.getCurrentTurnPlayerId();
             if (this.lastTurnPlayerId !== currentTurnId) {
                 const isFirstTurn = this.lastTurnPlayerId === null;
                 this.lastTurnPlayerId = currentTurnId;
                 // Algo de tiempo antes del primer turno
                 if (isFirstTurn) {
-                    this.time.delayedCall(2000, async () => {
+                    this.time.delayedCall(800, async () => {
                         await this.handleNewTurn(gameModel);
                     });
                 }
@@ -208,7 +210,7 @@ export class Board extends Phaser.Scene {
                 }).filter((coord) => coord !== null);
                 this.cameraController.followToken(playerToMove.token, 2.2, () => {
                     playerToMove.token.moveToCoords(pathCoordinates, () => {
-                        this.time.delayedCall(800, () => { });
+                        this.time.delayedCall(1000, () => { });
                         EventBus.emit('token-fin');
                     });
                 });
@@ -224,31 +226,24 @@ export class Board extends Phaser.Scene {
             else if (gameModel.phase === 'management' || gameModel.phase === 'business') {
                 this.interactWithTile(gameModel);
             }
-            // if (gameModel.phase === 'management') {
-            //     console.log("Cámara detenida. Abriendo menú de gestión...");
-            //     this.interactWithTile(gameModel);
-            // } else if (gameModel.phase === 'business') {
-            //     console.log("Cámara detenida: estoy en business pero he caido en propiedad de otro tío");
-            //     this.interactWithTile(gameModel);
-            // } else if (gameModel.phase === 'choose_fantasy') {
-            //     console.log("Cámara detenida: estoy en choose_fantasy");
-            //     this.interactWithTile(gameModel);
-            // }
         });
         EventBus.on('view-new-turn', async (gameModel) => {
-            const playerId = gameModel.getCurrentTurnPlayerId();
-            const player = gameModel.getPlayer(String(playerId));
-            if (!player) {
-                console.warn(`Manager: No se pudo anunciar turno. Jugador ${playerId} no encontrado.`);
-                return;
-            }
-            const isMe = gameModel.isMyTurn();
-            const bannerText = isMe ? "Tu turno" : `Turno de ${player.name}`;
-            const color = '#' + player.color.toString(16).padStart(6, '0');
-            this.hideUI();
-            await this.announceTurn(bannerText, color);
-            this.showUI();
+            await this.handleNewTurn(gameModel);
         });
+        // EventBus.on('view-new-turn', async (gameModel: any) => {
+        //     const playerId = gameModel.getCurrentTurnPlayerId();
+        //     const player = gameModel.getPlayer(String(playerId));
+        //     if (!player) {
+        //         console.warn(`Manager: No se pudo anunciar turno. Jugador ${playerId} no encontrado.`);
+        //         return;
+        //     }
+        //     const isMe = gameModel.isMyTurn();
+        //     const bannerText = isMe ? "Tu turno" : `Turno de ${player.name}`;
+        //     const color = '#' + player.color.toString(16).padStart(6, '0');
+        //     this.hideUI();
+        //     await this.announceTurn(bannerText, color);
+        //     this.showUI();
+        // });
         // Evento para marcar quien compra propiedad 
         EventBus.on('property-bought', this.handlePurchase, this);
         // Evento para que camara vuelva a la vista general
@@ -275,31 +270,29 @@ export class Board extends Phaser.Scene {
             }
         });
         EventBus.on('execute-tram-travel', (data) => {
-            const activePlayerId = this.GamelogicManager.model.getCurrentTurnPlayerId();
-            const playerPair = this.players.find(p => p.model.id === activePlayerId);
-            if (!playerPair) {
-                console.error("TRAM ERROR: no se ha encontrado la futura posicion");
-                return;
-            }
+            const playerPair = this.players.find(p => p.model.id === String(data.playerId));
             const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
-            if (!targetTile)
-                return;
-            const finalX = targetTile.x;
-            const finalY = targetTile.y;
-            const path = [{ x: finalX, y: finalY }];
-            playerPair.token.moveToCoords(path, () => {
-                this.tweens.add({
-                    targets: playerPair.token,
-                    y: finalY - 15,
-                    yoyo: true,
-                    ease: 'Back.easeOut',
-                    duration: 400,
-                    onComplete: () => {
-                        playerPair.model.currentTileId = data.targetId;
-                        this.GamelogicManager.model.updatePlayerPosition(activePlayerId, data.targetId);
-                    }
+            if (playerPair && targetTile) {
+                console.log(`Tram Visual: Moviendo a ${playerPair.model.name} a ${data.targetId}`);
+                const path = [{ x: targetTile.x, y: targetTile.y }];
+                playerPair.token.moveToCoords(path, () => {
+                    this.tweens.add({
+                        targets: playerPair.token,
+                        y: targetTile.y - 15,
+                        yoyo: true,
+                        ease: 'Back.easeOut',
+                        duration: 600,
+                        onComplete: () => {
+                            // 3. Actualizamos la posición lógica local una vez terminada la animación
+                            playerPair.model.currentTileId = data.targetId;
+                            // 4. Sincronizamos el modelo lógico global para este cliente
+                            this.GamelogicManager.model.updatePlayerPosition(data.playerId, data.targetId);
+                            // 5. Forzamos un refresco general del modelo para React/HUD
+                            EventBus.emit('model-updated', this.GamelogicManager.model);
+                        }
+                    });
                 });
-            });
+            }
             const tramTiles = this.tiles.filter(t => t instanceof TramTile);
             tramTiles.forEach(tile => tile.disableInteractive());
         });
@@ -357,8 +350,11 @@ export class Board extends Phaser.Scene {
             const tile = this.tiles.find(t => t.tileConfig.id === data.currentTileId);
             const myId = this.GamelogicManager.model.myId;
             if (tile) {
-                this.pendingParkingData = { tile: tile, playerId: myId };
+                this.pendingParkingData = { tile: tile, playerId: data.playerId };
+                const parking_money = this.GamelogicManager.model.getParkingMoney();
+                console.log(`Parking: El jugador ${data.playerId} va a cobrar ${parking_money}M`);
                 console.log("Parking: Animación lista", data.currentTileId);
+                this.GamelogicManager.syncPlayerMoney(data.playerId, parking_money, true);
             }
         });
         EventBus.on('start-administer', () => {
@@ -402,6 +398,7 @@ export class Board extends Phaser.Scene {
                 });
             }
         });
+        // Evento siguiente fase, comprueba que el player no tiene saldo negativo
         EventBus.on('request-next-phase', () => {
             const model = this.GamelogicManager.model;
             const myId = model.myId;
@@ -455,8 +452,63 @@ export class Board extends Phaser.Scene {
             this.showUI();
         }
     }
+    syncPropertiesOwnership(gameModel) {
+        Object.values(gameModel.boardProperties).forEach((prop) => {
+            const ownerId = prop.ownerId;
+            this.handlePurchase({
+                tileId: prop.id,
+                playerId: ownerId,
+                playerColor: ownerId ? gameModel.getPlayerColor(ownerId) : null
+            });
+        });
+    }
+    syncBuildingsAndMortgages(gameModel) {
+        Object.values(gameModel.boardProperties).forEach((prop) => {
+            const tile = this.tiles.find(t => t.tileConfig.id === prop.id);
+            if (tile && (tile instanceof PropertyTile || tile instanceof ServerTile || tile instanceof BridgeTile)) {
+                // Sincronizar hipoteca
+                tile.updateMortgageVisual(prop.isMortgaged);
+                // Sincronizar casas (solo en propiedades)
+                if (tile instanceof PropertyTile) {
+                    tile.setConstructionLevel(prop.houseCount);
+                }
+            }
+        });
+    }
+    syncPlayerPositions(gameModel) {
+        this.players.forEach(p => {
+            const modelPos = gameModel.getPlayerPosition(p.model.id);
+            // Si la pieza en Phaser no está donde dice el servidor
+            if (p.model.currentTileId !== modelPos) {
+                const targetTile = this.tiles.find(t => t.tileConfig.id === modelPos);
+                if (targetTile) {
+                    console.log(`Corrección de posición para ${p.model.name}: ${modelPos}`);
+                    p.model.currentTileId = modelPos;
+                    // Animación de teletransporte/movimiento rápido para sincronizar
+                    this.tweens.add({
+                        targets: p.token,
+                        alpha: 0.5,
+                        scale: 0.8,
+                        duration: 300,
+                        onComplete: () => {
+                            p.token.setPosition(targetTile.x, targetTile.y);
+                            this.tweens.add({
+                                targets: p.token,
+                                alpha: 1,
+                                scale: 1,
+                                duration: 300,
+                                ease: 'Power2'
+                            });
+                        }
+                    });
+                }
+            }
+        });
+    }
     async handleNewTurn(gameModel) {
-        const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
+        //const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
+        const playerId = gameModel.getCurrentTurnPlayerId();
+        const player = gameModel.getPlayer(String(playerId));
         console.log(player);
         if (!player)
             return;
@@ -465,6 +517,7 @@ export class Board extends Phaser.Scene {
         const playerColor = '#' + player.color.toString(16).padStart(6, '0');
         this.hideUI();
         await this.announceTurn(bannerText, playerColor);
+        this.showUI();
         // Después de enseñar banner, empieza la fase
         this.handlePhaseLogic(gameModel);
     }

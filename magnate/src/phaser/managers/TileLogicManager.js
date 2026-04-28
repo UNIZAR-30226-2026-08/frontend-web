@@ -121,6 +121,7 @@ export class TileLogicManager {
                     buttonText: cornerConfig.buttonText,
                     sound: cornerConfig.sound,
                     id: tile.tileConfig.id,
+                    playerId: player.id
                 });
             }
             else {

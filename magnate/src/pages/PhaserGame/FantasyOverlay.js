@@ -66,7 +66,7 @@ export const FantasyOverlay = () => {
             setTimeout(() => {
                 EventBus.emit('close-overlay');
                 setCardData(null);
-            }, 2500);
+            }, 4000);
         }
     };
     return (_jsxs("div", { className: "fixed inset-0 z-[10000] flex items-center justify-center bg-black/10 backdrop-blur-sm", children: [_jsx("div", { className: "absolute inset-0 backdrop-blur-sm animate-in fade-in duration-300" }), _jsxs("div", { className: "relative z-10 flex flex-row gap-12 animate-in fade-in zoom-in duration-300 scale-90 md:scale-100", children: [_jsx("div", { className: `transition-all duration-300 

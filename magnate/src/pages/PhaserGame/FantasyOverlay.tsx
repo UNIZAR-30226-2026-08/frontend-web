@@ -77,7 +77,7 @@ export const FantasyOverlay = () => {
             setTimeout(() => {
                 EventBus.emit('close-overlay');
                 setCardData(null);
-            }, 2500);
+            }, 4000);
         }
     };
 

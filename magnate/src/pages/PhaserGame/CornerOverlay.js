@@ -27,12 +27,12 @@ export const CornerOverlay = () => {
     const closeOverlay = () => {
         setPropData(null);
         EventBus.emit('close-overlay');
-        if (propData.tileText == 'Tranvía') { // depends on UI: src/phaser/scenes/Board.ts
+        if (propData.tileText == 'Tranvía') {
             // Funcionamiento del tranvía
-            EventBus.emit('open-tram-overlay', { currentTileId: propData.id });
+            EventBus.emit('open-tram-overlay', { currentTileId: propData.id, playerId: propData.playerId });
         }
         else if (propData.tileText == 'Parking Gratuito') {
-            EventBus.emit('collect-parking-money', { currentTileId: propData.id });
+            EventBus.emit('collect-parking-money', { currentTileId: propData.id, playerId: propData.playerId });
         }
     };
     return (_jsx("div", { className: "fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm", children: _jsxs("div", { className: "flex flex-col items-center gap-8", children: [_jsx(CornerTileContent, { image: propData.image, tileText: propData.tileText }), _jsx(Button, { onClick: () => closeOverlay(), className: `px-9 py-6 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`, children: propData.buttonText })] }) }));

@@ -316,7 +316,6 @@ export class GameModel {
     }
 	
 	// ---- Funciones para ver si se puede construir casas
-
 	// Calculates how many houses you can add to a property
     public getMaxAddableHouses(propId: string, playerId: string, housePrice: number): number {
         const targetProp = this.getProperty(propId);

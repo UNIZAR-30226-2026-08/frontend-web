@@ -144,6 +144,7 @@ export const GameService = ( ) => {
 	const actionTradeProposal = ( data : WSTypes.GameAskTrade ) => {
 		const message = {
 			"type" : "ActionTradeProposal",
+			"player": data.player,
 			"destination_user" : data.destination_user,
 			"offered_money" : data.offered_money,
 			"asked_money" : data.asked_money,
@@ -263,7 +264,8 @@ export const GameService = ( ) => {
 			"active_turn_player" : data.active_turn_player,
 			"phase" : data.phase,
 			"parking_money": data.parking_money,
-			"fantasy_event": data.fantasy_event
+			"fantasy_event": data.fantasy_event,
+			"positions": data.positions
 		};
 		EventBus.emit('report-response', responseBasic);
 
@@ -384,7 +386,7 @@ export const GameService = ( ) => {
 					"player": data.player,
 					"square" : data.square
 				};
-				EventBus.emit('report-action-take-tram',reportTakeTram);
+				EventBus.emit('report-action-take-tram', reportTakeTram);
 				break;
 			case "ActionDropPurchase":
 				const reportDropPurchase : WSTypes.GameReportSquare = {
