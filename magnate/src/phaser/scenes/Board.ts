@@ -34,7 +34,7 @@ export class Board extends Phaser.Scene {
     private tiles: Tile[] = [];
 	private players : { model: PlayerModel, token: PlayerToken }[] = [];
     private colorPalette: number[] = [];
-    private fantasyCards: any[] = []; // TODO: rellenar con data/fantasyCard.json o recibir de backend
+    private fantasyCards: any[] = [];
     
     // -- Managers Visuales
     public diceManager!: DiceManager;
@@ -199,7 +199,7 @@ export class Board extends Phaser.Scene {
             this.syncPlayers(gameModel);
             this.syncPropertiesOwnership(gameModel);
             this.syncBuildingsAndMortgages(gameModel);
-            this.syncPlayerPositions(gameModel);
+            //this.syncPlayerPositions(gameModel);
 
             const currentTurnId = gameModel.getCurrentTurnPlayerId();
             if (this.lastTurnPlayerId !== currentTurnId) {
@@ -267,22 +267,6 @@ export class Board extends Phaser.Scene {
             await this.handleNewTurn(gameModel);
         });
 
-        // EventBus.on('view-new-turn', async (gameModel: any) => {
-        //     const playerId = gameModel.getCurrentTurnPlayerId();
-        //     const player = gameModel.getPlayer(String(playerId));
-
-        //     if (!player) {
-        //         console.warn(`Manager: No se pudo anunciar turno. Jugador ${playerId} no encontrado.`);
-        //         return;
-        //     }
-        //     const isMe = gameModel.isMyTurn();
-        //     const bannerText = isMe ? "Tu turno" : `Turno de ${player.name}`;
-        //     const color = '#' + player.color.toString(16).padStart(6, '0');
-
-        //     this.hideUI();
-        //     await this.announceTurn(bannerText, color);
-        //     this.showUI();
-        // });
         
         // Evento para marcar quien compra propiedad 
         EventBus.on('property-bought', this.handlePurchase, this); 
@@ -333,13 +317,8 @@ export class Board extends Phaser.Scene {
                         ease: 'Back.easeOut',
                         duration: 600,
                         onComplete: () => {
-                            // 3. Actualizamos la posición lógica local una vez terminada la animación
                             playerPair.model.currentTileId = data.targetId;
-                            
-                            // 4. Sincronizamos el modelo lógico global para este cliente
                             this.GamelogicManager.model.updatePlayerPosition(data.playerId, data.targetId);
-                            
-                            // 5. Forzamos un refresco general del modelo para React/HUD
                             EventBus.emit('model-updated', this.GamelogicManager.model);
                         }
                     });
@@ -455,6 +434,7 @@ export class Board extends Phaser.Scene {
             }
         });
 
+        // para cuando un player se rinde
         EventBus.on('view-remove-player', (data: { playerId: string }) => {
             const playerIndex = this.players.findIndex(p => p.model.id === data.playerId);
             
@@ -474,6 +454,40 @@ export class Board extends Phaser.Scene {
                     }
                 });
             } 
+        });
+
+        // para mover fichas
+        EventBus.on('view-teleport-player', (data: { playerId: string, targetTileId: string }) => {
+            const playerPair = this.players.find(p => p.model.id === data.playerId);
+            const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetTileId);
+
+            if (playerPair && targetTile) {
+                console.log(`Fantasía Visual: Teletransportando a ${playerPair.model.name} a ${data.targetTileId}`);
+
+                this.tweens.add({
+                    targets: playerPair.token,
+                    alpha: 0,
+                    scale: 0.5,
+                    duration: 300,
+                    onComplete: () => {
+                        playerPair.token.setPosition(targetTile.x, targetTile.y);
+                        playerPair.model.currentTileId = data.targetTileId;
+                        
+                        this.tweens.add({
+                            targets: playerPair.token,
+                            alpha: 1,
+                            scale: 1,
+                            duration: 300,
+                            ease: 'Back.easeOut'
+                        });
+                    }
+                });
+            }
+        });
+
+        // evento que muestra animacion para ir a la carcel
+        EventBus.on('view-send-to-jail', (data: { playerId: string }) => {
+            this.sendToSecretary(data.playerId);
         });
 
         // Evento siguiente fase, comprueba que el player no tiene saldo negativo
@@ -589,39 +603,40 @@ export class Board extends Phaser.Scene {
         });
     }
 
-    private syncPlayerPositions(gameModel: any) {
-        this.players.forEach(p => {
-            const modelPos = gameModel.getPlayerPosition(p.model.id);
+    // private syncPlayerPositions(gameModel: any) {
+    //     this.players.forEach(p => {
+    //         const modelPos = gameModel.getPlayerPosition(p.model.id);
             
-            // Si la pieza en Phaser no está donde dice el servidor
-            if (p.model.currentTileId !== modelPos) {
-                const targetTile = this.tiles.find(t => t.tileConfig.id === modelPos);
+    //         // Si la pieza en Phaser no está donde dice el servidor
+    //         if (p.model.currentTileId !== modelPos) {
+    //             const targetTile = this.tiles.find(t => t.tileConfig.id === modelPos);
                 
-                if (targetTile) {
-                    console.log(`Corrección de posición para ${p.model.name}: ${modelPos}`);
-                    p.model.currentTileId = modelPos;
+    //             if (targetTile) {
+    //                 console.log(`Corrección de posición para ${p.model.name}: ${modelPos}`);
+    //                 p.model.currentTileId = modelPos;
 
-                    // Animación de teletransporte/movimiento rápido para sincronizar
-                    this.tweens.add({
-                        targets: p.token,
-                        alpha: 0.5,
-                        scale: 0.8,
-                        duration: 300,
-                        onComplete: () => {
-                            p.token.setPosition(targetTile.x, targetTile.y);
-                            this.tweens.add({
-                                targets: p.token,
-                                alpha: 1,
-                                scale: 1,
-                                duration: 300,
-                                ease: 'Power2'
-                            });
-                        }
-                    });
-                }
-            }
-        });
-    }
+    //                 // Animación de teletransporte/movimiento rápido para sincronizar
+    //                 this.tweens.add({
+    //                     targets: p.token,
+    //                     alpha: 0.5,
+    //                     scale: 0.8,
+    //                     duration: 300,
+    //                     onComplete: () => {
+    //                         p.token.setPosition(targetTile.x, targetTile.y);
+    //                         this.tweens.add({
+    //                             targets: p.token,
+    //                             alpha: 1,
+    //                             scale: 1,
+    //                             duration: 300,
+    //                             ease: 'Power2'
+    //                         });
+    //                     }
+    //                 });
+    //             }
+    //         }
+    //     });
+    // }
+
     private async handleNewTurn(gameModel: any) {
         //const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
         const playerId = gameModel.getCurrentTurnPlayerId();
@@ -705,7 +720,7 @@ export class Board extends Phaser.Scene {
             }
             EventBus.emit('model-updated', this.GamelogicManager.model);
         } else { // volvemos a la vista general mientras el playerActive está en management
-            this.time.delayedCall(1000, () => {
+            this.time.delayedCall(800, () => {
                 console.log("Volviendo a la vista de origen...");
                 this.cameraController.resetView(1500); 
             });
@@ -873,6 +888,7 @@ export class Board extends Phaser.Scene {
         const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
 
         if (tile && (tile instanceof PropertyTile || tile instanceof ServerTile || tile instanceof BridgeTile)) {
+            const isNewPurchase = !tile.tileConfig.ownerId && data.playerId;
             tile.tileConfig.ownerId = data.playerId;
             
             if (data.playerId === null || data.playerColor === null) { // borrar marcadores
@@ -883,13 +899,15 @@ export class Board extends Phaser.Scene {
                     colorNum = parseInt(colorNum.replace('#', '0x'), 16);
                 }
                 tile.setOwnerMarker(colorNum);
-                this.tweens.add({
-                    targets: tile,
-                    alpha: 0.5,
-                    duration: 150,
-                    yoyo: true,
-                    ease: 'Quad.easeInOut'
-                });
+                if (isNewPurchase) {
+                    this.tweens.add({
+                        targets: tile,
+                        alpha: 0.5,
+                        duration: 150,
+                        yoyo: true,
+                        ease: 'Quad.easeInOut'
+                    });
+                }
             }
         } else {
             console.warn("No se encontró la casilla con ID:", data.tileId);

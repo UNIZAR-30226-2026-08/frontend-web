@@ -7,8 +7,6 @@ import boardConfig from '../../../public/data/board.json';
 import moneyConfig from '../../../public/data/money.json';
 export class GameModel {
     gameId = "";
-    // public active_phase_player: string = "waiting-for-players";	// sup. ID
-    // public active_turn_player: string = "waiting-for-players";	// sup. ID
     active_phase_player = 0; // sup. ID
     active_turn_player = 0; // sup. ID
     phase = "business"; // other than roll the dices
@@ -253,7 +251,7 @@ export class GameModel {
         if (!prop || String(prop.ownerId) !== playerId || prop.isMortgaged)
             return false;
         const group = this._getPropertiesInGroup(prop.group);
-        // You cannot mortgage a property if ANY property in that group has houses
+        // no se puede hipotecar si alguna del grupo tiene casas
         for (const prop of group) {
             if (prop.houseCount > 0)
                 return false;

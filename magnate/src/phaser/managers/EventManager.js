@@ -29,7 +29,6 @@ export class EventManager {
                     tile.setInteractive({ useHandCursor: true });
                     tile.removeAllListeners('pointerdown');
                     tile.once('pointerdown', () => {
-                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
                         const propConfig = tile.tileConfig;
                         EventBus.emit('tile-added-to-trade', {
                             id: propConfig.id,
@@ -84,18 +83,6 @@ export class EventManager {
                 }
             });
         });
-        // // Lógica construir casas/hoteles
-        // EventBus.on('execute-property-build', (data: { tileId: string, level: string, isMortgaged: boolean }) => {
-        //     const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
-        //     if (tile && tile instanceof PropertyTile) {
-        //         // Mapeamos el string del Overlay a un número para el método setConstructionLevel
-        //         const levelMap: Record<string, number> = {
-        //             'base': 0, 'house1': 1, 'house2': 2, 'house3': 3, 'house4': 4, 'hotel': 5
-        //         };
-        //         const numericLevel = levelMap[data.level] ?? 0;
-        //         tile.setConstructionLevel(numericLevel);
-        //     }
-        // });
     }
     setupTramEvents() {
         EventBus.on('start-tram-selection', () => {

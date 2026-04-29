@@ -565,7 +565,7 @@ export class GameLogicManager {
         Object.entries(moneyMap).forEach(([id, bal]) => {
             const p = this.model.getPlayer(id);
             if (p) {
-                p.balance = Number(bal);
+                p.balance = Math.round(Number(bal));
                 p.emitUpdate(); // actualiza player
             }
         });
@@ -658,7 +658,7 @@ export class GameLogicManager {
         console.log("Efecto fantasía result: ", result);
 
         switch (type) {
-            // --- EVENTOS DE DINERO --- // TODO: REVISAR si actualizar dinero
+            // --- EVENTOS DE DINERO ---
             // case 'winPlainMoney':
             // case 'winRatioMoney':
             // case 'losePlainMoney':
@@ -670,25 +670,45 @@ export class GameLogicManager {
             // --- EVENTOS DE MOVIMIENTO : carcel ---
             case 'goToJail':
                 if (activePlayer) activePlayer.jailRemainingTurns = 3;
+                EventBus.emit('view-send-to-jail', { playerId: activePlayerId });
                 break;
             
             case 'sendToJail':
                 const victimId = String(result?.target_player);
                 const victim = this.model.getPlayer(victimId);
-                if (victim) victim.jailRemainingTurns = 3;
+                if (victim) {
+                    victim.jailRemainingTurns = 3;
+                    EventBus.emit('view-send-to-jail', { playerId: victimId });
+                }
                 break;
             
             case 'everybodyToJail':
                 Object.values(this.model.players).forEach(p => {
                     p.jailRemainingTurns = 3;
+                    EventBus.emit('view-send-to-jail', { playerId: p.id });
                 });
                 break;
             
             // --- EVENTOS DE MOVIMIENTO ---
             case 'goToStart':
+            case 'moveOpponentAnywhereRandom':
             case 'moveAnywhereRandom':
+                const newPos = this.model.getPlayerPosition(activePlayerId);
+                EventBus.emit('view-teleport-player', {
+                    playerId: activePlayerId,
+                    targetTileId: newPos
+                });
+                break;
+
             case 'magnetism':
             case 'shufflePositions':
+                Object.keys(this.model.players).forEach(playerId => {
+                    const newPos = this.model.getPlayerPosition(playerId);
+                    EventBus.emit('view-teleport-player', {
+                        playerId: playerId,
+                        targetTileId: newPos
+                    });
+                });
                 break;
 
             // --- EVENTOS DE PROPIEDADES ---

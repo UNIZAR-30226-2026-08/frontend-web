@@ -21,7 +21,7 @@ const TradeHeader = ({ player, isSender }: { player: any, isSender: boolean }) =
             </div>
             <div className="flex flex-col">
                 <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-800 leading-none">
-                    {player?.name}
+                    {isSender ? "Tú" : player?.name}
                 </h3>
                 <span className={`text-[10px] font-bold text-[var(--color-primary)] opacity-70 ${isSender ? 'text-left' : 'text-right'}`}>
                     {isSender ? 'ESTÁS OFRECIENDO' : 'ESTÁS PIDIENDO'}

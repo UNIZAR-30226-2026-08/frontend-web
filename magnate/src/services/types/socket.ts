@@ -77,10 +77,6 @@ export interface FantasyCardDesc {
 	card_cost: number;
 }
 
-// TODO mejorar librería websocket
-// Nico: ConnState: internal state of the WS client (en vdd interesa para
-// permitir o no ciertas operaciones)
-
 export interface GameAction { 
     type: gameActionType;
 	msg?: string;	// for chat messages

@@ -10,7 +10,7 @@ const TradeHeader = ({ player, isSender }) => (_jsxs("div", { className: `p-8 pb
                         backgroundColor: player?.color || '#cbd5e1',
                         color: '#fff',
                         textShadow: '0px 2px 4px rgba(0,0,0,0.2)'
-                    } }), _jsxs("div", { className: "flex flex-col", children: [_jsx("h3", { className: "text-2xl font-black italic uppercase tracking-tighter text-slate-800 leading-none", children: player?.name }), _jsx("span", { className: `text-[10px] font-bold text-[var(--color-primary)] opacity-70 ${isSender ? 'text-left' : 'text-right'}`, children: isSender ? 'ESTÁS OFRECIENDO' : 'ESTÁS PIDIENDO' })] })] })] }));
+                    } }), _jsxs("div", { className: "flex flex-col", children: [_jsx("h3", { className: "text-2xl font-black italic uppercase tracking-tighter text-slate-800 leading-none", children: isSender ? "Tú" : player?.name }), _jsx("span", { className: `text-[10px] font-bold text-[var(--color-primary)] opacity-70 ${isSender ? 'text-left' : 'text-right'}`, children: isSender ? 'ESTÁS OFRECIENDO' : 'ESTÁS PIDIENDO' })] })] })] }));
 export const TradingOverlay = () => {
     const { playSound } = useAudio();
     const [sender, setSender] = useState(null);
