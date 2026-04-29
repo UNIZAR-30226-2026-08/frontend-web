@@ -1,8 +1,0 @@
-import { jsx as _jsx } from "react/jsx-runtime";
-import * as React from "react";
-import { cn } from "@/lib/utils";
-const Input = React.forwardRef(({ className, type, ...props }, ref) => {
-    return (_jsx("input", { type: type, className: cn("flex h-9 w-full rounded-full border border-input bg-white px-3 py-1 shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50  placeholder:text-[var(--color-placeholder)] placeholder:font-bold placeholder:text-[22px] ", className), ref: ref, required: true, ...props }));
-});
-Input.displayName = "Input";
-export { Input };

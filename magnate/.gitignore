@@ -19,6 +19,8 @@ dist-ssr
 !tailwind.config.js
 !postcss.config.js
 !eslint.config.js
+!src/api/*.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
