@@ -1,5 +1,4 @@
 export const ServiceCardContent = ({ data }: any ) => {
-
     if (data.isMortgaged) {
         return (
             <div className="w-full h-full bg-white border-2 border-black p-[12px] flex flex-col shadow-2xl">
@@ -55,13 +54,13 @@ export const ServiceCardContent = ({ data }: any ) => {
                     </h3>
                 </div>
 				<div className="border-b-2 border-black flex justify-center items-center h-40 p-4">
-				    {data.image && (
-                        <img
-                            src={data.image}
-                            alt="tile icon"
-                            className="max-h-full max-w-full object-contain"
-                        />
-                    )}
+                    <img src={ data.group === 13 || data.typeName === "Servidor" 
+                                ? "/images/server.png" 
+                                : "/icons/bridge.svg"
+                            }
+                        alt="tile icon"
+                        className="max-h-full max-w-full object-contain"
+                    />
 				</div>
 
                 <div className="p-5 flex-1 flex flex-col items-center">

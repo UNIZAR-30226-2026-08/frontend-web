@@ -35,6 +35,47 @@ export class GameLogicManager {
             EventBus.emit('model-updated', this.model);
         });
 
+        // Response general
+        EventBus.on('report-response', (data: any) => {
+            console.log("Modelo actual:", this.model);
+            const isNewTurn = this.model.active_turn_player !== data.active_turn_player;
+            const isNewPhase = this.model.phase !== data.phase;
+
+            this.model.active_phase_player = data.active_phase_player;
+            this.model.active_turn_player = data.active_turn_player;
+            this.model.phase = data.phase;
+            this.model.parking_money = data.parking_money;
+
+            // Actualizar dinero
+            if (data.money) {
+                this.updateBalances(data.money);
+            }
+            // Actualizar posiciones
+            if (data.positions) {
+                Object.entries(data.positions).forEach(([id, pos]) => {
+                    this.model.updatePlayerPosition(String(id), String(pos).padStart(3, '0'));
+                });
+            }
+
+            if(isNewTurn) {
+                console.log(`Cambio de Turno: turno del jugador ${data.active_turn_player}`);
+                EventBus.emit('view-new-turn', this.model);
+                setTimeout(() => {
+                    this.updateHUDControls(data.phase);
+                    EventBus.emit('model-updated', this.model);
+                }, 2800);
+
+            } else if (isNewPhase) {
+                console.log(`Cambio de Fase: pasamos a ${data.phase}`);
+                EventBus.emit('model-updated', this.model);
+                this.updateHUDControls(data.phase);
+            }
+            console.log("Response general:", data);
+            console.log("Modelo actual:", this.model);
+
+        });
+
+
         EventBus.on('report-response-throw-dices', (data: any) => {
             // TODO: --- inicio dados
             console.log("Manager: Rolling dices...", data);
@@ -45,6 +86,9 @@ export class GameLogicManager {
                 destinations: data.destinations || []
             });
 
+            if (data.fantasy_event) { // para guardar proximo  evento fantasía
+                this.model.setFantasyEvent(data.fantasy_event.fantasy_type, data.fantasy_event.value);
+            }
             
             if (data.destinations?.length === 1) {
                 console.log("Manager: Square forced, waiting for dice to land...");
@@ -75,6 +119,10 @@ export class GameLogicManager {
 
         EventBus.on('report-response-choose-square', (data: any) => {
             console.log("Manager: Square chosen...", data);
+
+            if (data.fantasy_event) { // para guardar proximo evento fantasía
+                this.model.setFantasyEvent(data.fantasy_event.fantasy_type, data.fantasy_event.value);
+            }
         
             const movingPlayerId = String(data.active_turn_player); 
             if (data.path && data.path.length > 0) {
@@ -114,47 +162,12 @@ export class GameLogicManager {
                 isSender: isSender
             });
         });
-
-        EventBus.on('report-response', (data: any) => {
-            const isNewTurn = this.model.active_turn_player !== data.active_turn_player;
-            const isNewPhase = this.model.phase !== data.phase;
-
-            this.model.active_phase_player = data.active_phase_player;
-            this.model.active_turn_player = data.active_turn_player;
-            this.model.phase = data.phase;
-
-            // Actualizar dinero
-            if (data.money) {
-                Object.entries(data.money).forEach(([id, bal]) => {
-                    const p = this.model.getPlayer(id);
-                    if (p) {
-                        p.balance = Number(bal);
-                        p.emitUpdate();
-                    }
-                });
+        
+        EventBus.on('report-response-movement', (data: any) => {
+            console.log("Manager: Movimiento", data);
+            if (data.fantasy_event) {
+                this.model.setFantasyEvent(data.fantasy_event.fantasy_type, data.fantasy_event.value);
             }
-            // Actualizar posiciones
-            if (data.positions) {
-                Object.entries(data.positions).forEach(([id, pos]) => {
-                    this.model.updatePlayerPosition(String(id), String(pos).padStart(3, '0'));
-                });
-            }
-
-            if(isNewTurn) {
-                console.log(`Cambio de Turno: turno del jugador ${data.active_turn_player}`);
-                EventBus.emit('view-new-turn', this.model);
-                setTimeout(() => {
-                    this.updateHUDControls(data.phase);
-                }, 2800);
-
-            } else if (isNewPhase) {
-                console.log(`Cambio de Fase: pasamos a ${data.phase}`);
-                this.updateHUDControls(data.phase);
-            }
-            // EventBus.emit('model-updated', this.model);
-            console.log("Response general:", data);
-            console.log("Modelo actual:", this.model);
-
         });
 
         // ---------------------- COMPRA PROPIEDAD ----------------------
@@ -250,7 +263,6 @@ export class GameLogicManager {
                 const highestBid = participants[0].bid;
                 const hasTie = participants.length > 1 && participants[1].bid === highestBid;
                 
-
                 if (hasTie) {
                     isTie = true;
                     console.log("Manager: empate en la puja más alta.");
@@ -282,10 +294,24 @@ export class GameLogicManager {
             EventBus.emit('model-updated', this.model);
         });
 
+        EventBus.on('report-action-take-tram', (data: any) => {
+            console.log("Manager: Alguien ha tomado el tranvía", data);
+
+            const movingPlayerId = String(data.player);
+            const targetTileId = String(data.square).padStart(3, '0');
+
+            EventBus.emit('execute-tram-travel', {
+                playerId: movingPlayerId, 
+                targetId: targetTileId
+            });
+        });
+
         // ---------------------- NEGOCIACIONES ----------------------
         EventBus.on('report-action-trade-proposal', (data: WSTypes.GameReportTradeProposal) => {
             console.log("Manager: Nueva propuesta de trato recibida", data);
             const myId = localStorage.getItem('myId');
+            
+            this.lastPendingProposal = data;
             
             if (String(data.destination_user) !== String(myId)) {
                 console.log("Manager: El trato no es para mí, ignoro el overlay.");
@@ -300,7 +326,7 @@ export class GameLogicManager {
                 return ids.map(id => {
                     const prop = this.model.getProperty(String(id).padStart(3, '0'));
                     return {
-                        id: id,
+                        id: Number(id),
                         name: prop?.name || `Propiedad ${id}`,
                         color: prop?.color || '#cbd5e1'
                     };
@@ -309,25 +335,32 @@ export class GameLogicManager {
 
             const proposalData = {
                 offeringPlayer: {
+                    id: offeringPlayer?.id,
                     name: offeringPlayer?.name,
-                    color: offeringPlayer?.color
+                    color: offeringPlayer ? this.model.getPlayerColor(offeringPlayer.id) : '#ffffff'
                 },
                 askedPlayer: {
+                    id: askedPlayer?.id,
                     name: askedPlayer?.name,
-                    color: askedPlayer?.color
+                    color: askedPlayer ? this.model.getPlayerColor(askedPlayer.id) : '#cbd5e1'
                 },
                 offeredMoney: data.offered_money,
                 askedMoney: data.asked_money,
                 offeredProperties: mapProperties(data.offered_properties || []),
                 askedProperties: mapProperties(data.asked_properties || []),
             };
-            this.lastPendingProposal = data;
+            console.log("Información de la ultima propuesta guardada:", this.lastPendingProposal);
+            console.log("Emitiendo mensaje de proposalData", proposalData);
             EventBus.emit('show-trade-request', proposalData);
         });
 
         EventBus.on('report-action-trade-answer', (data: any) => {
+            console.log("action-trade-answer", data);
             const accepted = data.accept;
-
+            const player = data.player;
+            console.log("Manager: ¿Trato aceptado?", accepted);
+            console.log("ultima propuesta", this.lastPendingProposal);
+            
             if (accepted && this.lastPendingProposal) {
                 this.executeTradeTransfer(this.lastPendingProposal);
                 EventBus.emit('show-toast', { 
@@ -335,7 +368,7 @@ export class GameLogicManager {
                     duration: 4000 
                 });
                 this.lastPendingProposal = null;
-            } else {
+            } else if (!accepted) {
                 EventBus.emit('show-toast', { 
                     message: `La propuesta ha sido rechazada.`, 
                     duration: 3000 
@@ -352,6 +385,7 @@ export class GameLogicManager {
             if (prop) {
                 prop.isMortgaged = true;
                 prop.houseCount = 0;
+                this.updateBalances(data.money);
                 EventBus.emit('model-updated', this.model);
                 EventBus.emit('update-tile-mortgage-visual', { tileId: propId, isMortgaged: true });
             }
@@ -363,11 +397,14 @@ export class GameLogicManager {
             const prop = this.model.getProperty(propId);
             if (prop) {
                 prop.isMortgaged = false;
+
+                this.updateBalances(data.money);
                 EventBus.emit('model-updated', this.model);
                 EventBus.emit('update-tile-mortgage-visual', { tileId: propId, isMortgaged: false });
             }
         });
 
+        // CONSTRUIR Y DEMOLER CASAS
         EventBus.on('report-action-build', (data: any) => {
             const propId = String(data.square).padStart(3, '0');
             const prop = this.model.getProperty(propId);
@@ -394,6 +431,41 @@ export class GameLogicManager {
             }
         });
 
+        // fantasía
+
+        // Si se ha elegido la carta vista, actualiza; si se ha elegido la oculta 
+        EventBus.on('report-response-choose-fantasy', (data: any) => {
+            console.log("Manager: resultado de fantasía recibido", data);
+
+            // actualizar dinero
+            if (data.money) this.updateBalances(data.money);
+
+            // actualizar posiciones
+            if (data.positions) {
+                Object.entries(data.positions).forEach(([id, pos]) => {
+                    const playerId = String(id);
+                    const newPos = String(pos).padStart(3, '0');
+                    
+                    this.model.updatePlayerPosition(playerId, newPos);
+                });
+            }
+
+            if (data.fantasy_result && data.fantasy_result.fantasy_event) {
+                const event = data.fantasy_result.fantasy_event;
+                this.handleFantasyEventEffect(event.fantasy_type, event.value, data.fantasy_result.result);
+                
+                EventBus.emit('fantasy-card-result-applied', {
+                    type: event.fantasy_type,
+                    value: event.value,
+                    cost: event.card_cost,
+                    result: data.fantasy_result.result
+                });
+            }
+
+            EventBus.emit('model-updated', this.model);
+        });
+
+        // BANCARROTA
         EventBus.on('report-action-surrender', (data: WSTypes.GameReportSender) => {
             const playerId = String(data.player);
             const player = this.model.getPlayer(playerId);
@@ -436,7 +508,6 @@ export class GameLogicManager {
                 
             }
         });
-                        
 
 		EventBus.on('pause-game', () => {
 			this.model.isPaused = true;
@@ -448,6 +519,7 @@ export class GameLogicManager {
     private updateHUDControls(phase: string) {
         const isMe = this.model.isMyTurn();
         const myId = this.model.myId;
+        
         if (phase === 'roll_the_dices') {
             EventBus.emit('update-turn-controls', isMe);
         } else if (phase === 'business') {
@@ -477,12 +549,27 @@ export class GameLogicManager {
                 roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
             });
         } else if (phase === 'auction') {
-            console.log("Empieza subastaaaa");
+            console.log("Empieza subastaaaa!!");
+            EventBus.emit('update-controls-state', {
+                roll: false, administer: false, trade: false, finishTurn: false, bankrupt: true
+            });
         } else if (phase === 'proposal_acceptance') {
             console.log("Enviando propuesta de trato al otro tío");
+        }  else if (phase === 'choose_fantasy') {
+            console.log("Manager: empieza fantasía");
         }
     }
 
+    private updateBalances(moneyMap: Record<string, number>) {
+        if (!moneyMap) return;
+        Object.entries(moneyMap).forEach(([id, bal]) => {
+            const p = this.model.getPlayer(id);
+            if (p) {
+                p.balance = Math.round(Number(bal));
+                p.emitUpdate(); // actualiza player
+            }
+        });
+    }
     
     // Procesa el intercambio de dinero y propiedades entre dos jugadores
     private executeTradeTransfer(data: any) {
@@ -523,22 +610,166 @@ export class GameLogicManager {
         const moneyAsked = Number(data.asked_money || 0);
 
         // Actualizar balances
-        sender.balance -= moneyOffered;
-        sender.balance += moneyAsked;
-
-        receiver.balance += moneyOffered;
-        receiver.balance -= moneyAsked;
-
-        // --- animaciones ---
-        if (moneyOffered > 0) {
-            EventBus.emit('view-animate-money', { playerId: senderId, numBill: 6, amount: `-${moneyOffered}M` });
-        }
-        if (moneyAsked > 0) {
-            EventBus.emit('view-animate-money', { playerId: receiverId, numBill: 6, amount: `-${moneyAsked}M` });
+        const senderChange = moneyAsked - moneyOffered;
+        if (senderChange !== 0) {
+            this.syncPlayerMoney(senderId, senderChange);
         }
 
+        const receiverChange = moneyOffered - moneyAsked;
+        if (receiverChange !== 0) {
+            this.syncPlayerMoney(receiverId, receiverChange);
+        }
+        EventBus.emit('model-updated', this.model);
         console.log(`[tradeando] Sincronización completa. ${sender.name}: ${sender.balance}M | ${receiver.name}: ${receiver.balance}M`);
     }
 
+    public syncPlayerMoney(playerId: string, amount: number, showAnimation: boolean = true) {
+        const player = this.model.getPlayer(playerId);
+        if (!player || amount === 0) return;
+
+        this.model.updatePlayerBalance(playerId, amount);
+        console.log("balance del player", this.model.getPlayerBalance(playerId));
+
+        player.emitUpdate();
+        // if (showAnimation) {
+        //     EventBus.emit('view-animate-money', {
+        //         playerId: playerId,
+        //         amount: `${amount > 0 ? '+' : ''}${amount}M`,
+        //         numBill: amount
+        //     });
+        // }
+    }
+
+//     - "fantasy_event": FantasyEvent	    - See above
+//     - "result": Dictionary | null		- Depends on "fantasy_event"
+// 			null for: WIN_PLAIN_MONEY, WIN_RATIO_MONEY, LOSE_PLAIN_MONEY, LOSE_RATIO_MONEY, SHARE_MONEY_ALL, EVERYBODY_SENDS_YOU_MONEY,
+//					GET_PARKING_MONEY, GO_TO_JAIL, EVERYBODY_TO_JAIL, SHUFFLE_POSITIONS, MOVE_ANYWHERE_RANDOM, MAGNETISM, GO_TO_START
+//			{"square": custom_id} for: BREAK_OPPONENT_HOUSE, BREAK_OWN_HOUSE, FREE_HOUSE, RECEIVE_PROPERTY
+//			{"squares": [custom_id, ...]} for: EARTHQUAKE
+// 			{"target_player": pk} for: MOVE_OPPONENT_ANYWHERE_RANDOM, SEND_TO_JAIL
+//			{"doubled": bool} for: DOUBLE_OR_NOTHING
+    private handleFantasyEventEffect(type: WSTypes.FantasyEventType, value: any, result: any) {
+        const myId = this.model.myId;
+        const activePlayerId = String(this.model.active_turn_player);
+        const activePlayer = this.model.getPlayer(activePlayerId);
+
+        console.log("Efecto fantasía tipo: ", type);
+        console.log("Efecto fantasía valor: ", value);
+        console.log("Efecto fantasía result: ", result);
+
+        switch (type) {
+            // --- EVENTOS DE DINERO ---
+            // case 'winPlainMoney':
+            // case 'winRatioMoney':
+            // case 'losePlainMoney':
+            // case 'loseRatioMoney':
+            // case 'getParkingMoney':
+            // case 'shareMoneyAll': 
+            // case 'everybodySendsYouMoney':
+
+            // --- EVENTOS DE MOVIMIENTO : carcel ---
+            case 'goToJail':
+                if (activePlayer) activePlayer.jailRemainingTurns = 3;
+                EventBus.emit('view-send-to-jail', { playerId: activePlayerId });
+                break;
+            
+            case 'sendToJail':
+                const victimId = String(result?.target_player);
+                const victim = this.model.getPlayer(victimId);
+                if (victim) {
+                    victim.jailRemainingTurns = 3;
+                    EventBus.emit('view-send-to-jail', { playerId: victimId });
+                }
+                break;
+            
+            case 'everybodyToJail':
+                Object.values(this.model.players).forEach(p => {
+                    p.jailRemainingTurns = 3;
+                    EventBus.emit('view-send-to-jail', { playerId: p.id });
+                });
+                break;
+            
+            // --- EVENTOS DE MOVIMIENTO ---
+            case 'goToStart':
+            case 'moveOpponentAnywhereRandom':
+            case 'moveAnywhereRandom':
+                const newPos = this.model.getPlayerPosition(activePlayerId);
+                EventBus.emit('view-teleport-player', {
+                    playerId: activePlayerId,
+                    targetTileId: newPos
+                });
+                break;
+
+            case 'magnetism':
+            case 'shufflePositions':
+                Object.keys(this.model.players).forEach(playerId => {
+                    const newPos = this.model.getPlayerPosition(playerId);
+                    EventBus.emit('view-teleport-player', {
+                        playerId: playerId,
+                        targetTileId: newPos
+                    });
+                });
+                break;
+
+            // --- EVENTOS DE PROPIEDADES ---
+            case 'breakOpponentHouse':
+            case 'breakOwnHouse':
+                const targetSquare = result?.square;
+                if (!targetSquare) return;
+                const propToBreak = this.model.getProperty(String(targetSquare).padStart(3, '0'));
+                if (propToBreak && propToBreak.houseCount > 0) {
+                    propToBreak.houseCount--;
+                    EventBus.emit('view-update-tile-construction', { 
+                        tileId: propToBreak.id, 
+                        level: propToBreak.houseCount 
+                    });
+                }
+                break;
+            case 'freeHouse':
+                const targetSquareId = result?.square;
+                if (!targetSquareId) return;
+                const propToBuild = this.model.getProperty(String(targetSquareId).padStart(3, '0'));
+                if (propToBuild && propToBuild.houseCount < 5) {
+                    propToBuild.houseCount++;
+                    EventBus.emit('view-update-tile-construction', { 
+                        tileId: propToBuild.id, 
+                        level: propToBuild.houseCount 
+                    });
+                }
+                break;
+            
+            case 'earthquake':
+                const affectedSquares = result?.squares || [];
+                affectedSquares.forEach((id: any) => {
+                    const prop = this.model.getProperty(String(id).padStart(3, '0'));
+                    if (prop) {
+                        prop.houseCount = 0;
+                        EventBus.emit('view-update-tile-construction', { tileId: prop.id, level: 0 });
+                    }
+                });
+                break;
+            case 'reviveProperty':
+                const propToFix = this.model.getProperty(String(value).padStart(3, '0'));
+                if (propToFix) {
+                    propToFix.isMortgaged = false;
+                    EventBus.emit('update-tile-mortgage-visual', { tileId: propToFix.id, isMortgaged: false });
+                }
+                break;
+            
+            case 'doubleOrNothing':
+                if (result?.doubled) {
+                    console.log("¡Suerte! El dinero se ha duplicado");
+                } else {
+                    console.log("Mala suerte, lo has perdido todo (en este evento)");
+                }
+                break;
+
+            default:
+                console.warn(`No hay efecto para esa fantasía: ${type}`);
+                break;
+        }
+
+        EventBus.emit('model-updated', this.model);
+    }
 
 }

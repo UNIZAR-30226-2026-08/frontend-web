@@ -42,20 +42,18 @@ export class TileLogicManager {
         const config = tile.tileConfig;
        
         if (tile instanceof FantasyTile) {
-            // TODO: Vendrá del backend
-            const cartasFantasia = [
-                { title: "Concurso de Postales EINA", description: "Ganaste el concurso anual de postales navideñas de la EINA. Tu premio: 150€.", price: 130 },
-                { title: "Destino EINA", description: "Ya eres un matemático que solo tiene que ir a la EINA. Avanza a la casilla de salida.", price: 100 }
-            ];
-            
-            const cartaAleatoria = Phaser.Utils.Array.GetRandom(cartasFantasia);
+            console.log("He caido en una carta fantasía");
+            const currentFantasy = gameModel.currentFantasyEvent;
+            const myId = localStorage.getItem('myId');
 
-            // Evento hacia react
-            EventBus.emit('show-fantasy-card', {
-                ...cartaAleatoria,
-                playerName: player.name,
-                playerColor: '#' + player.color.toString(16).padStart(6, '0')
-            });
+            if (currentFantasy && String(player.id) === String(myId)) {
+                EventBus.emit('show-fantasy-overlay', {
+                    type: currentFantasy.type,
+                    value: currentFantasy.value,
+                });
+            } else {
+                console.warn("Error: tileLogicManager está en fantasía y no hay carta");
+            }
         }
         
 		else if (tile instanceof PropertyTile) {
@@ -154,6 +152,7 @@ export class TileLogicManager {
                         buttonText: cornerConfig.buttonText,
                         sound: cornerConfig.sound,
                         id: tile.tileConfig.id,
+                        playerId: player.id
                     });
                 } else {
                     console.warn(`No se ha encontrado: ${tile.constructor.name}`);

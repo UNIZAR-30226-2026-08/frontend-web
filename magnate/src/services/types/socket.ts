@@ -20,12 +20,6 @@ export type FantasyEventType = 'winPlainMoney'
 | 'reviveProperty'
 | 'earthquake';
 
-export interface FantasyCardDesc {
-	type: FantasyEventType;
-	value?: number;
-	cost: number;
-}
-
 export type Phase =  //GamePhase in backend doc
 		'roll_the_dices'
 | 'choose_square'
@@ -77,9 +71,11 @@ export type gameResponseType = 'Response'
 export type BotLevel = 'very_easy' | 'easy' | 'medium' | 'hard' | 'very_hard' 
 | 'expert';
 
-// TODO mejorar librería websocket
-// Nico: ConnState: internal state of the WS client (en vdd interesa para
-// permitir o no ciertas operaciones)
+export interface FantasyCardDesc {
+	fantasy_type: FantasyEventType;
+	value?: number;
+	card_cost: number;
+}
 
 export interface GameAction { 
     type: gameActionType;
@@ -97,7 +93,7 @@ export interface GameAction {
 	offered_properties?: string[];  // tile id of property location
 	asked_properties?: string[];	// tile id of property location
 	// trade answer
-	choose?: boolean; 	// True if trade is accepted
+	accept?: boolean; 	// True if trade is accepted
 }
 
 export interface GameActionReport { 
@@ -117,7 +113,7 @@ export interface GameActionReport {
 	offered_properties?: string[];  // tile id of property location
 	asked_properties?: string[];	// tile id of property location
 	// trade answer
-	choose?: boolean; 	// True if trade is accepted
+	accept?: boolean; 	// True if trade is accepted
 }
 
 export interface GameResponse {
@@ -127,6 +123,7 @@ export interface GameResponse {
 	active_turn_player: number;
 	phase: Phase;
 	parking_money?: Number;
+	
     // movement
 	path?: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
 	fantasy_event?: FantasyEventType;
@@ -218,6 +215,8 @@ export interface GameInfoResponse {
 	active_turn_player: number;
 	phase: Phase;
 	parking_money?: Number;
+	fantasy_event?: FantasyEventType;
+	positions?: Record<string, string>;
 }
 
 export interface GameInfoMovement {
@@ -249,7 +248,10 @@ export interface GameInfoFantasy {
 	active_phase_player: number;
 	active_turn_player: number;
 	phase: Phase;
-	fantasy_result?: FantasyCardDesc; // see above
+	fantasy_result: {
+        fantasy_event?: FantasyCardDesc;
+        result: any;
+    };
 	positions?: Record<string, string>; // userid, tileid
 }
 
@@ -337,6 +339,8 @@ export interface GameAskFantasy {
 export interface GameAskTradeAnswer {
 	/** True if trade is accepted */
 	accept: boolean; 
+	player: string;
+	game: string;
 }
 
 export interface GameAskBid {
@@ -344,6 +348,7 @@ export interface GameAskBid {
 }
 
 export interface GameAskTrade {
+	player: string;
 	destination_user: string;	// userid
 	offered_money:	number;
 	asked_money: number;
@@ -373,7 +378,7 @@ export interface GameReportFantasy {
 }
 
 export interface GameReportTradeAnswer {
-	//player: string;	// user id of player who sent the action
+	player: string;	// user id of player who sent the action
 	/** True if trade is accepted */
 	accept?: boolean; 
 }
@@ -384,8 +389,9 @@ export interface GameReportBid {
 }
 
 export interface GameReportTradeProposal {
+	game: string;
 	player: string;	// user id of player who sent the action
-	destination_user?: string;	// userid
+	destination_user?: number;	// userid
 	offered_money?:	number;
 	asked_money?: number;
 	offered_properties?: string[];  // tile id of property location

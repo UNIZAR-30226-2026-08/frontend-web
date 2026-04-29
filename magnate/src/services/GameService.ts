@@ -144,6 +144,7 @@ export const GameService = ( ) => {
 	const actionTradeProposal = ( data : WSTypes.GameAskTrade ) => {
 		const message = {
 			"type" : "ActionTradeProposal",
+			"player": data.player,
 			"destination_user" : data.destination_user,
 			"offered_money" : data.offered_money,
 			"asked_money" : data.asked_money,
@@ -156,7 +157,9 @@ export const GameService = ( ) => {
 	const actionTradeAnswer = ( data: WSTypes.GameAskTradeAnswer ) => {
 		const message = {
 			"type" : "ActionTradeAnswer",
-			"choose" : data.accept
+			"accept" : data.accept, 
+			"player": data.player,
+			"game": data.game
 		};
 		EventBus.emit('send-message', message);
 	};
@@ -262,7 +265,9 @@ export const GameService = ( ) => {
 			"active_phase_player" : data.active_phase_player,
 			"active_turn_player" : data.active_turn_player,
 			"phase" : data.phase,
-			"parking_money": data.parking_money
+			"parking_money": data.parking_money,
+			"fantasy_event": data.fantasy_event,
+			"positions": data.positions
 		};
 		EventBus.emit('report-response', responseBasic);
 
@@ -307,13 +312,22 @@ export const GameService = ( ) => {
 				EventBus.emit('report-response-throw-dices',responseThrowDices);
 				break;
 			case "ResponseChooseFantasy":
+				console.log("EVENTO fantasia response:", data);
+				const rawFantasy = (data.fantasy_result as any)?.fantasy_event;
 				const responseChooseFantasy : WSTypes.GameInfoFantasy = {
 					"money" : data.money,
 					"active_phase_player" : data.active_phase_player,
 					"active_turn_player" : data.active_turn_player,
 					"phase" : data.phase,
-					"fantasy_result": data.fantasy_result,
-					"positions": data.positions
+					"positions": data.positions,
+					"fantasy_result": data.fantasy_result ? {
+						fantasy_event: rawFantasy ? {
+							fantasy_type: rawFantasy.fantasy_type,
+							value: rawFantasy.value,
+							card_cost: rawFantasy.card_cost
+						} : undefined,
+						result: (data.fantasy_result as any).result
+					} : { result: null }
 				};
 				EventBus.emit('report-response-choose-fantasy',responseChooseFantasy);
 				break;
@@ -374,7 +388,7 @@ export const GameService = ( ) => {
 					"player": data.player,
 					"square" : data.square
 				};
-				EventBus.emit('report-action-take-tram',reportTakeTram);
+				EventBus.emit('report-action-take-tram', reportTakeTram);
 				break;
 			case "ActionDropPurchase":
 				const reportDropPurchase : WSTypes.GameReportSquare = {
@@ -421,21 +435,22 @@ export const GameService = ( ) => {
 				break;
 			case "ActionTradeProposal":
 				const reportTradeProposal : WSTypes.GameReportTradeProposal = {
+					"game": data.game,
 					"player": data.player,
-					"destination_user": data.destination_user,
+					"destination_user": Number(data.destination_user),
 					"offered_money": data.offered_money,
 					"asked_money": data.asked_money,
 					"offered_properties": data.offered_properties,
 					"asked_properties": data.asked_properties
 				};
-				EventBus.emit('report-action-trade-proposal',reportTradeProposal);
+				EventBus.emit('report-action-trade-proposal', reportTradeProposal);
 				break;
 			case "ActionTradeAnswer":
 				const reportTradeAnswer : WSTypes.GameReportTradeAnswer = {
-					//"player": data.player,
-					"accept": data.choose
+					"player": data.player,
+					"accept": data.accept
 				};
-				EventBus.emit('report-action-trade-answer',reportTradeAnswer);
+				EventBus.emit('report-action-trade-answer', reportTradeAnswer);
 				break;
 			case "ActionMortgageSet":
 				const reportMortgageSet : WSTypes.GameReportSquare = {
@@ -506,7 +521,7 @@ export const GameService = ( ) => {
 		EventBus.on('action-buy-square', actionBuySquare); // Comprar propiedad
 		EventBus.on('action-build', actionBuild); // construir casa
 		EventBus.on('action-demolish', actionDemolish); // destruir casa
-		EventBus.on('action-choose-card', actionChooseCard);
+		EventBus.on('action-choose-card', actionChooseCard); // se envía true si se elige la vista, false la oculta
 		EventBus.on('action-surrender', actionSurrender); // alguien se declara en bancarrota
 		EventBus.on('action-trade-proposal', actionTradeProposal); // jugador manda propuesta a otro
 		EventBus.on('action-trade-answer', actionTradeAnswer); // jugador acepta/deniega la propuesta

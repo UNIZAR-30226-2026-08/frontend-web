@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAudio } from '@/context/AudioContext';
 import { EventBus } from '@/EventBus';
 
-const MessageBubble = ({ text, isSender, senderName, senderColor }) => {
+const MessageBubble = ({ text, isSender, senderName, senderColor }: any) => {
     return (
         <div className={`flex w-full ${isSender ? 'justify-end' : 'justify-start'}`}>
             <div className={`flex flex-col ${isSender ? 'items-end' : 'items-start'} max-w-[90%]`}>
@@ -42,7 +42,8 @@ export const ChatHUD = () => {
         }
     ]);
     
-    const messagesEndRef = useRef(null);
+    //const messagesEndRef = useRef(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     const { playSound } = useAudio();
 
     const scrollToBottom = () => {
@@ -54,7 +55,7 @@ export const ChatHUD = () => {
     }, [messages, isOpen]);
 
     useEffect(() => {
-        const handleIncomingMessage = (event) => {
+        const handleIncomingMessage = (event : any) => {
             const { playerId, playerName, playerColor, text, isSender } = event;
             
             setMessages(prev => [...prev, {
@@ -67,7 +68,7 @@ export const ChatHUD = () => {
         };
 
         EventBus.on('receive-chat-message', handleIncomingMessage);
-        return () => EventBus.off('receive-chat-message', handleIncomingMessage);
+        return () => {EventBus.off('receive-chat-message', handleIncomingMessage);}
     }, []);
 
     const MessageIcon = (
@@ -90,7 +91,7 @@ export const ChatHUD = () => {
         setIsOpen(!isOpen);
     };
 
-    const handleInputKeyDown = (e) => {
+    const handleInputKeyDown = (e : any) => {
         if (e.key === 'Enter') {
             const text = e.target.value.trim();
             if (text === "") return;

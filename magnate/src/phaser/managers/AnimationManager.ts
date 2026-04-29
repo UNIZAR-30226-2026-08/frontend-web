@@ -18,8 +18,8 @@ export class AnimationManager {
 
     
     // Animación monedas (para parking)
-    public CoinAnimation(tile: Tile, playerId: string,  players: { model: any, token: PlayerToken }[], count: number = 10) {
-        const playerPair = players.find(p => p.model.id === playerId);
+    public CoinAnimation(tile: Tile, playerId?: string,  players?: { model: any, token: PlayerToken }[], count: number = 10) {
+        const playerPair = players?.find(p => p.model.id === playerId);
         if (!playerPair) return;
 
         const { token } = playerPair;
