@@ -37,8 +37,8 @@ export const GameService = ( ) => {
 	const handlePrivateChangeSettings = (data : PrivateRoomHostSettings) => {
 		const msg : PrivateCommand = {
 			"command": "update_settings",
-			"bot_level": msg.bot_evel,
-			"target_players": msg.target_players
+			"bot_level": WSTypes.spaeng[data.bot_level],
+			"target_players": data.target_players
 		};	
 		EventBus.emit('private-send-message', msg);
 	};
@@ -205,8 +205,9 @@ export const GameService = ( ) => {
 					"players": data.players
 				};
 				EventBus.emit('private-room-player-joined',playersMsg);
+				console.log("joined player");
 				const settingsMsg : PrivateRoomHostSettings = {
-					"bot_level": data.bot_level,
+					"bot_level": WSTypes.engspa[data.bot_level as unknown as WSTypes.BotLevel] || data.bot_level,
 					"target_players": data.target_players
 				};
 				EventBus.emit('private-room-settings',settingsMsg);
@@ -235,7 +236,7 @@ export const GameService = ( ) => {
 				break;
 			case "settings_changed":
 				const settingsmsg : PrivateRoomHostSettings = {
-					"bot_level": data.bot_level,
+					"bot_level": WSTypes.engspa[data.bot_level as unknown as WSTypes.BotLevel] || data.bot_level,
 					"target_players": data.target_players
 				};
 				EventBus.emit('private-room-settings',settingsmsg);

@@ -220,7 +220,7 @@ export const WSClient = ( ) => {
 				case "game_state": 
 					if (data.game_state.id === gameIdRef.current) {
 						if (playersIdsRef.current === null) {
-							playersIdsRef.current = data.data.players;
+							playersIdsRef.current = data.game_state.players;
 						}
 						EventBus.emit('new-game-state', data.data);
 						if (!inside) {

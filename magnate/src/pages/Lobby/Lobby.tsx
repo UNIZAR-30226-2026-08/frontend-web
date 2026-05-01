@@ -59,25 +59,30 @@ export function Lobby() {
     const [copied, setCopied] = useState(false); // para el icono de copiar código
     const roomCode = location.state?.roomCode || "N/A";
 
-    const players = [ // TODO: falta añadir icono de cada jugador
-        { title: "usuario1", bgImg: "skins/barco_closeup.png", isBot: false, ready: false},
-        { title: "usuario2", bgImg: "skins/barco_closeup.png", isBot: false, ready: false},
+    const players = [ 
+        //{ title: "usuario1", bgImg: "skins/barco_closeup.png", isBot: false, ready: false},
+        //{ title: "usuario2", bgImg: "skins/barco_closeup.png", isBot: false, ready: true},
     ];
-    const [difficulty, setDifficulty] = useState<'Muy fácil' | 'Fácil' | 'Medio' | 'Difícil' | 'Muy difícil' | 'Experto'>('Medio');
+    const [difficulty, setDifficulty] = useState<WSTypes.NivelBot>('Medio');
     const [lobbyPlayers, setLobbyPlayers] = useState(players);
 
     const addBot = (index : number) => {
-        if (lobbyPlayers[index]) return;
+		setLobbyPlayers(prevPlayers => {
+        	if (prevPlayers[index]) return prevPlayers; // ya había alguien
 
-        const newBot = { title: `bot ${index + 1}`, bgImg:gridImageUrl , isBot:true, ready:false };
-        const newPlayers = [...lobbyPlayers];
-        newPlayers[index] = newBot;
-        setLobbyPlayers(newPlayers);
+        	const newPlayers = [...prevPlayers];
+        	//const newBot = { title: `bot ${index + 1}`, bgImg:gridImageUrl , isBot:true, ready:false };
+        	const newBot = { title: "", bgImg:gridImageUrl , isBot:true, ready:false };
+        	newPlayers[index] = newBot;
+			return newPlayers;
+		});
     }
     const removeBot = (index : number) => {
-        const newPlayers = [...lobbyPlayers];
-        newPlayers[index] = null;
-        setLobbyPlayers(newPlayers); 
+		setLobbyPlayers(prevPlayers => {
+			const newPlayers = [...prevPlayers];
+			newPlayers[index] = null;
+			return newPlayers; 
+		});
     }
     const copyToClipboard = () => {
         navigator.clipboard.writeText(roomCode);
@@ -94,31 +99,76 @@ export function Lobby() {
 	};
 
 	useEffect(() => { 
-        const handleOwnerToggle = (data: PrivateRoomOwner) => {
+        const handleOwnerToggle = (data: WSTypes.PrivateRoomOwner) => {
             setImOwner(data.is_owner);
 			if (data.is_owner) {
 				setImReady(true);
 				EventBus.emit('private-set-ready', true);
 			} // unless you leave room you won't get un-owner-ed
         };
-		const handlePlayerJoined = (data: PrivateRoomPlayers) => {};
-		const handlePlayerLeft = (data: PrivateRoomPlayers) => {};
-		const handleRoomSettings = (data: PrivateRoomHostSettings) => {};
-		const handleSomeoneReady = (data: PrivateRoomReady) => {};
+		const handlePlayerMovement = (data: WSTypes.PrivateRoomPlayers) => {
+			setLobbyPlayers(prevPlayers => {
+				const humans = data.players.map((waiter) => ({
+					title: waiter.username,
+					bgImg: waiter.user_piece === null ? "skins/sombrero_closeup.png" : "skins/barco_closeup.png", // TODO Retrieve actual piece (see WSTypes.Waiters)
+					isBot: false,
+					ready: waiter.ready_to_play
+				}));
+
+				const bots = prevPlayers.filter(p => p!== null && p.isBot);
+				const combined = [...humans, ...bots].slice(0,4);
+
+				return Array.from({length:4}, (_, i)=> combined[i] || null);
+			});
+		};
+		const handleSomeoneReady = (data: WSTypes.PrivateRoomReady) => {
+			setLobbyPlayers((prevPlayers) =>
+				prevPlayers.map( p =>
+					p?.title===data.user ? { ...p, ready:data.is_ready } : p )
+			);
+		};
+		const handleRoomSettings = (data: WSTypes.PrivateRoomHostSettings) => {
+			// level update
+			const rawLevel = data.bot_level as unknown as WSTypes.NivelBot;
+			const translatedLevel = (rawLevel ? rawLevel : undefined) || 'Medio';
+			setDifficulty(translatedLevel); 
+
+			// lobby losts update
+			setLobbyPlayers(prevPlayers => {
+				let currentActive = prevPlayers.filter(p => p !== null).length;
+				const newPlayers = [...prevPlayers];
+
+				for (let i=3; i>=0 && currentActive > data.target_players; i--) {
+					// Remove bot (correctly updated)
+					if (newPlayers[i] !== null && newPlayers[i]?.isBot) {
+						newPlayers[i] = null;
+						currentActive--;
+					}
+				}
+				for (let i=0; i<4 && currentActive < data.target_players; i++) {
+					// Add bot (correctly updated)
+					if (newPlayers[i] === null) {
+						newPlayers[i] = {title: "", bgImg: gridImageUrl, isBot: true, ready: false};
+						currentActive++;
+					}
+				}
+				return newPlayers;
+			});
+		};
 
 		const handleEnter = () => navigate('/phaser-game');
 
 		EventBus.on('you-may-now-enter-the-game', handleEnter);
         EventBus.on('private-room-owner-toggle', handleOwnerToggle);
-        EventBus.on('private-room-player-joined', handlePlayerJoined);
-        EventBus.on('private-room-player-left', handlePlayerLeft);
+        EventBus.on('private-room-player-joined', handlePlayerMovement);
+        EventBus.on('private-room-player-left', handlePlayerMovement);
         EventBus.on('private-room-settings', handleRoomSettings);
         EventBus.on('private-room-ready', handleSomeoneReady);
         return () => {
 			EventBus.off('you-may-now-enter-the-game', handleEnter);
             EventBus.off('private-room-owner-toggle', handleOwnerToggle);
-        	EventBus.off('private-room-player-joined', handlePlayerJoined);
-        	EventBus.off('private-room-player-left', handlePlayerLeft);
+			EventBus.off('private-room-player-joined', handlePlayerMovement);
+			EventBus.off('private-room-player-left', handlePlayerMovement);
         	EventBus.off('private-room-settings', handleRoomSettings);
         	EventBus.off('private-room-ready', handleSomeoneReady);
         };
@@ -156,9 +206,18 @@ export function Lobby() {
                     </span>
 
                     <div className="relative group">
+						{imOwner ? (
                         <select 
                             value={difficulty}
-                            onChange={(e) => setDifficulty(e.target.value as any)}
+                            onChange={(e) => {
+								const newLevel = e.target.value;
+								setDifficulty(newLevel);
+
+								EventBus.emit('private-change-settings', {
+									bot_level: newLevel,
+									target_players: activePlayersCount
+								});
+							}}
                             className="appearance-none bg-white border-4 border-zinc-200 rounded-full px-8 py-3 
                                     font-black uppercase text-sm text-zinc-700 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.05)] 
                                     transition-all cursor-pointer pr-14 
@@ -176,7 +235,15 @@ export function Lobby() {
                                 </option>
                             ))}
                         </select>
+  						)
+						: (
+						<div className="bg-zinc-100 border-4 border-zinc-200 rounded-full px-10 py-3 font-black uppercase text-sm text-zinc-500 shadow-none cursor-default">
+        				    {difficulty}
+        				</div>
+						)}
+						{imOwner && (
                         <div className="absolute inset-0 rounded-full pointer-events-none group-hover:ring-2 group-hover:ring-[var(--color-primary)]/20 transition-all" />
+  						)}
                     </div>
                 </div>
             </div>
@@ -197,17 +264,22 @@ export function Lobby() {
                                     <ModeContent data={slot}  />
                                 </Button>
                                 
-                                {slot.isBot && ( 
-                                    <Button
-                                        onClick={() => removeBot(index)}
-                                        className="absolute flex items-center justify-center opacity-0 group-hover:opacity-100
-                                        transition-opacity duration-300 cursor-pointer"
-                                    >
-                                        <span className="text-zinc-300 text-6xl font-light hover:text-white transition-colors">
-                                            ✕
-                                        </span>
+                                {imOwner && slot.isBot && ( 
+								<div className="absolute bottom-10 z-40">
+									<Button 
+                                        onClick={() => {
+											removeBot(index);
+		EventBus.emit('private-change-settings', {
+			bot_level: difficulty,
+			target_players: activePlayersCount - 1
+		});
+										}}
+                                        className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[16px] font-black uppercase px-6 py-2 rounded-full
+                                                    ${bouncyAnimation}`}>
+                                    x Eliminar Bot
                                     </Button>
-                                )}
+								</div>
+							)}
                             </>
                         ) : (
                             // No hay jugador
@@ -219,7 +291,13 @@ export function Lobby() {
                                 <div className="absolute bottom-10">
 									{(imOwner && index===activePlayersCount) && (
 									<Button 
-                                        onClick={() => addBot(index)}
+                                        onClick={() => {
+											addBot(index);
+		EventBus.emit('private-change-settings', {
+			bot_level: difficulty,
+			target_players: activePlayersCount + 1
+		});
+										}}
                                         className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[16px] font-black uppercase px-6 py-2 rounded-full
                                                     ${bouncyAnimation}`}>
                                     + Añadir Bot
@@ -268,7 +346,7 @@ export function Lobby() {
                     className={`bg-[var(--color-primary)] text-[var(--color-text)] text-[30px] uppercase font-bold w-[320px] h-14
                     ${bouncyAnimation}`}
                 > 
-					{imOwner ? "Comenzar juego" : (imReady ? "Listo" : "No listo")}
+					{imOwner ? "Comenzar juego" : (imReady ? "No listo" : "Listo")}
                 </Button>
             </div>
         </div>

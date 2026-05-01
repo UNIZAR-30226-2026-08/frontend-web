@@ -76,6 +76,26 @@ export type gameResponseType = 'Response'
 export type BotLevel = 'very_easy' | 'easy' | 'medium' | 'hard' | 'very_hard' 
 | 'expert';
 
+export type NivelBot = 'Muy fácil' | 'Fácil' | 'Medio' | 'Difícil' | 'Muy difícil' | 'Experto';
+
+export const engspa : Record<BotLevel, NivelBot> = {
+	'very_easy': 'Muy fácil',
+	'easy': 'Fácil',
+	'medium': 'Medio',
+	'hard': 'Difícil',
+	'very_hard': 'Muy difícil',
+	'expert': 'Experto'
+};
+
+export const spaeng : Record<NivelBot, BotLevel> = {
+	'Muy fácil': 'very_easy',
+	'Fácil': 'easy',
+	'Medio': 'medium',
+	'Difícil': 'hard',
+	'Muy difícil': 'very_hard',
+	'Experto': 'expert'
+};
+
 // TODO mejorar librería websocket
 // Nico: ConnState: internal state of the WS client (en vdd interesa para
 // permitir o no ciertas operaciones)
@@ -175,11 +195,12 @@ export interface PrivateAction {
 	// player joined only (skin id)
 	//user_piece?: string;
 }
+
 /*
  * DATA TYPES FOR DEVELOPERS
  */
 export interface PrivateRoomHostSettings {
-	bot_level: BotLevel;
+	bot_level: NivelBot;
 	target_players: number;
 }
 
@@ -200,7 +221,8 @@ export interface PrivateRoomPlayers {
 export interface Waiters {
 	username: string;
 	ready_to_play: boolean;
-	//custom_id: string; // piece / skin
+	user_piece: string | null; // id in data/items.json token dict 
+	// ( take skins/items[icon] s.t. items[id]===user_piece )
 }
 
 export interface ChatMessageContent {
