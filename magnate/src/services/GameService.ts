@@ -5,6 +5,7 @@ import * as WSTypes from "@/services/types/socket";
 // flags to show more or less output
 const SELF_PROTECTION = true;
 const VERBOSE = true;
+const DEBUG = true;
 
 export const GameService = ( ) => { 
 	/*
@@ -63,8 +64,93 @@ export const GameService = ( ) => {
 	};
 
 	const sendChatMessage = ( msg : string ) => {
-		const chatMessage = { "type" : "ChatMessage", "msg" : msg };
-		EventBus.emit('send-message', chatMessage);
+		const cheatUssage : string = `/dice <d1> <d2> <d3>
+/tp <player_id> <tile_id>
+/money <player_id> <money>
+/property <player_id> <tile_id> <houses> <mortgage>
+/clearProperty <tile_id>`;
+		if (DEBUG && msg && msg.startsWith('/')) {
+			const command = msg.slice(1).split(' ');
+			switch (command[0]) {
+				case 'dice':
+					if (command.length !== 4) {
+						EventBus.emit('send-message', cheatUssage);
+						break;
+					}
+					const diceCheat : WSTypes.CheatMessage = {
+						"type": "Cheat",
+						"cheat": 'MockDice',
+						"dice1": parseInt(command[1], 10),
+						"dice2": parseInt(command[2], 10),
+						"dice_bus": parseInt(command[3], 10)
+					};
+					EventBus.emit('send-cheat', diceCheat);
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK dice"});
+					break;
+				case 'tp':
+					if (command.length !== 3) {
+						EventBus.emit('send-message', cheatUssage);
+						break;
+					}
+					const tpCheat : WSTypes.CheatMessage = {
+						"type": "Cheat",
+						"cheat": 'MockDice',
+						"player_id": command[1],
+						"square_id": command[2]
+					};
+					EventBus.emit('send-cheat', tpCheat);
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK tp"});
+					break;
+				case 'money':
+					if (command.length !== 3) {
+						EventBus.emit('send-message', cheatUssage);
+						break;
+					}
+					const moneyCheat : WSTypes.CheatMessage = {
+						"type": "Cheat",
+						"cheat": 'SetMoney',
+						"player_id": command[1],
+						"amount": parseInt(command[2], 10)
+					};
+					EventBus.emit('send-cheat', moneyCheat);
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK money"});
+					break;
+				case 'property':
+					if (command.length !== 5) {
+						EventBus.emit('send-message', cheatUssage);
+						break;
+					}
+					const propCheat : WSTypes.CheatMessage = {
+						"type": "Cheat",
+						"cheat": 'CreateProperty',
+						"player_id": command[1],
+						"square_id": command[2],
+						"houses": parseInt(command[3], 10),
+						"mortgage": command[4] === 'true'
+					};
+					EventBus.emit('send-cheat', propCheat);
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK property"});
+					break;
+				case 'clearProperty':
+					if (command.length !== 2) {
+						EventBus.emit('send-message', cheatUssage);
+						break;
+					}
+					const clearCheat : WSTypes.CheatMessage = {
+						"type": "Cheat",
+						"cheat": 'DeleteProperty',
+						"square_id": command[1]
+					};
+					EventBus.emit('send-cheat', clearCheat);
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK clearProperty"});
+					break;
+				default:
+					EventBus.emit('send-message', cheatUssage);
+			}
+		} else {
+			const chatMessage = { "type" : "ChatMessage", "msg" : msg };
+			EventBus.emit('send-message', chatMessage);
+		}
 	};
 
 	// ACTIONS

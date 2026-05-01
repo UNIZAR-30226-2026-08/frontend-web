@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation } from 'react-router-dom';
 import { EventBus } from '@/EventBus';
-import { GameAction, PrivateCommand, ChatMessageContent } from "@/services/types/socket";
+import { GameAction, PrivateCommand, ChatMessageContent, CheatMessage } from "@/services/types/socket";
 import { useAuth } from '@/context/AuthContext';
 
 /**
@@ -61,6 +61,7 @@ export const WSClient = ( ) => {
 	        socket.current.close(sockcode, "");
 	        socket.current = null;
 			playersIdsRef.current = [];
+			insideRef.current = false;
 	    }
 	};
 
@@ -103,7 +104,7 @@ export const WSClient = ( ) => {
 				// }
 				insideRef.current = true;
 				EventBus.emit('you-may-now-enter-the-game');
-				gameIdRef.current = data.game_id;
+				//gameIdRef.current = data.game_id;
 				//sessionStorage.setItem('activeGameId', data.game_id);
 
 				setTimeout(() => {
@@ -320,6 +321,15 @@ export const WSClient = ( ) => {
 	};
 
 	// Copied above function
+	const gameSendCheat = ( msg : CheatMessage ) => {
+		if (socket.current && socket.current.readyState === WebSocket.OPEN) {
+			socket.current.send(JSON.stringify(msg));
+		} else if (WS_ERROR) {
+			console.log("SELF PROTECTION: tried to send message through closed ws");
+		}
+	};
+
+	// Copied above function
 	const privateSendMessage = ( msg : PrivateCommand ) => {
 		if (socket.current && socket.current.readyState === WebSocket.OPEN) {
 			socket.current.send(JSON.stringify(msg));
@@ -370,6 +380,7 @@ export const WSClient = ( ) => {
 		} );
 		EventBus.on('handle-enter-game', handleGame);
 		EventBus.on('send-message', gameSendMessage);
+		EventBus.on('send-cheat', gameSendCheat);
 		EventBus.on('handle-private-connect', handlePrivateRoom);
 		EventBus.on('private-send-message', privateSendMessage);
 		return () => {
@@ -381,6 +392,7 @@ export const WSClient = ( ) => {
 			EventBus.off('send-message', gameSendMessage);
 			EventBus.off('handle-private-connect', handlePrivateRoom);
 			EventBus.off('private-send-message', privateSendMessage);
+			EventBus.off('send-cheat', gameSendCheat);
 		};
 	}, [token, location.pathname]);
 

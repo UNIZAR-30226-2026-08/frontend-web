@@ -197,6 +197,26 @@ export interface PrivateAction {
 	//user_piece?: string;
 }
 
+export type cheatName = 'MockDice' | 'Teleport' | 'SetMoney' 
+| 'CreateProperty' | 'DeleteProperty';
+
+export interface CheatMessage {
+	type: string;
+	cheat: cheatName; // nombre del cheat
+	// dice
+	dice1?: number;
+	dice2?: number;
+	dice_bus?: number;
+	// tp teleport
+	player_id?: string;
+	square_id?: string;
+	// money
+	amount?: number;
+	// property clearProperty
+	houses?: number;
+	mortgage?: boolean;
+}
+
 /*
  * DATA TYPES FOR DEVELOPERS
  */
