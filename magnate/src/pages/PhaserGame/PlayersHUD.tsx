@@ -3,6 +3,7 @@ import { PlayerHUD } from '@/components/layout/PlayerHUD';
 import { useAudio } from '@/context/AudioContext';
 import { EventBus } from '@/EventBus';
 import { PlayerModel } from '@/phaser/models/PlayerModel';
+import { useItemData } from '@/context/ItemContext';
 
 interface PlayersHUDProps {
     players: PlayerModel[];
@@ -12,15 +13,16 @@ interface PlayersHUDProps {
 
 export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClick }: PlayersHUDProps) => {
     const { playSound } = useAudio();
+    const { getItemInfo } = useItemData();
     const [playersList, setPlayersList] = useState<any[]>(initialPlayers);
     const [isVisible, setIsVisible] = useState(true);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [canClick, setCanClick] = useState(false);
+    const [activeEmojis, setActiveEmojis] = useState<{ [key: string]: string }>({});
 
-    // Nos guardamos el DOM para cada jugador
     const playerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+    const emojiTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
-    // Envia la coordenada correspondiente a (izda, medio)
     const emitCoordinates = useCallback(() => {
         const positions: Record<string, { x: number, y: number }> = {};
         
@@ -40,7 +42,6 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
         }
     }, []);
 
-    // Se recalcula cada vez que cambia la lista de jugadores o la pantalla
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             emitCoordinates();
@@ -96,6 +97,37 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
         };
     }, []);
 
+    useEffect(() => {
+        const handleIncomingMessage = (event: any) => {
+            const { playerId, text } = event;
+            if (typeof text === 'string' && text.startsWith('/emoji ')) {
+                const emojiId = Number(text.split(' ')[1]);
+                const info = getItemInfo(emojiId);
+
+                if (info) {
+                    setActiveEmojis(prev => ({ ...prev, [playerId]: info.url }));
+
+                    if (emojiTimeouts.current[playerId]) {
+                        clearTimeout(emojiTimeouts.current[playerId]);
+                    }
+
+                    emojiTimeouts.current[playerId] = setTimeout(() => {
+                        setActiveEmojis(prev => {
+                            const newState = { ...prev };
+                            delete newState[playerId];
+                            return newState;
+                        });
+                    }, 4000);
+                }
+            }
+        };
+
+        EventBus.on('receive-chat-message', handleIncomingMessage);
+        return () => {
+            EventBus.off('receive-chat-message', handleIncomingMessage);
+        };
+    }, [getItemInfo]);
+
     const handlePlayerClick = (playerId: string) => {
         if (canClick) {
             playSound('player_choose');
@@ -136,22 +168,39 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
                 pointerEvents: !isVisible ? 'none' : (canClick || !isDarkMode ? 'auto' : 'none')
             }}
         >
-            {playersList?.map((player) => (
-                <div 
-                    key={player.id} 
-                    ref={(el) => { playerRefs.current[player.id] = el; }}
-                    className={canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}
-                >
-                    <PlayerHUD 
-                        playerId={player.id} 
-                        initialName={player.name} 
-                        initialColor={player.color} 
-                        initialBalance={player.balance}
-                        isClickable={canClick}
-                        onClick={() => handlePlayerClick(player.id)}
-                    />
-                </div>
-            ))}
+            {playersList?.map((player) => {
+                const isEmojiActive = activeEmojis[String(player.id)];
+
+                return (
+                    <div 
+                        key={player.id} 
+                        ref={(el) => { playerRefs.current[player.id] = el; }}
+                        className={`relative w-fit ${canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}`}
+                    >
+                        {isEmojiActive && (
+                            <div 
+                                className="absolute top-1/2 left-0 -translate-y-[100%] -translate-x-[25%] z-[100] pointer-events-none"
+                            >
+                                <div className="animate-bounce flex items-center justify-center">
+                                    <img 
+                                        src={isEmojiActive} 
+                                        alt="emoji" 
+                                        className="w-14 h-14 object-contain drop-shadow-xl" 
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        <PlayerHUD 
+                            playerId={player.id} 
+                            initialName={player.name} 
+                            initialColor={player.color} 
+                            initialBalance={player.balance}
+                            isClickable={canClick}
+                            onClick={() => handlePlayerClick(player.id)}
+                        />
+                    </div>
+                );
+            })}
         </div>
     );
 };
