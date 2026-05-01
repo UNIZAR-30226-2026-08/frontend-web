@@ -1,9 +1,75 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAudio } from '@/context/AudioContext';
+import { EventBus } from '@/EventBus';
+
+const MessageBubble = ({ text, isSender, senderName, senderColor }: any) => {
+    return (
+        <div className={`flex w-full ${isSender ? 'justify-end' : 'justify-start'}`}>
+            <div className={`flex flex-col ${isSender ? 'items-end' : 'items-start'} max-w-[90%]`}>
+                <span 
+                    className="text-[11px] font-black uppercase mb-1 tracking-wider mx-1"
+                    style={{ color: senderColor }}
+                >
+                    {senderName}
+                </span>
+                
+                <div className={`
+                    px-4 py-3 shadow-[0_2px_4px_rgba(0,0,0,0.05)] border border-zinc-200
+                    ${isSender 
+                        ? 'bg-[#e0f2fe] rounded-tl-xl rounded-tr-xl rounded-bl-xl rounded-br-none' 
+                        : 'bg-white rounded-tl-xl rounded-tr-xl rounded-bl-none rounded-br-xl'
+                    }
+                `}>
+                    <p className="text-sm text-[#3f3f46] font-medium leading-relaxed break-words">
+                        {text}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export const ChatHUD = () => {
     const [isOpen, setIsOpen] = useState(false);
+    
+    const [messages, setMessages] = useState([
+        {
+            id: 'sys-init',
+            text: '¡Bienvenido al chat de Magnate! Construye tu imperio.',
+            isSender: false,
+            senderName: 'Sistema',
+            senderColor: '#9ca3af'
+        }
+    ]);
+    
+    //const messagesEndRef = useRef(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     const { playSound } = useAudio();
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, isOpen]);
+
+    useEffect(() => {
+        const handleIncomingMessage = (event : any) => {
+            const { playerId, playerName, playerColor, text, isSender } = event;
+            
+            setMessages(prev => [...prev, {
+                id: playerId + Date.now().toString(),
+                text,
+                isSender,
+                senderName: playerName,
+                senderColor: playerColor
+            }]);
+        };
+
+        EventBus.on('receive-chat-message', handleIncomingMessage);
+        return () => {EventBus.off('receive-chat-message', handleIncomingMessage);}
+    }, []);
 
     const MessageIcon = (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -25,6 +91,21 @@ export const ChatHUD = () => {
         setIsOpen(!isOpen);
     };
 
+    const handleInputKeyDown = (e : any) => {
+        if (e.key === 'Enter') {
+            const text = e.target.value.trim();
+            if (text === "") return;
+
+            const message = { 
+                "type": "SendChatMessage",
+                "text": text 
+            };
+            EventBus.emit('send-chat-message', message);
+            
+            e.target.value = "";
+        }
+    };
+
     return (
         <div 
             className={`fixed left-0 top-0 h-screen z-[2000] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center
@@ -39,20 +120,23 @@ export const ChatHUD = () => {
                 </div>
                 
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2 overflow-x-hidden">
-                    <div className="group">
-                        <p className="text-[11px] text-zinc-400 font-black uppercase mb-1 tracking-wider ml-1">Sistema</p>
-                        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-                            <p className="text-sm text-zinc-700 font-medium leading-relaxed">
-                                ¡Bienvenido al chat de Magnate! Construye tu imperio.
-                            </p>
-                        </div>
-                    </div>
+                    {messages.map((msg) => (
+                        <MessageBubble 
+                            key={msg.id}
+                            text={msg.text}
+                            isSender={msg.isSender}
+                            senderName={msg.senderName}
+                            senderColor={msg.senderColor}
+                        />
+                    ))}
+                    <div ref={messagesEndRef} />
                 </div>
 
                 <div className="mt-4 mb-4">
                     <input 
                         type="text" 
                         placeholder="Escribir mensaje..."
+                        onKeyDown={handleInputKeyDown}
                         className="w-full bg-white border-2 border-zinc-200 rounded-xl px-4 py-3 text-zinc-900 font-bold text-sm outline-none focus:border-[var(--color-primary)] transition-all shadow-inner"
                     />
                 </div>

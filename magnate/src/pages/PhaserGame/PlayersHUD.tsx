@@ -2,44 +2,56 @@ import React, { useState, useEffect } from 'react';
 import { PlayerHUD } from '@/components/layout/PlayerHUD';
 import { useAudio } from '@/context/AudioContext';
 import { EventBus } from '@/EventBus';
-
-interface PlayerInitData {
-    id: string;
-    name: string;
-    color: string;
-    balance: number;
-}
+import { PlayerModel } from '@/phaser/models/PlayerModel';
 
 interface PlayersHUDProps {
-    players: PlayerInitData[];
+    players: PlayerModel[];
     dynamicScale: number;
-    // isClickable?: boolean;
     onPlayerClick?: (playerId: string) => void;
 }
 
-export const PlayersHUD = ({ 
-    players,  
-    dynamicScale, //isClickable = false, 
-    onPlayerClick 
-}: PlayersHUDProps) => {
+export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClick }: PlayersHUDProps) => {
     const { playSound } = useAudio();
+    const [playersList, setPlayersList] = useState<any[]>(initialPlayers);
     const [isVisible, setIsVisible] = useState(true);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [canClick, setCanClick] = useState(false);
 
     useEffect(() => {
-       
+        const handleSinglePlayerUpdate = (updatedPlayer: any) => {
+            setPlayersList(prev => prev.map(p => 
+                p.id === updatedPlayer.id ? { ...p, ...updatedPlayer } : p
+            ));
+        };
+        const handleModelUpdate = (gameModel: any) => {
+            if (!gameModel || !gameModel.players) return;
+            const updatedPlayers = Object.values(gameModel.players).map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                balance: p.balance,
+                properties: p.properties,
+                
+                color: typeof p.color === 'number' 
+                    ? `#${p.color.toString(16).padStart(6, '0')}` 
+                    : p.color
+            }));
+            setPlayersList(updatedPlayers);
+        };
         const handleHide = () => setIsVisible(false);
         const handleShow = () => {setIsVisible(true);}
         const handleDarkMode = (active: boolean) => { setIsDarkMode(active); };
         const handleSetClickable = (active: boolean) => { setCanClick(active); };
 
+        EventBus.on('player-updated', handleSinglePlayerUpdate);
+        EventBus.on('model-updated', handleModelUpdate);
         EventBus.on('hide-players-hud', handleHide);
         EventBus.on('show-players-hud', handleShow);
         EventBus.on('dark-mode', handleDarkMode);
         EventBus.on('set-hud-clickable', handleSetClickable);
 
         return () => {
+            EventBus.off('player-updated', handleSinglePlayerUpdate);
+            EventBus.off('model-updated', handleModelUpdate);
             EventBus.off('hide-players-hud', handleHide);
             EventBus.off('show-players-hud', handleShow);
             EventBus.off('dark-mode', handleDarkMode);
@@ -51,14 +63,26 @@ export const PlayersHUD = ({
         if (canClick) {
             playSound('player_choose');
             
-            const targetPlayer = players.find(p => p.id === playerId);
-            const me = players[0]; 
-            if (targetPlayer && me) {
-                EventBus.emit('open-trading-mode', { 
-                    sender: me,
-                    receiver: targetPlayer,
-                    allPlayers: players
+            const targetPlayer = playersList.find(p => p.id === playerId);
+            const myId = localStorage.getItem('myId');
+            const me = playersList.find(p => p.id === myId);
+
+            if (playerId === myId) {
+                EventBus.emit('show-toast', { 
+                    message: "No puedes iniciar un intercambio contigo mismo",
+                    duration: 3000 
                 });
+                EventBus.emit('show-selection-notice', null);
+                return;
+            }
+
+            if (targetPlayer && me) {
+                EventBus.emit('show-trading-mode', {
+                    sender: me, // quien inicia tradeo
+                    receiver: targetPlayer, // el otro jugador
+                });
+                EventBus.emit('set-hud-clickable', false);
+                EventBus.emit('show-selection-notice', null);
             }
             onPlayerClick?.(playerId);
         }
@@ -75,7 +99,7 @@ export const PlayersHUD = ({
                 pointerEvents: !isVisible ? 'none' : (canClick || !isDarkMode ? 'auto' : 'none')
             }}
         >
-            {players?.map((player) => (
+            {playersList?.map((player) => (
                 <div key={player.id} 
                     className={canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}>
                     <PlayerHUD 
@@ -83,6 +107,7 @@ export const PlayersHUD = ({
                         initialName={player.name} 
                         initialColor={player.color} 
                         initialBalance={player.balance}
+                        //propertiesCount={player.properties?.length || 0}
                         isClickable={canClick}
                         onClick={() => handlePlayerClick(player.id)}
                     />

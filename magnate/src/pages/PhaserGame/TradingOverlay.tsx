@@ -3,7 +3,7 @@ import { EventBus } from '@/EventBus';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAudio } from '@/context/AudioContext';
-
+import { GameLogicManager } from '@/phaser/managers/GameLogicManager';
 // --- HEADER ---
 const TradeHeader = ({ player, isSender }: { player: any, isSender: boolean }) => (
     <div className={`p-8 pb-4 flex flex-col gap-1 ${isSender ? 'items-start' : 'items-end text-right'}`}>
@@ -21,7 +21,7 @@ const TradeHeader = ({ player, isSender }: { player: any, isSender: boolean }) =
             </div>
             <div className="flex flex-col">
                 <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-800 leading-none">
-                    {player?.name}
+                    {isSender ? "Tú" : player?.name}
                 </h3>
                 <span className={`text-[10px] font-bold text-[var(--color-primary)] opacity-70 ${isSender ? 'text-left' : 'text-right'}`}>
                     {isSender ? 'ESTÁS OFRECIENDO' : 'ESTÁS PIDIENDO'}
@@ -34,7 +34,6 @@ const TradeHeader = ({ player, isSender }: { player: any, isSender: boolean }) =
 export const TradingOverlay = () => {
 	const { playSound } = useAudio();
 
-    const [allPlayers, setAllPlayers] = useState<any[]>([]);
     const [sender, setSender] = useState<any>(null);
     const [receiver, setReceiver] = useState<any>(null);
     
@@ -60,23 +59,12 @@ export const TradingOverlay = () => {
     useEffect(() => {
 
         const handleOpenTrade = (data: any) => {
-            setAllPlayers(data.allPlayers || []);
             setSender(data.sender);
-            //setReceiver(data.receiver);
-            // TODO: pruebas, vendrá de backend
-            const propReceiver = {
-                ...data.receiver,
-                properties: data.receiver?.properties || [   
-                    { id: "013", name: "Cafetería de matemáticas", color: "#3b82f6" }, 
-                    { id: "023", name: "ITA", color: "#c73bf6" },
-                    { id: "021", name: "I3A", color: "#f6f03b" },
-                    { id: "031", name: "I3A", color: "#f6f03b" },
-                    { id: "026", name: "Circe", color: "#f6f03b" },
-                    { id: "037", name: "Circe", color: "#f88000" },]};
-            setReceiver(propReceiver);
+            setReceiver(data.receiver);
+
             setMyOffer({ money: 0, properties: [] }); 
-            setTheirOffer({ money: 0, properties: propReceiver.properties });
             setTheirOffer({ money: 0, properties: [] });
+    
             setIsMinimised(false);
             setShowProperties(false);
             EventBus.emit('set-hud-clickable', false);
@@ -120,6 +108,66 @@ export const TradingOverlay = () => {
         setSelectingFor(null);
         EventBus.emit('dark-mode', false);
         EventBus.emit('set-hud-clickable', false);
+    };
+
+    const proposeTrade = () => {
+        if (!sender || !receiver) return;
+
+        // Comprobaciones
+        if (myOffer.money > sender.balance) { // No puedo ofrecer más dinero del que tengo
+            EventBus.emit('show-toast', { message: "No tienes suficiente dinero", duration: 3000 });
+            return;
+        } 
+        if (theirOffer.money > receiver.balance) { // No puedo pedirle más dinero del que tiene
+            EventBus.emit('show-toast', { message: "El oponente no tiene tanto dinero", duration: 3000 });
+            return;
+        } 
+        const allPropertiesInTrade = [
+            ...myOffer.properties,
+            ...theirOffer.properties
+        ];
+        const gameModel = GameLogicManager.getInstance().model;
+        for (const prop of allPropertiesInTrade) {
+            
+            const propertyData = gameModel.getProperty(prop.id);
+            if (!propertyData) continue;
+
+            // No se puede tradear si la propiedad misma tiene casas
+            if (propertyData.houseCount > 0) {
+                EventBus.emit('show-toast', { 
+                    message: `No se puede tradear ${propertyData.name} porque tiene construcciones`, 
+                    duration: 4000 
+                });
+                return;
+            }
+
+            // No se puede tradear si OTRA propiedad del mismo grupo tiene casas
+            const groupHasHouses = Object.values(gameModel.boardProperties).some(p => 
+                p.group === propertyData.group && p.houseCount > 0
+            );
+
+            if (groupHasHouses) {
+                EventBus.emit('show-toast', { 
+                    message: `El grupo de ${propertyData.name} tiene casas construidas. Debes venderlas primero.`, 
+                    duration: 4000 
+                });
+                return;
+            }
+        }
+
+        // Estructura para ActionTradeProposal
+        const tradePayload = {
+            player: sender.id,
+            destination_user: Number(receiver.id),
+            offered_money: myOffer.money,
+            offered_properties: myOffer.properties.map(p => p.id),
+            asked_money: theirOffer.money,
+            asked_properties: theirOffer.properties.map(p => p.id)
+        };
+
+        console.log("Enviando propuesta:", tradePayload);
+        EventBus.emit('action-trade-proposal', tradePayload);
+        closeTrading();
     };
 
     const startSelection = (who: 'me' | 'them') => {
@@ -195,6 +243,7 @@ export const TradingOverlay = () => {
                             <TradeZone 
                                 title="Tu Dinero"
                                 offer={myOffer}
+                                maxMoney={sender.balance}
                                 playerProperties={sender.properties}
                                 onAdd={() => startSelection('me')} 
                                 onMoneyChange={(v: number) => setMyOffer({...myOffer, money: v})}
@@ -222,6 +271,7 @@ export const TradingOverlay = () => {
                             <TradeZone 
                                 title={`Oferta de ${receiver.name}`}
                                 offer={theirOffer} 
+                                maxMoney={receiver.balance}
                                 playerProperties={receiver.properties}
                                 onAdd={() => startSelection('them')} 
                                 onMoneyChange={(v: number) => setTheirOffer({...theirOffer, money: v})}
@@ -230,7 +280,7 @@ export const TradingOverlay = () => {
                             />
                         </div>
                         <div className="flex justify-center items-center p-8">
-                            <Button onClick={closeTrading}
+                            <Button onClick={proposeTrade}
 							sound="trade_accepted"
                             className={`w-[150px] h-[60px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[14px] 
                                             rounded-full ${bouncyAnimation}`}>
@@ -244,7 +294,7 @@ export const TradingOverlay = () => {
     );
 };
 
-const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], onRemoveProperty, showProperties}: any) => {
+const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], onRemoveProperty, showProperties, maxMoney}: any) => {
     
     const hasProperties = playerProperties && playerProperties.length > 0;
     const paperStyle = {
@@ -263,7 +313,7 @@ const TradeZone = ({ title, offer, onAdd, onMoneyChange, playerProperties = [], 
 
             <div className="relative group">
                 <Input 
-                    placeholder="0"
+                    placeholder={`Máx: ${maxMoney}M`}
                     className="w-full bg-white border-2 border-slate-400 rounded-[30px] py-8 px-7 text-xl font-bold text-slate-900 outline-none 
                     focus:border-slate-700 transition-all placeholder:text-slate-400 shadow-sm"
                     value={offer.money || ''}

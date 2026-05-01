@@ -11,13 +11,21 @@ export const ControlsHUD = () => {
     const [isDark, setIsDark] = useState(false); // Para oscurecer botones
     const [isHidden, setIsHidden] = useState(false);
 
-    const [canRoll, setCanRoll] = useState(true);
-    const [canAdminister, setCanAdminister] = useState(true);
-    const [canTrade, setCanTrade] = useState(true);
+    const [canRoll, setCanRoll] = useState(false);
+    const [canAdminister, setCanAdminister] = useState(false);
+    const [canTrade, setCanTrade] = useState(false);
     const [canFinishTurn, setCanFinishTurn] = useState(false);
-    const [canBankrupt, setCanBankrupt] = useState(true);
+    const [canBankrupt, setCanBankrupt] = useState(false);
 
     useEffect(() => {
+        const handleUpdateTurnControls = (isMyTurn: boolean) => {
+            setCanRoll(isMyTurn);
+            setCanAdminister(false);
+            setCanTrade(false);
+            setCanFinishTurn(false);
+            setCanBankrupt(true);
+        };
+
         const handleUpdateControls = (states: { 
             roll?: boolean, 
             administer?: boolean, 
@@ -43,6 +51,7 @@ export const ControlsHUD = () => {
         const handleHide = () => setIsHidden(true);
         const handleShow = () => setIsHidden(false);
 
+        EventBus.on('update-turn-controls', handleUpdateTurnControls);
         EventBus.on('update-controls-state', handleUpdateControls);
         EventBus.on('dice-roll-complete', handleRollComplete);
         EventBus.on('hide-controls-hud', handleHide);
@@ -50,6 +59,7 @@ export const ControlsHUD = () => {
 
         return () => {
             EventBus.off('dark-mode', handleDarkMode);
+            EventBus.off('update-turn-controls', handleUpdateTurnControls);
             EventBus.off('update-controls-state', handleUpdateControls);
             EventBus.off('dice-roll-complete', handleRollComplete);
             EventBus.off('hide-controls-hud', handleHide);
@@ -67,7 +77,8 @@ export const ControlsHUD = () => {
 
     const handleRollClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setIsRolling(true);
-        EventBus.emit('trigger-dice-roll');
+        // EventBus.emit('trigger-dice-roll');
+        EventBus.emit('action-throw-dices')
         e.currentTarget.blur();
     };
 
@@ -78,20 +89,24 @@ export const ControlsHUD = () => {
 
     const handleAdministerClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.blur();
-        EventBus.emit('dark-mode', true);
-        EventBus.emit('show-players-hud', true);
-        EventBus.emit('open-property-selection-mode');
+        EventBus.emit('start-administer');
+        // EventBus.emit('dark-mode', true);
+        // EventBus.emit('show-players-hud', true);
+        // EventBus.emit('open-property-selection-mode');
     };
 
     const handleTradeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.blur();
-        EventBus.emit('dark-mode', true);
-        EventBus.emit('set-hud-clickable', true);
-        EventBus.emit('start-selection-mode');
+        EventBus.emit('start-trade');
+        // EventBus.emit('dark-mode', true);
+        // EventBus.emit('set-hud-clickable', true);
+        // EventBus.emit('start-selection-mode');
     };
 
     const handleFinishTurnClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         console.log('Finish Turn clicked!');
+        EventBus.emit('request-next-phase');
+        // EventBus.emit('action-next-phase');
         // TODO: EventBus.emit('trigger-finish-turn')
         e.currentTarget.blur();
     };
@@ -99,10 +114,16 @@ export const ControlsHUD = () => {
     const handleBankruptClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setIsBankruptOpen(true);
         e.currentTarget.blur();
+        
     };
 
     const handleConfirmBankrupt = () => {
-        EventBus.emit('trigger-bankruptcy');
+        console.log("Enviando rendición al servidor...");
+        EventBus.emit('action-surrender');
+        // emito evento y me voy
+        EventBus.emit('handle-leave-game');
+        window.location.href = '/home';
+        //EventBus.emit('trigger-bankruptcy');
         setIsBankruptOpen(false);
     };
 

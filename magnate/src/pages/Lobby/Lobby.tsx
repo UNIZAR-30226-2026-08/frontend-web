@@ -49,7 +49,7 @@ const ModeContent = ( {data} : {data : { title: string, bgImg: string,  isBot: b
  * @return complete Lobby page
  */
 export function Lobby() {
-    const gridImageUrl = "src/assets/bg_city_white.jpg";
+    const gridImageUrl = "images/bg_city_white.jpg";
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 	const navigate = useNavigate();
 	const location = useLocation();

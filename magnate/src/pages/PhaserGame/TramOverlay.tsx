@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { EventBus } from '@/EventBus';
 import { Button } from '@/components/ui/button';
 import { useAudio } from '@/context/AudioContext';
+import { GameLogicManager } from '@/phaser/managers/GameLogicManager';
 
 export const TramOverlay = () => {
     // ESTADOS DEL OVERLAY
@@ -25,8 +26,8 @@ export const TramOverlay = () => {
 
     useEffect(() => {
         // From CornerOverlay if click on "Gestionar Desplazamiento"
-        const handleOpen = (data: { currentTileId: string }) => {
-            setCurrentTileId(data.currentTileId);
+        const handleOpen = (data: any) => {
+            setCurrentTileId(data);
             setIsOpen(false);
             setSelectedTram(null);
             
@@ -64,13 +65,22 @@ export const TramOverlay = () => {
 
     const confirmTramTravel = () => {
 		console.log("dentro de tram travel");
-        const cost = (selectedTram.id === currentTileId) ? 0 : 50; // TODO Check cost
+        const cost = (selectedTram.id === currentTileId) ? 0 : 30;
 		console.log(selectedTram.id)
-        
-        EventBus.emit('execute-tram-travel', {
-			targetId: selectedTram.id, 
-            cost: cost 
-		});
+
+        const gameModel = GameLogicManager.getInstance().model;
+        const myId = gameModel.myId;
+        const me = gameModel.getPlayer(myId);
+        if (me && me.balance < cost) {
+            EventBus.emit('show-toast', {
+                message: `No tienes suficientes créditos (${cost}M necesarios)`,
+            });
+            return;
+        }
+
+        EventBus.emit('action-take-tram', {
+            square: selectedTram.id
+        });
         
 		setIsOpen(false);
 		setSelectedTram(null);
@@ -112,7 +122,7 @@ export const TramOverlay = () => {
                                         </span>
                                         {selectedTram.id !== currentTileId && (
                                             <span className="text-[12px] opacity-80 font-bold tracking-tighter">
-                                                Coste: 50M
+                                                Coste: 30M
                                             </span>
                                         )}
                                     </div>

@@ -10,6 +10,7 @@ import { DiceManager } from './DiceManager';
 import { TileLogicManager } from './TileLogicManager';
 import { CameraController } from '../utils/CameraController';
 import { AnimationManager } from './AnimationManager';
+import { GameModel } from '../models/GameModel';
 
 interface IBoardScene extends Phaser.Scene {
     sendToSecretary(playerId: string): Promise<void>;
@@ -58,7 +59,6 @@ export class EventManager {
                     tile.removeAllListeners('pointerdown');
 
                     tile.once('pointerdown', () => {
-                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
                         const propConfig = tile.tileConfig as IPropertyTile;
                         EventBus.emit('tile-added-to-trade', {
                             id: propConfig.id,
@@ -73,49 +73,45 @@ export class EventManager {
         });
 
         // Lógica de administración
-        EventBus.on('open-property-selection-mode', () => {
-            const propertyIds = ["001", "008", "013", "003", "031", "019"]; // TODO: propiedades del player en el estado
+        EventBus.on('open-property-selection-mode', (model: GameModel, playerId: string) => {
+            // propiedades del player
+            const propertyIds = model.getPlayerProperties(playerId);
+            if (propertyIds.length === 0) {
+                EventBus.emit('show-toast', { message: "No tienes propiedades para administrar", duration: 3000 });
+                EventBus.emit('dark-mode', false);
+                return;
+            }
             BoardEffects.setFocusByIds(this.tiles, propertyIds, this.scene, []);
             this.tiles.forEach(tile => {
-
+                const tileId = tile.tileConfig.id;
                 if (propertyIds.includes(tile.tileConfig.id)) {
+                    tile.setInteractive();
                     tile.removeAllListeners('pointerdown');
 
                     tile.once('pointerdown', () => {
                         BoardEffects.setFocusByIds(this.tiles, null, this.scene, this.players.map(p=>p.token));
-                        // TODO: esto viene del backend o tendremos que añadirlo a cada property
-                        const rentValues = {base: 50, house1: 200, house2: 300, house3: 400, house4: 500, hotel: 800 };
-                        const propConfig = tile.tileConfig as IPropertyTile;
+                        const prop = model.getProperty(tileId);
+                        if (!prop) return;
                         
                         EventBus.emit('open-property-management', { 
                             data: {
-                                ...tile.tileConfig,
-                                headerColor: propConfig.color || '#FFFFFF' ,
-                                rent: rentValues,
-                                housePrice: 20,
-                                isMortgaged: false,
-                                mortgage: 20
-                            }
+                                id: prop.id,
+                                name: prop.name,
+                                color: prop.color,
+                                owner: prop.ownerId,
+                                group: prop.group,
+                                houseCount: prop.houseCount,
+                                buildPrice: prop.buildPrice,
+                                buyPrice: prop.buyPrice,
+                                rentPrices: prop.rentPrices,
+                                isMortgaged: prop.isMortgaged,
+                            },
                         });
                     });
                 } else {
                     tile.disableInteractive();
                 }
             });
-        });
-
-        // Lógica construir casas/hoteles
-        EventBus.on('execute-property-build', (data: { tileId: string, level: string, isMortgaged: boolean }) => {
-            const tile = this.tiles.find(t => t.tileConfig.id === data.tileId);
-            
-            if (tile && tile instanceof PropertyTile) {
-                // Mapeamos el string del Overlay a un número para el método setConstructionLevel
-                const levelMap: Record<string, number> = {
-                    'base': 0, 'house1': 1, 'house2': 2, 'house3': 3, 'house4': 4, 'hotel': 5
-                };
-                const numericLevel = levelMap[data.level] ?? 0;
-                tile.setConstructionLevel(numericLevel);
-            }
         });
 
     }
@@ -184,7 +180,7 @@ export class EventManager {
             if (isDouble) {
                 BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p=>p.token));
                 this.scene.showToast('¡Dobles! Sales libre.');
-                p.model.jailTurnCount = 0;
+                p.model.jailRemainingTurns = 0;
                 p.model.emitUpdate();
                 this.scene.time.delayedCall(1500, () => {
                     this.scene.diceManager.clearDice();
@@ -194,7 +190,7 @@ export class EventManager {
                 });
                 
             } else {
-                if (p.model.jailTurnCount >= 3) {
+                if (p.model.jailRemainingTurns >= 3) {
                     BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p=>p.token));
                     this.scene.showToast('¡Tercer turno! Debes pagar la fianza obligatoriamente');
                     this.setupJailClick(targetId, 'pay');
@@ -203,7 +199,7 @@ export class EventManager {
                     this.setupJailClick(jailId, 'stay');
                     this.setupJailClick(targetId, 'pay');
                 }
-                p.model.jailTurnCount++;
+                p.model.jailRemainingTurns++;
                 p.model.emitUpdate();
             }
         });
@@ -216,7 +212,7 @@ export class EventManager {
             const p = this.getActivePlayer();
             if (p && p.model.balance >= pay.amount) { // TODO: ajustar dinero players
                 p.model.balance -= pay.amount;
-                p.model.jailTurnCount = 0;
+                p.model.jailRemainingTurns = 0;
                 this.scene.showToast("Fianza pagada");
                 EventBus.emit('player-updated', p.model);
                 EventBus.emit('close-overlay');
@@ -235,7 +231,7 @@ export class EventManager {
             const jailId = "104";
             const targetId = "108"; // ID de destino tras los dados
 
-            if (p.model.jailTurnCount >= 3) {
+            if (p.model.jailRemainingTurns >= 3) {
                 BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p => p.token));
                 this.setupJailClick(targetId, 'pay');
             } else {
@@ -277,7 +273,7 @@ export class EventManager {
                 tileId: tileId,
                 tileName: tile.tileConfig.name,
                 mode: mode, // 'pay' (50€) o 'stay' (pasar turno)
-                turnCount: p?.model.jailTurnCount || 0
+                turnCount: p?.model.jailRemainingTurns || 0
             });
         });
     }

@@ -33,7 +33,8 @@ export const WSClient = ( ) => {
 	 */
 	const socket = useRef<WebSocket | null>(null);
 
-	const [inside, setInsideFlag] = useState<boolean>(false);
+	//const [inside, setInsideFlag] = useState<boolean>(false);
+	const insideRef = useRef<boolean>(false);
 	const gameIdRef = useRef("");
 	const playersIdsRef = useRef([]);
 
@@ -53,7 +54,8 @@ export const WSClient = ( ) => {
 	        // 1000 standard code for "Normal Closure" TODO more generic msg
 	        socket.current.close(sockcode, "");
 	        socket.current = null;
-			playersIdsRef.current = null;
+			playersIdsRef.current = [];
+			insideRef.current = false;
 	    }
 	};
 
@@ -63,6 +65,11 @@ export const WSClient = ( ) => {
 	 * @fires many many event buses TODO
 	 */
 	const handlePublicRoom = () => {
+		if (socket.current && (socket.current.readyState === 0 || socket.current.readyState === 1)) {
+			if (VERBOSE) console.log("DEBUG: ya hay un intento de conexión en curso.");
+			return;
+		}
+
 		if (VERBOSE) {
 			console.log("DEBUG: entered handlePublicRoom");
 		}
@@ -83,7 +90,18 @@ export const WSClient = ( ) => {
 			}
 			if (data.action === "match_found") {
 				if (VERBOSE) { console.log("Tomo game id:",data.game_id); }
-				EventBus.emit('handle-enter-game',data.game_id);
+				// EventBus.emit('handle-enter-game', data.game_id);
+				// if (socket.current) {
+				// 	socket.current.onclose = null;
+				// 	socket.current.close();
+				// 	socket.current = null;
+				// }
+				insideRef.current = true;
+				EventBus.emit('you-may-now-enter-the-game');
+
+				setTimeout(() => {
+					EventBus.emit('handle-enter-game', data.game_id);
+				}, 100);
 			}
 			else if (data.action === "error") {
 				console.log(data.message);
@@ -174,7 +192,6 @@ export const WSClient = ( ) => {
 	 * @fires many many event buses TODO
 	 */
 	const handleGame = (game_id: string) => {
-		//closeExistingSocket();
 		gameIdRef.current = game_id;
 		if (VERBOSE) {
 			console.log("DEBUG: entered handleGame");
@@ -207,7 +224,10 @@ export const WSClient = ( ) => {
 						// It'd b Better to use the API in fact, deprecated(?)
 					break;
 				case "chat_message": 
-					if (data.game === gameIdRef.current && playersIdsRef.current.includes(data.user) ) {
+                    console.log(playersIdsRef);
+                    // FIXME
+					// if (data.game === gameIdRef.current && playersIdsRef.current.includes(data.user) ) {
+					if (data.game === gameIdRef.current) {
 						const chatMessage : ChatMessageContent = {
 							"user": data.user,
 							"msg":  data.msg
@@ -217,36 +237,38 @@ export const WSClient = ( ) => {
 						console.log("VERBOSE: Este mensaje no es para este chat.");
 					}
 					break;
-				case "game_state": 
-					if (data.game_state.id === gameIdRef.current) {
-						if (playersIdsRef.current === null) {
-							playersIdsRef.current = data.game_state.players;
+				case "game_state":
+					const gameStateData = data.game_state;
+					if (gameStateData && gameStateData.id === gameIdRef.current) {
+						console.log("--> ESTADO DEL JUEGO RECIBIDO:");
+       					console.log(gameStateData);
+						if (gameStateData.players && (playersIdsRef.current.length === 0)) {
+							playersIdsRef.current = gameStateData.players;
 						}
-						EventBus.emit('new-game-state', data.data);
-						if (!inside) {
-							EventBus.emit('you-may-now-enter-the-game');
-							setInsideFlag(true);
-						}
+                        EventBus.emit('new-game-state', gameStateData);
+                    
 					} else if (VERBOSE) {
 						console.log("VERBOSE: This message is not for this game id");
 					}
 					break;
 				case "game_action": 
-					if (data.data.game === gameIdRef.current && playersIdsRef.current.includes(data.data.player) ) {
+					if (data.data.game === gameIdRef.current) {
 						EventBus.emit('receive-action',data.data);
+						
+						if (VERBOSE) {
+							console.log(`WS: Acción recibida y emitida (${data.data.type}) del jugador ${data.data.player}`);
+						}
 					} else if (VERBOSE) {
-						//console.err("VERBOSE: game id or action sender do not align with current game.");
 						console.log("VERBOSE: No need to report my own actions");
 					}
 					break;
 				case "game_response":
-					EventBus.emit('receive-response',data.data);
+					EventBus.emit('receive-response', data.data);
 					break;
 				default:
 					if (SELF_PROTECTION) {
 						console.log("SELF PROTECTION: mensaje desconocido",data);	
 					}
-
 			}
 		};
 
@@ -310,7 +332,7 @@ export const WSClient = ( ) => {
 			EventBus.off('handle-private-connect', handlePrivateRoom);
 			EventBus.off('private-send-message', privateSendMessage);
 		};
-	}, [token, socket]);
+	}, [token]);
 
 	return null;
 };

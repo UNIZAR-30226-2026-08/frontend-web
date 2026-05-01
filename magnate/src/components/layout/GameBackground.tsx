@@ -3,6 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { EventBus } from '@/EventBus';
 
+
 const CameraSync = () => {
     const { camera } = useThree();
 
@@ -53,7 +54,7 @@ export const GameBackground = () => {
                 <directionalLight position={[10, 10, 10]} intensity={2} />
                 
                 <CameraSync />
-                <AnimatedModel />
+                {/* <AnimatedModel /> */}
             </Canvas>
         </div>
     );

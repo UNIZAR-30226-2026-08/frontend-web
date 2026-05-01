@@ -1,26 +1,5 @@
-
-interface ServiceData {
-    title: string;
-    typeName: string;
-    image: string;
-    price: number;
-    rent: {
-        one: number;
-        all: number;
-    };
-    mortgage: number;
-}
-
-interface ServiceCardContentProps {
-    data: ServiceData;
-    isMortgaged?: boolean;
-    isAvailable?: boolean; // True if it has already been bought, False otherwise (pay rent)
-	hasAll?: keyof ServiceData['rent']; 		// Has every one of this group
-}
-
-export const ServiceCardContent = ({ data, isMortgaged, isAvailable, hasAll }:  ServiceCardContentProps ) => {
-
-    if (isMortgaged) {
+export const ServiceCardContent = ({ data }: any ) => {
+    if (data.isMortgaged) {
         return (
             <div className="w-full h-full bg-white border-2 border-black p-[12px] flex flex-col shadow-2xl">
                 <div className="relative w-full h-full border-[8px] border-[#e63946] flex flex-col bg-white items-center justify-between p-6 text-center overflow-hidden">
@@ -34,7 +13,7 @@ export const ServiceCardContent = ({ data, isMortgaged, isAvailable, hasAll }:  
 							<h3>{data.typeName}</h3>
                         </div>
                         <h2 className="text-2xl font-black uppercase text-black leading-tight border-b-2 border-black pb-2 mx-4">
-                            {data.title}
+                            {data.name}
                         </h2>
                     </div>
                     
@@ -46,7 +25,7 @@ export const ServiceCardContent = ({ data, isMortgaged, isAvailable, hasAll }:  
                         <div className="flex flex-col items-center">
                             <p className="text-[10px] font-black uppercase text-gray-500 mb-1">Hipotecado por</p>
                             <span className="text-5xl font-black text-black tracking-tighter">
-                                {Math.floor(data.mortgage * 1.1)}€
+                                {(data.buyPrice / 2)}M
                             </span>
                         </div>
                     </div>
@@ -71,15 +50,17 @@ export const ServiceCardContent = ({ data, isMortgaged, isAvailable, hasAll }:  
                     </span>
                     
                     <h3 className="text-black font-black uppercase text-center text-xl leading-tight drop-shadow-sm">
-                        {data.title}
+                        {data.name}
                     </h3>
                 </div>
 				<div className="border-b-2 border-black flex justify-center items-center h-40 p-4">
-				    <img
-				        src={data.image}
-				        alt="tile icon"
-				        className="max-h-full max-w-full object-contain"
-				    />
+                    <img src={ data.group === 13 || data.typeName === "Servidor" 
+                                ? "/images/server.png" 
+                                : "/icons/bridge.svg"
+                            }
+                        alt="tile icon"
+                        className="max-h-full max-w-full object-contain"
+                    />
 				</div>
 
                 <div className="p-5 flex-1 flex flex-col items-center">
@@ -95,14 +76,14 @@ export const ServiceCardContent = ({ data, isMortgaged, isAvailable, hasAll }:  
                         <div className="flex justify-between items-end text-gray-600 pt-6">
                             <span className="shrink-0">Con 1 {data.typeName}</span>
                             <div className="flex-1 border-b-2 border-dotted border-gray-400 mb-[5px] mx-2" />
-                            <span>{data.rent.one}€</span>
+                            <span>{data.rentPrices[0]}M</span>
                         </div>
 
                         {/* Con los 2 del grupo */}
                         <div className="flex justify-between items-end text-gray-600">
                             <span className="shrink-0">Con 2 {data.typeName}</span>
                             <div className="flex-1 border-b-2 border-dotted border-gray-400 mb-[5px] mx-2" />
-                            <span>{data.rent.all}€</span>
+                            <span>{data.rentPrices[1]}M</span>
                         </div>
 
                     </div>
@@ -112,7 +93,7 @@ export const ServiceCardContent = ({ data, isMortgaged, isAvailable, hasAll }:  
                         {/* Hipoteca */}
                         <div className="flex flex-col items-center border-t border-gray-300 pt-3">
                             <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Valor de Hipoteca</p>
-                            <span className="text-xl font-black text-black">{data.mortgage}€</span>
+                            <span className="text-xl font-black text-black">{data.buyPrice/2}M</span>
                         </div>
 
                     </div>
