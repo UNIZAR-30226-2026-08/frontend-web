@@ -31,6 +31,7 @@ const MessageBubble = ({ text, isSender, senderName, senderColor }: any) => {
 
 export const ChatHUD = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [hasUnread, setHasUnread] = useState(false);
     
     const [messages, setMessages] = useState([
         {
@@ -42,7 +43,6 @@ export const ChatHUD = () => {
         }
     ]);
     
-    //const messagesEndRef = useRef(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { playSound } = useAudio();
 
@@ -55,6 +55,12 @@ export const ChatHUD = () => {
     }, [messages, isOpen]);
 
     useEffect(() => {
+        if (isOpen) {
+            setHasUnread(false);
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
         const handleIncomingMessage = (event : any) => {
             const { playerId, playerName, playerColor, text, isSender } = event;
             
@@ -65,11 +71,15 @@ export const ChatHUD = () => {
                 senderName: playerName,
                 senderColor: playerColor
             }]);
+
+            if (!isOpen) {
+                setHasUnread(true);
+            }
         };
 
         EventBus.on('receive-chat-message', handleIncomingMessage);
         return () => {EventBus.off('receive-chat-message', handleIncomingMessage);}
-    }, []);
+    }, [isOpen]);
 
     const MessageIcon = (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -145,6 +155,7 @@ export const ChatHUD = () => {
             <button
                 onClick={handleToggleChat}
                 className={`
+                    relative
                     h-40 w-14 
                     bg-[var(--color-primary)]
                     hover:brightness-110
@@ -161,6 +172,10 @@ export const ChatHUD = () => {
                     z-0
                 `}
             >
+                {!isOpen && hasUnread && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--color-aux)] border-[2.5px] border-white rounded-full z-10 shadow-sm pointer-events-none"></div>
+                )}
+
                 <div className={`text-white transition-transform duration-500 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
                     <ChevronIcon />
                 </div>
