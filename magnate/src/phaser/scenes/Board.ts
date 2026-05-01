@@ -224,7 +224,7 @@ export class Board extends Phaser.Scene {
         EventBus.on('view-animate-path', (data: any) => {
             this.hideUI();
 
-            const formattedPath = data.path.map((id: number) => String(id).padStart(3, '0'));
+            const formattedPath = data.path.slice(1).map((id: number) => String(id).padStart(3, '0'));
             
             const playerToMove = this.players.find(p => p.model.id === String(data.playerId));
             
