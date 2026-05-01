@@ -1,8 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAudio } from '@/context/AudioContext';
 import { EventBus } from '@/EventBus';
+import { EmojiPickerBar } from './EmojiPickerBar';
+import { useItemData } from '@/context/ItemContext'; 
 
 const MessageBubble = ({ text, isSender, senderName, senderColor }: any) => {
+    const { getItemInfo } = useItemData();
+
+    const isEmojiCommand = typeof text === 'string' && text.startsWith('/emoji ');
+    let emojiUrl = null;
+    let emojiName = "";
+
+    if (isEmojiCommand) {
+        const emojiId = Number(text.split(' ')[1]);
+        const info = getItemInfo(emojiId);
+        if (info) {
+            emojiUrl = info.url;
+            emojiName = info.name;
+        }
+    }
+
     return (
         <div className={`flex w-full ${isSender ? 'justify-end' : 'justify-start'}`}>
             <div className={`flex flex-col ${isSender ? 'items-end' : 'items-start'} max-w-[90%]`}>
@@ -13,17 +30,27 @@ const MessageBubble = ({ text, isSender, senderName, senderColor }: any) => {
                     {senderName}
                 </span>
                 
-                <div className={`
-                    px-4 py-3 shadow-[0_2px_4px_rgba(0,0,0,0.05)] border border-zinc-200
-                    ${isSender 
-                        ? 'bg-[#e0f2fe] rounded-tl-xl rounded-tr-xl rounded-bl-xl rounded-br-none' 
-                        : 'bg-white rounded-tl-xl rounded-tr-xl rounded-bl-none rounded-br-xl'
-                    }
-                `}>
-                    <p className="text-sm text-[#3f3f46] font-medium leading-relaxed break-words">
-                        {text}
-                    </p>
-                </div>
+                {emojiUrl ? (
+                    <div className="px-2 py-1">
+                        <img 
+                            src={emojiUrl} 
+                            alt={emojiName} 
+                            className="w-12 h-12 object-contain drop-shadow-md pointer-events-none" 
+                        />
+                    </div>
+                ) : (
+                    <div className={`
+                        px-4 py-3 shadow-[0_2px_4px_rgba(0,0,0,0.05)] border border-zinc-200
+                        ${isSender 
+                            ? 'bg-[#e0f2fe] rounded-tl-xl rounded-tr-xl rounded-bl-xl rounded-br-none' 
+                            : 'bg-white rounded-tl-xl rounded-tr-xl rounded-bl-none rounded-br-xl'
+                        }
+                    `}>
+                        <p className="text-sm text-[#3f3f46] font-medium leading-relaxed break-words">
+                            {text}
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -116,6 +143,14 @@ export const ChatHUD = () => {
         }
     };
 
+    const handleEmojiSelect = (emojiId: string | number) => {
+        const message = {
+            "type": "SendChatMessage", 
+            "text": "/emoji " + emojiId
+        };
+        EventBus.emit('send-chat-message', message);
+    };
+
     return (
         <div 
             className={`fixed left-0 top-0 h-screen z-[2000] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center
@@ -129,7 +164,7 @@ export const ChatHUD = () => {
                     </span>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto space-y-4 pr-2 overflow-x-hidden">
+                <div className="flex-1 overflow-y-auto space-y-4 pr-2 overflow-x-hidden [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-200 hover:[&::-webkit-scrollbar-thumb]:bg-zinc-300 [&::-webkit-scrollbar-thumb]:rounded-full">
                     {messages.map((msg) => (
                         <MessageBubble 
                             key={msg.id}
@@ -142,7 +177,11 @@ export const ChatHUD = () => {
                     <div ref={messagesEndRef} />
                 </div>
 
-                <div className="mt-4 mb-4">
+                <div className="mt-2 -mx-2 rounded-xl overflow-hidden">
+                    <EmojiPickerBar onEmojiSelect={handleEmojiSelect} />
+                </div>
+
+                <div className="mt-0 mb-4">
                     <input 
                         type="text" 
                         placeholder="Escribir mensaje..."
