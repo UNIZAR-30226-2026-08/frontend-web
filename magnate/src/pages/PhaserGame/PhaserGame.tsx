@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as Phaser from 'phaser';
 import { GameConfig } from '../../phaser/config';
 import { FantasyOverlay } from "./FantasyOverlay";
@@ -45,6 +46,23 @@ export const PhaserGame = () => {
         width: typeof window !== 'undefined' ? window.innerWidth : 1920, 
         height: typeof window !== 'undefined' ? window.innerHeight : 1080 
     });
+
+	// Return to home if browser button pressed
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		window.history.pushState(null, '', window.location.pathname);
+
+		const handleBackButton = (event: PopStateEvent) => {
+			console.log("Back browser button pressed. Redirecting to /home");
+			EventBus.emit('handle-leave-game');
+			navigate('/home', { replace: true });
+		};
+		window.addEventListener('popstate', handleBackButton);
+		return () => {
+			window.removeEventListener('popstate', handleBackButton);
+		};
+	}, [navigate]);
 
     useEffect(() => {
 		const handleIdRequest = () => {

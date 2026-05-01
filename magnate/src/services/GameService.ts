@@ -210,9 +210,9 @@ export const GameService = ( ) => {
 				};
 				EventBus.emit('private-room-player-joined',playersMsg);
 				console.log("joined player");
-				const settingsMsg : PrivateRoomHostSettings = {
+				const settingsMsg : WSTypes.PrivateRoomHostSettings = {
 					"bot_level": WSTypes.engspa[data.bot_level as unknown as WSTypes.BotLevel] || data.bot_level,
-					"target_players": data.target_players
+					"target_players": data.target_players ?? 2
 				};
 				EventBus.emit('private-room-settings',settingsMsg);
 				const ownerMsg : WSTypes.PrivateRoomOwner = {
@@ -239,9 +239,9 @@ export const GameService = ( ) => {
 				EventBus.emit('private-room-ready',msg);
 				break;
 			case "settings_changed":
-				const settingsmsg : PrivateRoomHostSettings = {
+				const settingsmsg : WSTypes.PrivateRoomHostSettings = {
 					"bot_level": WSTypes.engspa[data.bot_level as unknown as WSTypes.BotLevel] || data.bot_level,
-					"target_players": data.target_players
+					"target_players": data.target_players ?? 1
 				};
 				EventBus.emit('private-room-settings',settingsmsg);
 				break;

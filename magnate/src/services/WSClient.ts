@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useLocation } from 'react-router-dom';
 import { EventBus } from '@/EventBus';
 import { GameAction, PrivateCommand, ChatMessageContent } from "@/services/types/socket";
 import { useAuth } from '@/context/AuthContext';
@@ -33,12 +34,17 @@ export const WSClient = ( ) => {
 	 */
 	const socket = useRef<WebSocket | null>(null);
 
-	//const [inside, setInsideFlag] = useState<boolean>(false);
+	const [inside, setInsideFlag] = useState<boolean>(false);
 	const insideRef = useRef<boolean>(false);
 	const gameIdRef = useRef("");
 	const playersIdsRef = useRef([]);
 
     const { token } = useAuth();
+
+	const location = useLocation();
+
+	// against 2 emissions of events on reload browser button clicked
+	// const hasAttemptedReconnection = useRef(false);
 
 	// Meant to be a private function. Self-descriptive.
 	// 4100 context change. 
@@ -55,7 +61,6 @@ export const WSClient = ( ) => {
 	        socket.current.close(sockcode, "");
 	        socket.current = null;
 			playersIdsRef.current = [];
-			insideRef.current = false;
 	    }
 	};
 
@@ -98,6 +103,8 @@ export const WSClient = ( ) => {
 				// }
 				insideRef.current = true;
 				EventBus.emit('you-may-now-enter-the-game');
+				gameIdRef.current = data.game_id;
+				//sessionStorage.setItem('activeGameId', data.game_id);
 
 				setTimeout(() => {
 					EventBus.emit('handle-enter-game', data.game_id);
@@ -149,6 +156,8 @@ export const WSClient = ( ) => {
 		socket.current = new WebSocket(url);
 		socket.current.onopen = (event) => { EventBus.emit('private-connect-response', true); };
 
+		//sessionStorage.setItem('roomCode', roomid);
+
 		socket.current.onmessage = (event) => {
 			const data = JSON.parse(event.data);
 			if (VERBOSE) {
@@ -157,6 +166,7 @@ export const WSClient = ( ) => {
 			}
 			if (data.action === "room_created") { // not even covered in docu. Kinda cheating
 				gameIdRef.current = data.room_code;
+				//sessionStorage.setItem('activeGameId', data.room_code);
 			} else {
 				EventBus.emit('receive-private',data);	
 			}
@@ -193,6 +203,7 @@ export const WSClient = ( ) => {
 	 */
 	const handleGame = (game_id: string) => {
 		gameIdRef.current = game_id;
+		//sessionStorage.setItem('activeGameId', game_id);
 		if (VERBOSE) {
 			console.log("DEBUG: entered handleGame");
 		}
@@ -246,6 +257,10 @@ export const WSClient = ( ) => {
 							playersIdsRef.current = gameStateData.players;
 						}
                         EventBus.emit('new-game-state', gameStateData);
+						if (!inside) {
+							EventBus.emit('you-may-now-enter-the-game');
+							setInsideFlag(true);
+						}
                     
 					} else if (VERBOSE) {
 						console.log("VERBOSE: This message is not for this game id");
@@ -314,10 +329,45 @@ export const WSClient = ( ) => {
 	};
 
 	useEffect(() => {
+		const validGameRoutes = ['/lobby', '/phaser-game', '/loading'];
+		const isGameRoute = validGameRoutes.some(route => location.pathname.includes(route));
+		if (!isGameRoute && socket.current && socket.current.readyState === WebSocket.OPEN) {
+			console.log("Out of game");
+			closeExistingSocket(4100);
+		} 
+		/*
+		else if (!hasAttemptedReconnection.current) {
+			hasAttemptedReconnection.current = true;
+
+			const path = location.pathname;
+			if (path.includes('/phaser-game')) {
+				const gameId = sessionStorage.getItem('activeGameId');
+				if (gameId) {
+					gameIdRef.current = gameId;
+					EventBus.emit('handle-enter-game', gameId);
+				}
+			} else if (path.includes('/loading')) {
+				EventBus.emit('handle-public-connect');
+			} else if (path.includes('/lobby')) {
+				const roomCode = sessionStorage.getItem('roomCode');
+				if (roomCode) {
+					EventBus.emit('handle-private-connect', roomCode);
+				}
+			}	
+		}
+	   */
 		EventBus.on('handle-public-connect', handlePublicRoom);
 		EventBus.on('handle-public-cancel', () => { closeExistingSocket(4101);} );
-		EventBus.on('handle-private-cancel', () => { closeExistingSocket(4102);} );
-		EventBus.on('handle-leave-game', () => { closeExistingSocket(4103);} );
+		EventBus.on('handle-private-cancel', () => { 
+			//sessionStorage.removeItem('roomCode');
+			closeExistingSocket(4102);
+		} );
+		EventBus.on('handle-leave-game', () => { 
+			//sessionStorage.removeItem('activeGameId');
+			insideRef.current = false;
+			setInsideFlag(false);
+			closeExistingSocket(4103);
+		} );
 		EventBus.on('handle-enter-game', handleGame);
 		EventBus.on('send-message', gameSendMessage);
 		EventBus.on('handle-private-connect', handlePrivateRoom);
@@ -332,7 +382,7 @@ export const WSClient = ( ) => {
 			EventBus.off('handle-private-connect', handlePrivateRoom);
 			EventBus.off('private-send-message', privateSendMessage);
 		};
-	}, [token]);
+	}, [token, location.pathname]);
 
 	return null;
 };

@@ -59,7 +59,7 @@ export function Lobby() {
     const [copied, setCopied] = useState(false); // para el icono de copiar código
     const roomCode = location.state?.roomCode || "N/A";
 
-    const players = [ 
+    const players : any = [ 
         //{ title: "usuario1", bgImg: "skins/barco_closeup.png", isBot: false, ready: false},
         //{ title: "usuario2", bgImg: "skins/barco_closeup.png", isBot: false, ready: true},
     ];
@@ -67,7 +67,7 @@ export function Lobby() {
     const [lobbyPlayers, setLobbyPlayers] = useState(players);
 
     const addBot = (index : number) => {
-		setLobbyPlayers(prevPlayers => {
+		setLobbyPlayers((prevPlayers: any) => {
         	if (prevPlayers[index]) return prevPlayers; // ya había alguien
 
         	const newPlayers = [...prevPlayers];
@@ -78,7 +78,7 @@ export function Lobby() {
 		});
     }
     const removeBot = (index : number) => {
-		setLobbyPlayers(prevPlayers => {
+		setLobbyPlayers((prevPlayers: any) => {
 			const newPlayers = [...prevPlayers];
 			newPlayers[index] = null;
 			return newPlayers; 
@@ -91,7 +91,7 @@ export function Lobby() {
     };
 
     const lobbySlots = Array.from({ length: 4 }, (_, i) => lobbyPlayers[i] || null);
-    const activePlayersCount = lobbyPlayers.filter(player => player !== null).length; 
+    const activePlayersCount = lobbyPlayers.filter((player: null) => player !== null).length; 
 
 	const handleVoluntaryLeave = () => {
 		EventBus.emit('private-cancel');
@@ -100,43 +100,43 @@ export function Lobby() {
 
 	useEffect(() => { 
         const handleOwnerToggle = (data: WSTypes.PrivateRoomOwner) => {
-            setImOwner(data.is_owner);
-			if (data.is_owner) {
+            setImOwner(data.is_owner ?? false);
+            if (data.is_owner) {
 				setImReady(true);
 				EventBus.emit('private-set-ready', true);
 			} // unless you leave room you won't get un-owner-ed
         };
-		const handlePlayerMovement = (data: WSTypes.PrivateRoomPlayers) => {
-			setLobbyPlayers(prevPlayers => {
-				const humans = data.players.map((waiter) => ({
-					title: waiter.username,
-					bgImg: waiter.user_piece === null ? "skins/sombrero_closeup.png" : "skins/barco_closeup.png", // TODO Retrieve actual piece (see WSTypes.Waiters)
-					isBot: false,
-					ready: waiter.ready_to_play
-				}));
+        const handlePlayerMovement = (data: WSTypes.PrivateRoomPlayers) => {
+            setLobbyPlayers((prevPlayers: any[]) => {
+                const humans = (data.players || []).map((waiter) => ({
+                    title: waiter.username,
+                    bgImg: waiter.user_piece === null ? "skins/sombrero_closeup.png" : "skins/barco_closeup.png", // TODO Retrieve actual piece (see WSTypes.Waiters)
+                    isBot: false,
+                    ready: waiter.ready_to_play
+                }));
 
-				const bots = prevPlayers.filter(p => p!== null && p.isBot);
+				const bots = prevPlayers.filter((p: { isBot: any; } | null) => p!== null && p.isBot);
 				const combined = [...humans, ...bots].slice(0,4);
 
 				return Array.from({length:4}, (_, i)=> combined[i] || null);
 			});
 		};
 		const handleSomeoneReady = (data: WSTypes.PrivateRoomReady) => {
-			setLobbyPlayers((prevPlayers) =>
-				prevPlayers.map( p =>
+			setLobbyPlayers((prevPlayers: any[]) =>
+				prevPlayers.map( (p: { title: string | undefined; }) =>
 					p?.title===data.user ? { ...p, ready:data.is_ready } : p )
 			);
 		};
-		const handleRoomSettings = (data: WSTypes.PrivateRoomHostSettings) => {
-			// level update
-			const rawLevel = data.bot_level as unknown as WSTypes.NivelBot;
-			const translatedLevel = (rawLevel ? rawLevel : undefined) || 'Medio';
-			setDifficulty(translatedLevel); 
+        const handleRoomSettings = (data: WSTypes.PrivateRoomHostSettings) => {
+            // level update
+            const rawLevel = data.bot_level as unknown as WSTypes.NivelBot;
+            const translatedLevel = (rawLevel ? rawLevel : undefined) || 'Medio';
+            setDifficulty(translatedLevel); 
 
-			// lobby losts update
-			setLobbyPlayers(prevPlayers => {
-				let currentActive = prevPlayers.filter(p => p !== null).length;
-				const newPlayers = [...prevPlayers];
+            // lobby losts update
+            setLobbyPlayers((prevPlayers: any[]) => {
+                let currentActive = prevPlayers.filter((p: null) => p !== null).length;
+                const newPlayers = [...prevPlayers];
 
 				for (let i=3; i>=0 && currentActive > data.target_players; i--) {
 					// Remove bot (correctly updated)
@@ -176,7 +176,7 @@ export function Lobby() {
 
 	const handleButtonClick = () => {
 		if (imOwner) {
-			//EventBus.emit('private-set-ready',true); // repetido supuestamente
+			//EventBus.emit('private-set-ready',true); // maybe for refreshing
 			EventBus.emit('private-start');
 		}
 		else {
@@ -210,14 +210,14 @@ export function Lobby() {
                         <select 
                             value={difficulty}
                             onChange={(e) => {
-								const newLevel = e.target.value;
-								setDifficulty(newLevel);
+                                const newLevel = e.target.value as WSTypes.NivelBot;
+                                setDifficulty(newLevel);
 
-								EventBus.emit('private-change-settings', {
-									bot_level: newLevel,
-									target_players: activePlayersCount
-								});
-							}}
+                                EventBus.emit('private-change-settings', {
+                                    bot_level: newLevel,
+                                    target_players: activePlayersCount
+                                });
+                            }}
                             className="appearance-none bg-white border-4 border-zinc-200 rounded-full px-8 py-3 
                                     font-black uppercase text-sm text-zinc-700 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.05)] 
                                     transition-all cursor-pointer pr-14 

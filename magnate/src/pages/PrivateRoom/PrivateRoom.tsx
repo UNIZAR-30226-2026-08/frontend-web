@@ -79,7 +79,7 @@ export function PrivateRoom () {
         }
     }
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (activeMode === 'host') {
@@ -92,24 +92,23 @@ export function PrivateRoom () {
 					console.log('correct new room login:', newCode);
 				});
 			}
-		} else { if (activeMode === 'join') {
+		} else if (activeMode === 'join') {
 			console.log("join");
 
 			const cInput = codeRef.current?.value || "";
 			if (!cInput) return;
 
+			const roomExists = await checkPrivateCode(token, cInput);
 			// room does not exist
-			if (!checkPrivateCode(token, cInput)) { // /lobby/check-code// !data.exists
-				codeRef.current.setCustomValidity("No hay ninguna sala activa con ese código");
-				codeRef.current.reportValidity();
+			if (!roomExists) { // /lobby/check-code// !data.exists
+				codeRef.current?.setCustomValidity("No hay ninguna sala activa con ese código");
+				codeRef.current?.reportValidity();
 				return;
 			} else {
 				activeCodeRef.current = cInput;
 				EventBus.emit('private-connect', cInput);
 				console.log('correct old room login:', cInput);
 			}
-			}
-
 		}
 
 		return;
