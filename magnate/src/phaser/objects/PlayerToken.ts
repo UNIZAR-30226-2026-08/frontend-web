@@ -3,6 +3,7 @@ import { EventBus } from '@/EventBus';
 
 export class PlayerToken extends Phaser.GameObjects.Container {
     public isMoving: boolean = false;
+    public hudPositions: Record<string, { x: number, y: number }> = {};
 
     constructor(scene: Phaser.Scene, x: number, y: number, color: number) {
         super(scene, x, y);
@@ -12,6 +13,32 @@ export class PlayerToken extends Phaser.GameObjects.Container {
         this.setDepth(100); 
         this.setInteractive(new Phaser.Geom.Circle(0, 0, 21), Phaser.Geom.Circle.Contains);
         scene.add.existing(this);
+
+        const handlePositionsUpdate = (domPositions: Record<string, { x: number, y: number }>) => {
+            const convertedPositions: Record<string, { x: number, y: number }> = {};
+            
+            // Hay que convertir las coordenadas de React a las de Phaser
+            const canvas = this.scene.game.canvas;
+            const rect = canvas.getBoundingClientRect();
+
+            const scaleX = this.scene.scale.gameSize.width / rect.width;
+            const scaleY = this.scene.scale.gameSize.height / rect.height;
+            
+            Object.entries(domPositions).forEach(([id, domPos]) => {
+                const canvasX = (domPos.x - rect.left) * scaleX;
+                const canvasY = (domPos.y - rect.top) * scaleY;
+                
+                convertedPositions[id] = { x: canvasX, y: canvasY };
+            });
+
+            this.hudPositions = convertedPositions;
+        };
+
+        EventBus.on('player-hud-positions', handlePositionsUpdate);
+
+        this.on('destroy', () => {
+            EventBus.off('player-hud-positions', handlePositionsUpdate);
+        });
     }
 
     public moveToCoords(path: { x: number, y: number }[], onComplete?: () => void) {
@@ -22,7 +49,6 @@ export class PlayerToken extends Phaser.GameObjects.Container {
         this.isMoving = true;
         const nextTarget = path.shift();
 
-        // Trigger the React Audio Context via EventBus
         EventBus.emit('play-sfx', 'player_token_hop');
 
         this.scene.tweens.add({

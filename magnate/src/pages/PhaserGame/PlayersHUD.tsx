@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlayerHUD } from '@/components/layout/PlayerHUD';
 import { useAudio } from '@/context/AudioContext';
 import { EventBus } from '@/EventBus';
 import { PlayerModel } from '@/phaser/models/PlayerModel';
+import { useItemData } from '@/context/ItemContext';
 
 interface PlayersHUDProps {
     players: PlayerModel[];
@@ -12,10 +13,47 @@ interface PlayersHUDProps {
 
 export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClick }: PlayersHUDProps) => {
     const { playSound } = useAudio();
+    const { getItemInfo } = useItemData();
     const [playersList, setPlayersList] = useState<any[]>(initialPlayers);
     const [isVisible, setIsVisible] = useState(true);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [canClick, setCanClick] = useState(false);
+    const [activeEmojis, setActiveEmojis] = useState<{ [key: string]: string }>({});
+
+    const playerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+    const emojiTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
+
+    const emitCoordinates = useCallback(() => {
+        const positions: Record<string, { x: number, y: number }> = {};
+        
+        Object.entries(playerRefs.current).forEach(([id, el]) => {
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                positions[id] = {
+                    x: rect.left,
+                    y: rect.top + (rect.height / 2)
+                };
+            }
+        });
+
+        if (Object.keys(positions).length > 0) {
+            console.log("Card pos: ", positions);
+            EventBus.emit('player-hud-positions', positions);
+        }
+    }, []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            emitCoordinates();
+        }, 350);
+
+        window.addEventListener('resize', emitCoordinates);
+
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener('resize', emitCoordinates);
+        };
+    }, [playersList, isVisible, dynamicScale, emitCoordinates]);
 
     useEffect(() => {
         const handleSinglePlayerUpdate = (updatedPlayer: any) => {
@@ -59,6 +97,37 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
         };
     }, []);
 
+    useEffect(() => {
+        const handleIncomingMessage = (event: any) => {
+            const { playerId, text } = event;
+            if (typeof text === 'string' && text.startsWith('/emoji ')) {
+                const emojiId = Number(text.split(' ')[1]);
+                const info = getItemInfo(emojiId);
+
+                if (info) {
+                    setActiveEmojis(prev => ({ ...prev, [playerId]: info.url }));
+
+                    if (emojiTimeouts.current[playerId]) {
+                        clearTimeout(emojiTimeouts.current[playerId]);
+                    }
+
+                    emojiTimeouts.current[playerId] = setTimeout(() => {
+                        setActiveEmojis(prev => {
+                            const newState = { ...prev };
+                            delete newState[playerId];
+                            return newState;
+                        });
+                    }, 4000);
+                }
+            }
+        };
+
+        EventBus.on('receive-chat-message', handleIncomingMessage);
+        return () => {
+            EventBus.off('receive-chat-message', handleIncomingMessage);
+        };
+    }, [getItemInfo]);
+
     const handlePlayerClick = (playerId: string) => {
         if (canClick) {
             playSound('player_choose');
@@ -78,8 +147,8 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
 
             if (targetPlayer && me) {
                 EventBus.emit('show-trading-mode', {
-                    sender: me, // quien inicia tradeo
-                    receiver: targetPlayer, // el otro jugador
+                    sender: me, 
+                    receiver: targetPlayer, 
                 });
                 EventBus.emit('set-hud-clickable', false);
                 EventBus.emit('show-selection-notice', null);
@@ -90,7 +159,7 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
 
     return (
         <div 
-            className={`absolute right-[3vw] top-1/2 flex flex-col gap-[6vh] z-10 origin-right transition-transform duration-300 ease-in-out group/list
+            className={`fixed right-[3vw] top-1/2 flex flex-col gap-[6vh] z-10 origin-right transition-transform duration-300 ease-in-out group/list
                 ${isDarkMode 
                 ? (canClick ? 'opacity-100 scale-100' : 'opacity-30 scale-95')
                 : 'opacity-100 scale-100'}`}
@@ -99,20 +168,39 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
                 pointerEvents: !isVisible ? 'none' : (canClick || !isDarkMode ? 'auto' : 'none')
             }}
         >
-            {playersList?.map((player) => (
-                <div key={player.id} 
-                    className={canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}>
-                    <PlayerHUD 
-                        playerId={player.id} 
-                        initialName={player.name} 
-                        initialColor={player.color} 
-                        initialBalance={player.balance}
-                        //propertiesCount={player.properties?.length || 0}
-                        isClickable={canClick}
-                        onClick={() => handlePlayerClick(player.id)}
-                    />
-                </div>
-            ))}
+            {playersList?.map((player) => {
+                const isEmojiActive = activeEmojis[String(player.id)];
+
+                return (
+                    <div 
+                        key={player.id} 
+                        ref={(el) => { playerRefs.current[player.id] = el; }}
+                        className={`relative w-fit ${canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}`}
+                    >
+                        {isEmojiActive && (
+                            <div 
+                                className="absolute top-1/2 left-0 -translate-y-[100%] -translate-x-[25%] z-[100] pointer-events-none"
+                            >
+                                <div className="animate-bounce flex items-center justify-center">
+                                    <img 
+                                        src={isEmojiActive} 
+                                        alt="emoji" 
+                                        className="w-14 h-14 object-contain drop-shadow-xl" 
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        <PlayerHUD 
+                            playerId={player.id} 
+                            initialName={player.name} 
+                            initialColor={player.color} 
+                            initialBalance={player.balance}
+                            isClickable={canClick}
+                            onClick={() => handlePlayerClick(player.id)}
+                        />
+                    </div>
+                );
+            })}
         </div>
     );
 };
