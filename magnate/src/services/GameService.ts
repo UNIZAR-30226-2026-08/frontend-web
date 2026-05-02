@@ -75,9 +75,9 @@ export const GameService = ( ) => {
 			"text" : cheatUssage }
 		};
 		const texto = String(msg);
-		console.log("El texto es ",texto);
-		console.log("Empieza por ",String(texto.charAt(0)));
-		console.log("El split ",String(texto.slice(1).split(' ')));
+		// console.log("El texto es ",texto);
+		// console.log("Empieza por ",String(texto.charAt(0)));
+		// console.log("El split ",String(texto.slice(1).split(' ')));
 		if (DEBUG && texto.startsWith('/')) {
 			console.log("empieza por barra");
 			const commandaux = texto.slice(1);
@@ -298,8 +298,11 @@ export const GameService = ( ) => {
 		EventBus.emit('send-message', message);
 	};
 
-	const actionPayBail = () => {
-		const message = { "type": "ActionPayBail" };
+	const actionPayBail = (data : WSTypes.GameAskJail ) => {
+		const message = { 
+			"type": "ActionPayBail",
+			"to_pay": data.to_pay
+		};
 		EventBus.emit('send-message', message);
 	};
 
@@ -364,7 +367,11 @@ export const GameService = ( ) => {
 				EventBus.emit('private-room-settings',settingsmsg);
 				break;
 			case "game_start":
-				EventBus.emit('handle-enter-game',data.game_id);
+				EventBus.emit('you-may-now-enter-the-game');
+				setTimeout(() => {
+					EventBus.emit('handle-enter-game', data.game_id);
+				}, 100);
+				//EventBus.emit('handle-enter-game',data.game_id);
 				break;
 			case "error":
 				if (VERBOSE) {
@@ -586,8 +593,9 @@ export const GameService = ( ) => {
 				EventBus.emit('report-action-mortgage-unset',reportMortgageUnset);
 				break;
 			case "ActionPayBail":
-				const reportPayBail : WSTypes.GameReportSender = {
-					"player": data.player
+				const reportPayBail : WSTypes.GameReportJail = {
+					"player": data.player,
+					"to_pay": data.to_pay
 				};
 				EventBus.emit('report-action-pay-bail',reportPayBail);
 				break;

@@ -134,6 +134,8 @@ export interface GameActionReport {
 	asked_properties?: string[];	// tile id of property location
 	// trade answer
 	accept?: boolean; 	// True if trade is accepted
+	// jail
+	to_pay?: boolean;
 }
 
 export interface GameResponse {
@@ -392,6 +394,10 @@ export interface GameAskBid {
 	money: number;
 }
 
+export interface GameAskJail {
+	to_pay: boolean;
+}
+
 export interface GameAskTrade {
 	player: string;
 	destination_user: string;	// userid
@@ -403,6 +409,11 @@ export interface GameAskTrade {
 
 export interface GameReportSender {
 	player: string;
+}
+
+export interface GameReportJail {
+	player: string;
+	to_pay?: boolean; // false if player stay in jail
 }
 
 export interface GameReportSquare {

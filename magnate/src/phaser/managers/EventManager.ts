@@ -40,7 +40,6 @@ export class EventManager {
         this.setupControlsEvents();
         this.setupTramEvents();
         this.setupJailEvent();
-        this.billEvent();
     }
 
     private getActivePlayer() {
@@ -275,12 +274,6 @@ export class EventManager {
                 mode: mode, // 'pay' (50€) o 'stay' (pasar turno)
                 turnCount: p?.model.jailRemainingTurns || 0
             });
-        });
-    }
-
-    private billEvent() {
-        EventBus.on('animate-bill', (data: { playerId: string, amount?: string }) => {
-            this.scene.animationManager.BillAnimation(data.playerId, 15, data.amount);
         });
     }
     

@@ -5,13 +5,6 @@ import { Tile } from '../objects/Tile';
 import { PlayerToken } from '../objects/PlayerToken';
 import { useAudio } from '@/context/AudioContext';
 
-const HUD_POSITIONS: Record<string, { x: number, y: number }> = {
-    "0001": { x: 1660, y: 250 },
-    "0002": { x: 1660, y: 450 },
-    "0003": { x: 1660, y: 650 },
-    "0004": { x: 1660, y: 850 },
-};
-
 export class AnimationManager {
 
     constructor(private scene: Phaser.Scene) {}
@@ -52,9 +45,8 @@ export class AnimationManager {
 
     // Animación billetes (cuando los players ganan/pierden dinero)
     public BillAnimation(playerId: string, count: number = 6, textAmount?: string) {
-		const { playSound } = useAudio();
-
-        const hudPos = HUD_POSITIONS[playerId] || { x: this.scene.scale.width - 100, y: this.scene.scale.height / 2 };
+		//const { playSound } = useAudio();
+        const hudPos = PlayerToken.hudPositions[playerId] || { x: this.scene.scale.width - 200, y: this.scene.scale.height / 2 };
         const isNegative = textAmount?.startsWith('-');
         const color = isNegative ? '#ff4d4d' : '#22c55e';
 
@@ -68,7 +60,7 @@ export class AnimationManager {
                 bill.setAlpha(1);
                 bill.setScale(0.5);
 
-				playSound('money_win');
+				//playSound('money_win');
 
                 this.scene.tweens.add({
                     targets: bill,
@@ -92,12 +84,12 @@ export class AnimationManager {
         }
         
         if (textAmount) { // Cantidad de dinero que se muestra
-			if (textAmount.startsWith('-')) {
-				playSound('money_lose');
-			}
-			else {
-				playSound('money_win');
-			}
+			// if (textAmount.startsWith('-')) {
+			// 	playSound('money_lose');
+			// }
+			// else {
+			// 	playSound('money_win');
+			// }
 
             const txt = this.scene.add.text(hudPos.x - 120, hudPos.y, textAmount, {
                 fontSize: '40px',

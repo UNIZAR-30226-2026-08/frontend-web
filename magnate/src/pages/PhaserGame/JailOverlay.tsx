@@ -57,9 +57,12 @@ export const JailOverlay = () => {
         if (!decisionData) return;
 
         if (decisionData.mode === 'pay') {
-            EventBus.emit('execute-jail-bail-payment', { amount: 50 });
-            EventBus.emit('execute-in-jail-travel', { targetId: decisionData.tileId });
-        } 
+            //EventBus.emit('execute-jail-bail-payment', { amount: 50 });
+            //EventBus.emit('execute-in-jail-travel', { targetId: decisionData.tileId });
+            EventBus.emit('action-pay-bail', { to_pay: true });
+        } else if (decisionData.mode === 'stay') {
+            EventBus.emit('action-pay-bail', { to_pay: false });
+        }
         close();
         EventBus.emit('clear-dice');
     };
