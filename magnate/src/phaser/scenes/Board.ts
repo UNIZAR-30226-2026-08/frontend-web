@@ -223,26 +223,33 @@ export class Board extends Phaser.Scene {
 
         EventBus.on('view-animate-path', (data: any) => {
             this.hideUI();
-
+        
             const formattedPath = data.path.slice(1).map((id: number) => String(id).padStart(3, '0'));
-            
             const playerToMove = this.players.find(p => p.model.id === String(data.playerId));
             
             if (playerToMove && formattedPath.length > 0) {
-                
+                const oldTileId = playerToMove.model.currentTileId;
+                const newTileId = formattedPath[formattedPath.length - 1];
+
+                playerToMove.token.isMoving = true;
+        
                 const pathCoordinates = formattedPath.map((tileId: string) => {
                     const targetTile = this.tiles.find(t => t.tileConfig.id === tileId);
-                    
-                    if (targetTile) {
-                        return { x: targetTile.x, y: targetTile.y }; 
-                    } else {
-                        console.warn(`Tile ${tileId} not found on the board!`);
-                        return null;
-                    }
+                    return targetTile ? { x: targetTile.x, y: targetTile.y } : null; 
                 }).filter((coord: { x: number, y: number } | null): coord is { x: number, y: number } => coord !== null);
-
+        
                 this.cameraController.followToken(playerToMove.token, 2.2, () => {
                     playerToMove.token.moveToCoords(pathCoordinates, () => {
+                        playerToMove.model.currentTileId = newTileId;
+                        
+                        playerToMove.token.isMoving = false;
+
+                        // Actualizamos los jugadores en la casilla que abandona
+                        this.organizeTokensOnTile(oldTileId);
+                
+                        // Actualizamos los jugadores en la casilla a la que llega
+                        this.organizeTokensOnTile(newTileId);
+        
                         this.time.delayedCall(1000, () => { });
                         EventBus.emit('token-fin');
                     });
@@ -304,10 +311,12 @@ export class Board extends Phaser.Scene {
             const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
 
             if (playerPair && targetTile) {
+                const oldTileId = playerPair.model.currentTileId;
+                playerPair.token.isMoving = true;
+
                 console.log(`Tram Visual: Moviendo a ${playerPair.model.name} a ${data.targetId}`);
                 
                 const path = [{ x: targetTile.x, y: targetTile.y }];
-                
             
                 playerPair.token.moveToCoords(path, () => {
                     this.tweens.add({
@@ -318,7 +327,12 @@ export class Board extends Phaser.Scene {
                         duration: 600,
                         onComplete: () => {
                             playerPair.model.currentTileId = data.targetId;
+                            playerPair.token.isMoving = false;
+
                             this.GamelogicManager.model.updatePlayerPosition(data.playerId, data.targetId);
+
+                            this.organizeTokensOnTile(oldTileId);
+                            this.organizeTokensOnTile(data.targetId); 
                             EventBus.emit('model-updated', this.GamelogicManager.model);
                         }
                     });
@@ -462,6 +476,9 @@ export class Board extends Phaser.Scene {
             const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetTileId);
 
             if (playerPair && targetTile) {
+                const oldTileId = playerPair.model.currentTileId;
+
+                playerPair.token.isMoving = true;
                 console.log(`Fantasía Visual: Teletransportando a ${playerPair.model.name} a ${data.targetTileId}`);
 
                 this.tweens.add({
@@ -470,15 +487,22 @@ export class Board extends Phaser.Scene {
                     scale: 0.5,
                     duration: 300,
                     onComplete: () => {
-                        playerPair.token.setPosition(targetTile.x, targetTile.y);
                         playerPair.model.currentTileId = data.targetTileId;
+                
+                        playerPair.token.setPosition(targetTile.x, targetTile.y);
                         
                         this.tweens.add({
                             targets: playerPair.token,
                             alpha: 1,
                             scale: 1,
                             duration: 300,
-                            ease: 'Back.easeOut'
+                            ease: 'Back.easeOut',
+                            onComplete: () => {
+                                // Terminó de aparecer. Liberamos y organizamos
+                                playerPair.token.isMoving = false;
+                                this.organizeTokensOnTile(oldTileId); 
+                                this.organizeTokensOnTile(data.targetTileId);
+                            }
                         });
                     }
                 });
@@ -762,25 +786,15 @@ export class Board extends Phaser.Scene {
         const cIndex = colorIndex % this.colorPalette.length;
         const assignedColor = this.colorPalette[cIndex];
 
-        const offset = 22;
-
-        const offsetX = (this.players.length % 2 === 0) ? -offset : offset;
-        const offsetY = (this.players.length < 2) ? -offset : offset;
-
-        const finalX = startTile.x + offsetX;
-        const finalY = startTile.y + offsetY;
-
         const model = new PlayerModel(id, name, assignedColor, balance);
-        const token = new PlayerToken(this, finalX, finalY, assignedColor);
+        model.currentTileId = startTile.tileConfig.id; 
+        const token = new PlayerToken(this, startTile.x, startTile.y, assignedColor);
 
         token.setDepth(200 + this.players.length);
 
-        // TODO: Esto es solo para probar el movimiento
-        // token.on('pointerdown', () => {
-        //     this.handlePlayerClick(id);
-        // });
-
         this.players.push({ model, token });
+
+        this.organizeTokensOnTile(startTile.tileConfig.id);
     }
 
     public getLocalPlayer() {
@@ -912,5 +926,50 @@ export class Board extends Phaser.Scene {
         } else {
             console.warn("No se encontró la casilla con ID:", data.tileId);
         }
+    }
+
+    // Posición dinámica de los tokens en una misma casilla
+    public organizeTokensOnTile(tileId: string) {
+        const tile = this.tiles.find(t => t.tileConfig.id === tileId);
+        if (!tile) return;
+
+        const playersOnTile = this.players.filter(p => p.model.currentTileId === tileId);
+        
+        // Si no hay jugadores no hacemos nada
+        if (playersOnTile.length === 0) return;
+
+        const SPREAD_RADIUS = 22;
+
+        let offsets: {x: number, y: number}[] = [];
+        switch (playersOnTile.length) {
+            case 1: offsets = [{ x: 0, y: 0 }]; break;
+            case 2: offsets = [{ x: -SPREAD_RADIUS, y: 0 }, { x: SPREAD_RADIUS, y: 0 }]; break;
+            case 3: offsets = [
+                { x: 0, y: -SPREAD_RADIUS }, 
+                { x: -SPREAD_RADIUS, y: SPREAD_RADIUS }, 
+                { x: SPREAD_RADIUS, y: SPREAD_RADIUS }
+            ]; break;
+            case 4: offsets = [
+                { x: -SPREAD_RADIUS, y: -SPREAD_RADIUS }, { x: SPREAD_RADIUS, y: -SPREAD_RADIUS }, 
+                { x: -SPREAD_RADIUS, y: SPREAD_RADIUS }, { x: SPREAD_RADIUS, y: SPREAD_RADIUS }
+            ]; break;
+            default:
+                for (let i = 0; i < playersOnTile.length; i++) {
+                    const angle = (i / playersOnTile.length) * Math.PI * 2;
+                    offsets.push({ x: Math.cos(angle) * SPREAD_RADIUS, y: Math.sin(angle) * SPREAD_RADIUS });
+                }
+        }
+
+        playersOnTile.forEach((player, index) => {
+            if (player.token.isMoving) return; 
+
+            this.tweens.add({
+                targets: player.token,
+                x: tile.x + offsets[index].x,
+                y: tile.y + offsets[index].y,
+                duration: 300,
+                ease: 'Sine.easeInOut'
+            });
+        });
     }
 }
