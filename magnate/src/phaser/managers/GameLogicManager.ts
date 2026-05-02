@@ -69,6 +69,18 @@ export class GameLogicManager {
                 console.log(`Cambio de Fase: pasamos a ${data.phase}`);
                 EventBus.emit('model-updated', this.model);
                 this.updateHUDControls(data.phase);
+
+                if (data.phase === "roll_the_dices") {
+                    const playerId = this.model.active_phase_player;
+                    const player = this.model.getPlayer(String(playerId));
+
+                    if (this.model.streak > 0 && this.model.streak < 3) {
+                        EventBus.emit('show-toast', { 
+                            message: `${player?.name || 'Alguien'} tira los dados de nuevo`,
+                            duration: 3000 
+                        });
+                    }
+                }
             }
             console.log("Response general:", data);
             console.log("Modelo actual:", this.model);
@@ -112,6 +124,25 @@ export class GameLogicManager {
                     }, 1800);
                 });
 
+            }
+
+            if (data.dice1 === data.dice2 && data.dice1 !== data.dice3) {
+                this.model.streak += 1;
+
+                if (this.model.streak !== data.streak) {
+                    console.log("Error: no coincide la racha...")
+                }
+
+                if (this.model.streak === 3) {
+                    this.model.streak = 0;
+
+                    EventBus.once('dice-roll-complete', () => {
+                        setTimeout(() => {
+                            EventBus.emit('view-send-to-jail', { playerId: String(data.active_turn_player) });
+                            EventBus.emit('clear-dice'); 
+                        }, 1800); 
+                    });
+                }
             }
             
             EventBus.emit('model-updated', this.model);
