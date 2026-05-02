@@ -228,11 +228,11 @@ export class Board extends Phaser.Scene {
             const playerToMove = this.players.find(p => p.model.id === String(data.playerId));
             
             if (playerToMove && formattedPath.length > 0) {
-                const oldTileId = playerToMove.model.currentTileId;
+                const oldTileId = String(data.path[0]).padStart(3, '0');
                 const newTileId = formattedPath[formattedPath.length - 1];
 
                 playerToMove.token.isMoving = true;
-        
+
                 const pathCoordinates = formattedPath.map((tileId: string) => {
                     const targetTile = this.tiles.find(t => t.tileConfig.id === tileId);
                     return targetTile ? { x: targetTile.x, y: targetTile.y } : null; 
@@ -240,13 +240,13 @@ export class Board extends Phaser.Scene {
         
                 this.cameraController.followToken(playerToMove.token, 2.2, () => {
                     playerToMove.token.moveToCoords(pathCoordinates, () => {
+                        // Actualizamos los jugadores en la casilla que abandona
+                        this.organizeTokensOnTile(oldTileId);
+
                         playerToMove.model.currentTileId = newTileId;
                         
                         playerToMove.token.isMoving = false;
 
-                        // Actualizamos los jugadores en la casilla que abandona
-                        this.organizeTokensOnTile(oldTileId);
-                
                         // Actualizamos los jugadores en la casilla a la que llega
                         this.organizeTokensOnTile(newTileId);
         
@@ -314,6 +314,8 @@ export class Board extends Phaser.Scene {
                 const oldTileId = playerPair.model.currentTileId;
                 playerPair.token.isMoving = true;
 
+                this.organizeTokensOnTile(oldTileId);
+
                 console.log(`Tram Visual: Moviendo a ${playerPair.model.name} a ${data.targetId}`);
                 
                 const path = [{ x: targetTile.x, y: targetTile.y }];
@@ -331,7 +333,6 @@ export class Board extends Phaser.Scene {
 
                             this.GamelogicManager.model.updatePlayerPosition(data.playerId, data.targetId);
 
-                            this.organizeTokensOnTile(oldTileId);
                             this.organizeTokensOnTile(data.targetId); 
                             EventBus.emit('model-updated', this.GamelogicManager.model);
                         }
@@ -479,6 +480,9 @@ export class Board extends Phaser.Scene {
                 const oldTileId = playerPair.model.currentTileId;
 
                 playerPair.token.isMoving = true;
+
+                this.organizeTokensOnTile(oldTileId); 
+
                 console.log(`Fantasía Visual: Teletransportando a ${playerPair.model.name} a ${data.targetTileId}`);
 
                 this.tweens.add({
@@ -500,7 +504,6 @@ export class Board extends Phaser.Scene {
                             onComplete: () => {
                                 // Terminó de aparecer. Liberamos y organizamos
                                 playerPair.token.isMoving = false;
-                                this.organizeTokensOnTile(oldTileId); 
                                 this.organizeTokensOnTile(data.targetTileId);
                             }
                         });
@@ -590,7 +593,12 @@ export class Board extends Phaser.Scene {
                 // Actualizamos solo datos lógicos
                 existingPlayer.model.name = pData.name;
                 existingPlayer.model.balance = pData.balance;
-                existingPlayer.model.currentTileId = pData.currentTileId;
+
+                if (!existingPlayer.token.isMoving) {
+                    existingPlayer.model.currentTileId = pData.currentTileId;
+                }
+
+                // existingPlayer.model.currentTileId = pData.currentTileId;
             }
         });
 
@@ -789,6 +797,7 @@ export class Board extends Phaser.Scene {
         const model = new PlayerModel(id, name, assignedColor, balance);
         model.currentTileId = startTile.tileConfig.id; 
         const token = new PlayerToken(this, startTile.x, startTile.y, assignedColor);
+        token.isMoving = false;
 
         token.setDepth(200 + this.players.length);
 
@@ -933,7 +942,9 @@ export class Board extends Phaser.Scene {
         const tile = this.tiles.find(t => t.tileConfig.id === tileId);
         if (!tile) return;
 
-        const playersOnTile = this.players.filter(p => p.model.currentTileId === tileId);
+        const playersOnTile = this.players.filter(p => 
+            p.model.currentTileId === tileId && !p.token.isMoving
+        );
         
         // Si no hay jugadores no hacemos nada
         if (playersOnTile.length === 0) return;
@@ -961,8 +972,6 @@ export class Board extends Phaser.Scene {
         }
 
         playersOnTile.forEach((player, index) => {
-            if (player.token.isMoving) return; 
-
             this.tweens.add({
                 targets: player.token,
                 x: tile.x + offsets[index].x,
