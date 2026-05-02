@@ -132,7 +132,7 @@ export const WSClient = ( ) => {
 						console.log("PUBLIC 4000 - User canceled the operation");
 						break;
 					default:
-						console.log("PUBLIC socket closed OK");
+						console.log("PUBLIC ",String(event.code) ," - PUBLIC socket closed OK");
 				}
 			}
 		};
@@ -189,7 +189,7 @@ export const WSClient = ( ) => {
 						EventBus.emit('private-connect-response', false);
 						break;
 					default:
-						console.log("PRIVATE socket closed OK");
+						console.log("PRIVATE ",String(event.code) ," - PRIVATE socket closed OK");
 				}
 			}
 		};
@@ -298,7 +298,7 @@ export const WSClient = ( ) => {
 						console.log("GAME 4003 - User is not a participant in this game");
 						break;
 					default:
-						console.log("GAME socket closed OK");
+						console.log("GAME ",String(event.code) ," - GAME socket closed OK");
 				}
 			}
 		};

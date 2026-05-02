@@ -120,6 +120,14 @@ export function Lobby() {
 
 				return Array.from({length:4}, (_, i)=> combined[i] || null);
 			});
+
+			if (imOwner) {
+				const roomUpdate : WSTypes.PrivateRoomHostSettings = {
+					"bot_level": difficulty,
+					"target_players": activePlayersCount
+				};
+				EventBus.emit('private-change-settings', roomUpdate);
+			}
 		};
 		const handleSomeoneReady = (data: WSTypes.PrivateRoomReady) => {
 			setLobbyPlayers((prevPlayers: any[]) =>

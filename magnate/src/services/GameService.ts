@@ -69,12 +69,23 @@ export const GameService = ( ) => {
 /money <player_id> <money>
 /property <player_id> <tile_id> <houses> <mortgage>
 /clearProperty <tile_id>`;
-		if (DEBUG && msg && msg.startsWith('/')) {
-			const command = msg.slice(1).split(' ');
+		const helpMessage = {
+			"type" : "ChatMessage", "msg" : {
+        	"type": "SendChatMessage", 
+			"text" : cheatUssage }
+		};
+		const texto = String(msg);
+		console.log("El texto es ",texto);
+		console.log("Empieza por ",String(texto.charAt(0)));
+		console.log("El split ",String(texto.slice(1).split(' ')));
+		if (DEBUG && texto.startsWith('/')) {
+			console.log("empieza por barra");
+			const commandaux = texto.slice(1);
+			const command = commandaux.split(' ');
 			switch (command[0]) {
 				case 'dice':
 					if (command.length !== 4) {
-						EventBus.emit('send-message', cheatUssage);
+						EventBus.emit('send-message', helpMessage);
 						break;
 					}
 					const diceCheat : WSTypes.CheatMessage = {
@@ -85,25 +96,27 @@ export const GameService = ( ) => {
 						"dice_bus": parseInt(command[3], 10)
 					};
 					EventBus.emit('send-cheat', diceCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK dice"});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK dice"}});
 					break;
 				case 'tp':
 					if (command.length !== 3) {
-						EventBus.emit('send-message', cheatUssage);
+						EventBus.emit('send-message', helpMessage);
 						break;
 					}
 					const tpCheat : WSTypes.CheatMessage = {
 						"type": "Cheat",
-						"cheat": 'MockDice',
+						"cheat": 'Teleport',
 						"player_id": command[1],
 						"square_id": command[2]
 					};
 					EventBus.emit('send-cheat', tpCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK tp"});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK tp"}});
 					break;
 				case 'money':
 					if (command.length !== 3) {
-						EventBus.emit('send-message', cheatUssage);
+						EventBus.emit('send-message', helpMessage);
 						break;
 					}
 					const moneyCheat : WSTypes.CheatMessage = {
@@ -113,11 +126,12 @@ export const GameService = ( ) => {
 						"amount": parseInt(command[2], 10)
 					};
 					EventBus.emit('send-cheat', moneyCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK money"});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK money"}});
 					break;
 				case 'property':
 					if (command.length !== 5) {
-						EventBus.emit('send-message', cheatUssage);
+						EventBus.emit('send-message', helpMessage);
 						break;
 					}
 					const propCheat : WSTypes.CheatMessage = {
@@ -129,11 +143,12 @@ export const GameService = ( ) => {
 						"mortgage": command[4] === 'true'
 					};
 					EventBus.emit('send-cheat', propCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK property"});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK property"}});
 					break;
 				case 'clearProperty':
 					if (command.length !== 2) {
-						EventBus.emit('send-message', cheatUssage);
+						EventBus.emit('send-message', helpMessage);
 						break;
 					}
 					const clearCheat : WSTypes.CheatMessage = {
@@ -142,13 +157,30 @@ export const GameService = ( ) => {
 						"square_id": command[1]
 					};
 					EventBus.emit('send-cheat', clearCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK clearProperty"});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK clearProperty"}});
 					break;
-				default:
-					EventBus.emit('send-message', cheatUssage);
+				case 'h':
+					EventBus.emit('send-message', helpMessage);
+					break;
+				case 'help':
+					EventBus.emit('send-message', helpMessage);
+					break;
+				default: // for emojis command to work
+        			const chatMessage = {
+						"type" : "ChatMessage", "msg" : {
+        			    "type": "SendChatMessage", 
+        			    "text": msg }
+        			};
+					EventBus.emit('send-message', chatMessage);
+					break;
 			}
 		} else {
-			const chatMessage = { "type" : "ChatMessage", "msg" : msg };
+        	const chatMessage = {
+				"type" : "ChatMessage", "msg" : {
+        	    "type": "SendChatMessage", 
+        	    "text": msg }
+        	};
 			EventBus.emit('send-message', chatMessage);
 		}
 	};

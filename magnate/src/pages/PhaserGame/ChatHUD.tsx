@@ -137,7 +137,7 @@ export const ChatHUD = () => {
                 "type": "SendChatMessage",
                 "text": text 
             };
-            EventBus.emit('send-chat-message', message);
+            EventBus.emit('send-chat-message', text); // TODO check
             
             e.target.value = "";
         }
@@ -148,7 +148,9 @@ export const ChatHUD = () => {
             "type": "SendChatMessage", 
             "text": "/emoji " + emojiId
         };
-        EventBus.emit('send-chat-message', message);
+        //EventBus.emit('send-chat-message', message); // TODO check
+		const text = "/emoji " + emojiId;
+        EventBus.emit('send-chat-message', text);
     };
 
     return (
