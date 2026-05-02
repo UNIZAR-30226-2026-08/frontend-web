@@ -118,6 +118,7 @@ export class TileLogicManager {
 		}
 
         else if (tile instanceof GoToJailTile) {
+            console.log("Estoy en secretaría");
             player.jailRemainingTurns = 1;
             player.emitUpdate();
             this.scene.sendToSecretary(player.id);

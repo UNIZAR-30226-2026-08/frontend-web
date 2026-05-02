@@ -3,7 +3,7 @@ import { EventBus } from '@/EventBus';
 
 export class PlayerToken extends Phaser.GameObjects.Container {
     public isMoving: boolean = false;
-    public hudPositions: Record<string, { x: number, y: number }> = {};
+    public static hudPositions: Record<string, { x: number, y: number }> = {};
 
     constructor(scene: Phaser.Scene, x: number, y: number, color: number) {
         super(scene, x, y);
@@ -31,7 +31,7 @@ export class PlayerToken extends Phaser.GameObjects.Container {
                 convertedPositions[id] = { x: canvasX, y: canvasY };
             });
 
-            this.hudPositions = convertedPositions;
+            PlayerToken.hudPositions = convertedPositions;
         };
 
         EventBus.on('player-hud-positions', handlePositionsUpdate);

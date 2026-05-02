@@ -37,7 +37,7 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
         });
 
         if (Object.keys(positions).length > 0) {
-            console.log("Card pos: ", positions);
+            // console.log("Card pos: ", positions);
             EventBus.emit('player-hud-positions', positions);
         }
     }, []);

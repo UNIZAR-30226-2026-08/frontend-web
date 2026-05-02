@@ -126,6 +126,7 @@ export const PropertyAdminOverlay = () => {
         setPropData(null);
         EventBus.emit('dark-mode', false);
         EventBus.emit('close-property-selection-mode');
+        EventBus.emit('close-overlay');
     };
 
     return (
@@ -160,15 +161,6 @@ export const PropertyAdminOverlay = () => {
                                 {!isMortgaged && !propData.isMortgaged && diff < 0 && `Recibirás ${Math.abs(totalCost)/2}M`}
                                 {diff === 0 && isMortgaged === propData.isMortgaged && ""}
                             </span>
-                            {/* <span className="text-sm opacity-80">
-                                {!isMortgaged && totalCost > 0 ? 'Pagar' : ''}
-                            </span>
-                            <span className="text-xl">
-                                {isMortgaged && "Aceptar"}
-                                {currentIndex === 0 && !isMortgaged && "Aceptar"}
-                                {currentIndex > 0 && !isMortgaged && currentIndex < 5 && `${currentIndex} CASAS - ${totalCost}€`}
-                                {currentIndex === 5  && !isMortgaged && `HOTEL - ${totalCost}€`}
-                            </span> */}
                         </div>
                     </Button>
                 </div>    

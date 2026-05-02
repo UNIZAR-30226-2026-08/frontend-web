@@ -98,7 +98,7 @@ export class GameLogicManager {
                 destinations: data.destinations || []
             });
 
-            if (data.fantasy_event) { // para guardar proximo  evento fantasía
+            if (data.fantasy_event) { // para guardar proximo evento fantasía
                 this.model.setFantasyEvent(data.fantasy_event.fantasy_type, data.fantasy_event.value);
             }
             
@@ -205,7 +205,8 @@ export class GameLogicManager {
         EventBus.on('report-action-buy-square', (data: WSTypes.GameReportSquare) => {
             const playerId = String(data.player);
             const propId = String(data.square).padStart(3, '0');
-            
+            const myId = this.model.myId;
+
             const property = this.model.getProperty(propId);
             const player = this.model.getPlayer(playerId);
 
@@ -215,11 +216,16 @@ export class GameLogicManager {
 
                 player.balance -= property.buyPrice; 
 
-                // EventBus.emit('view-animate-money', { 
-                //     playerId: playerId, 
-                //     amount: `-${property.buyPrice}M`,
-                //     numBill: 8
-                // });
+                const animData = {
+                    playerId: playerId,
+                    amount: `-${Math.round(property.buyPrice)}M`,
+                    numBill: 6
+                };
+                if (playerId === myId) {
+                    EventBus.emit('save-pending-bill', animData);
+                } else {
+                    EventBus.emit('view-animate-money', animData);
+                }
 
                 EventBus.emit('property-bought', {
                     tileId: propId,
@@ -300,7 +306,9 @@ export class GameLogicManager {
                 } else if (highestBid > 0) { // Si no hay empate y la puja no es 0, hay ganador
                     participants[0].isWinner = true;
                     winner = participants[0];
-                    
+                    const finalAmount = auctionInfo.final_amount;           
+                    const myId = this.model.myId;
+
                     // Actualizamos el dueño en el modelo local
                     const propId = String(auctionInfo.square).padStart(3, '0');
                     const winnerId = String(winner.id);
@@ -312,6 +320,14 @@ export class GameLogicManager {
                         playerColor: colorInt,
                         playerId: winnerId
                     });
+                    // animación dinero
+                    const animData = { playerId: winnerId, amount: `-${finalAmount}M`, numBill: 6};
+                    const iAmParticipant = participants.some(p => String(p.id) === String(myId));
+                    //if (iAmParticipant) {
+                        EventBus.emit('save-pending-bill', animData);
+                    //} else {
+                        //EventBus.emit('view-animate-money', animData);
+                    //}
                 }
             }
 
@@ -330,6 +346,24 @@ export class GameLogicManager {
 
             const movingPlayerId = String(data.player);
             const targetTileId = String(data.square).padStart(3, '0');
+            
+            const myId = this.model.myId;
+            const player = this.model.getPlayer(movingPlayerId);
+            if (player && player.currentTileId !== targetTileId) {
+                const cost = 30;
+
+                const animData = {
+                    playerId: movingPlayerId,
+                    amount: `-${cost}M`,
+                    numBill: 4
+                };
+
+                if (movingPlayerId === myId) {
+                    EventBus.emit('save-pending-bill', animData);
+                } else {
+                    EventBus.emit('view-animate-money', animData);
+                }
+            }
 
             EventBus.emit('execute-tram-travel', {
                 playerId: movingPlayerId, 
@@ -412,10 +446,22 @@ export class GameLogicManager {
         // Hipotecar
         EventBus.on('report-action-mortgage-set', (data: any) => {
             const propId = String(data.square).padStart(3, '0');
+            const playerId = String(data.player);
             const prop = this.model.getProperty(propId);
             if (prop) {
                 prop.isMortgaged = true;
                 prop.houseCount = 0;
+                const amountReceived = Math.round(prop.buyPrice / 2);
+                const animData = {
+                    playerId: playerId,
+                    amount: `+${amountReceived}M`,
+                    numBill: 6
+                };
+                if (playerId === this.model.myId) {
+                    EventBus.emit('save-pending-bill', animData);
+                } else {
+                    EventBus.emit('view-animate-money', animData);
+                }
                 this.updateBalances(data.money);
                 EventBus.emit('model-updated', this.model);
                 EventBus.emit('update-tile-mortgage-visual', { tileId: propId, isMortgaged: true });
@@ -425,9 +471,22 @@ export class GameLogicManager {
         // Deshipotecar
         EventBus.on('report-action-mortgage-unset', (data: any) => {
             const propId = String(data.square).padStart(3, '0');
+            const playerId = String(data.player);
             const prop = this.model.getProperty(propId);
             if (prop) {
                 prop.isMortgaged = false;
+                const amountPaid = Math.round(prop.buyPrice / 2);
+                const animData = {
+                    playerId: playerId,
+                    amount: `-${amountPaid}M`,
+                    numBill: 6
+                };
+
+                if (playerId === this.model.myId) {
+                    EventBus.emit('save-pending-bill', animData);
+                } else {
+                    EventBus.emit('view-animate-money', animData);
+                }
 
                 this.updateBalances(data.money);
                 EventBus.emit('model-updated', this.model);
@@ -438,9 +497,21 @@ export class GameLogicManager {
         // CONSTRUIR Y DEMOLER CASAS
         EventBus.on('report-action-build', (data: any) => {
             const propId = String(data.square).padStart(3, '0');
+            const playerId = String(data.player);
             const prop = this.model.getProperty(propId);
             if (prop) {
                 prop.houseCount += data.houses; 
+                const amount = Math.round(prop.buildPrice * data.houses);
+                const animData = {
+                    playerId: playerId,
+                    amount: `-${amount}M`,
+                    numBill: 6
+                };
+                if (playerId === this.model.myId) {
+                    EventBus.emit('save-pending-bill', animData);
+                } else {
+                    EventBus.emit('view-animate-money', animData);
+                }
                 EventBus.emit('model-updated', this.model);
                 EventBus.emit('view-update-tile-construction', { 
                     tileId: propId, 
@@ -451,9 +522,22 @@ export class GameLogicManager {
 
         EventBus.on('report-action-demolish', (data: any) => {
             const propId = String(data.square).padStart(3, '0');
+            const playerId = String(data.player);
             const prop = this.model.getProperty(propId);
             if (prop) {
                 prop.houseCount -= data.houses;
+                const amount = Math.round(Math.round((prop.buildPrice / 2) * data.houses));
+                const animData = {
+                    playerId: playerId,
+                    amount: `+${amount}M`,
+                    numBill: 6
+                };
+
+                if (playerId === this.model.myId) {
+                    EventBus.emit('save-pending-bill', animData);
+                } else {
+                    EventBus.emit('view-animate-money', animData);
+                }
                 EventBus.emit('model-updated', this.model);
                 EventBus.emit('view-update-tile-construction', { 
                     tileId: propId, 
@@ -538,6 +622,19 @@ export class GameLogicManager {
                 EventBus.emit('model-updated', this.model);
                 
             }
+        });
+
+        // CARCEL
+        EventBus.on('report-action-pay-bail', (data: WSTypes.GameReportJail) => {
+            const playerId = String(data.player);
+            const toPay = data.to_pay; // true si pago, false si se queda
+
+            if (toPay) {
+                EventBus.emit('show-toast', { message: "Fianza pagada" });
+            } else {
+                EventBus.emit('show-toast', { message: "Permaneces en Secretaría" });
+            }
+            EventBus.emit('close-overlay');
         });
 
 		EventBus.on('pause-game', () => {
@@ -643,18 +740,18 @@ export class GameLogicManager {
         // Actualizar balances
         const senderChange = moneyAsked - moneyOffered;
         if (senderChange !== 0) {
-            this.syncPlayerMoney(senderId, senderChange);
+            this.syncPlayerMoney(senderId, senderChange, true);
         }
 
         const receiverChange = moneyOffered - moneyAsked;
         if (receiverChange !== 0) {
-            this.syncPlayerMoney(receiverId, receiverChange);
+            this.syncPlayerMoney(receiverId, receiverChange, true);
         }
         EventBus.emit('model-updated', this.model);
         console.log(`[tradeando] Sincronización completa. ${sender.name}: ${sender.balance}M | ${receiver.name}: ${receiver.balance}M`);
     }
 
-    public syncPlayerMoney(playerId: string, amount: number, showAnimation: boolean = true) {
+    public syncPlayerMoney(playerId: string, amount: number, showAnimation: boolean = false) {
         const player = this.model.getPlayer(playerId);
         if (!player || amount === 0) return;
 
@@ -662,13 +759,13 @@ export class GameLogicManager {
         console.log("balance del player", this.model.getPlayerBalance(playerId));
 
         player.emitUpdate();
-        // if (showAnimation) {
-        //     EventBus.emit('view-animate-money', {
-        //         playerId: playerId,
-        //         amount: `${amount > 0 ? '+' : ''}${amount}M`,
-        //         numBill: amount
-        //     });
-        // }
+        if (showAnimation) {
+            EventBus.emit('view-animate-money', {
+                playerId: playerId,
+                amount: `${amount > 0 ? '+' : ''}${amount}M`,
+                numBill: 6
+            });
+        }
     }
 
 //     - "fantasy_event": FantasyEvent	    - See above
@@ -688,16 +785,49 @@ export class GameLogicManager {
         console.log("Efecto fantasía valor: ", value);
         console.log("Efecto fantasía result: ", result);
 
+        const handleFantasyMoneyAnim = (pId: string, val: number) => {
+            const animData = {
+                playerId: pId,
+                amount: `${val > 0 ? '+' : ''}${Math.round(val)}M`,
+                numBill: 6
+            };
+            if (pId === myId) {
+                EventBus.emit('save-pending-bill', animData);
+            } else {
+                EventBus.emit('view-animate-money', animData);
+            }
+        };
+
         switch (type) {
             // --- EVENTOS DE DINERO ---
-            // case 'winPlainMoney':
-            // case 'winRatioMoney':
-            // case 'losePlainMoney':
-            // case 'loseRatioMoney':
-            // case 'getParkingMoney':
-            // case 'shareMoneyAll': 
-            // case 'everybodySendsYouMoney':
+            case 'winPlainMoney':
+            case 'winRatioMoney':
+            case 'getParkingMoney':
+                handleFantasyMoneyAnim(activePlayerId, value);
+                break;
+            case 'losePlainMoney':
+            case 'loseRatioMoney':
+                handleFantasyMoneyAnim(activePlayerId, -value);
+                break;
+            case 'shareMoneyAll': {
+                const others = Object.keys(this.model.players).filter(id => id !== activePlayerId);
+                const totalGiven = value * others.length;
+                handleFantasyMoneyAnim(activePlayerId, -totalGiven);
+                others.forEach(pId => {
+                    handleFantasyMoneyAnim(pId, value);
+                });
+                break;
+            }
 
+            case 'everybodySendsYouMoney': {
+                const others = Object.keys(this.model.players).filter(id => id !== activePlayerId);
+                const totalReceived = value * others.length;
+                others.forEach(pId => {
+                    handleFantasyMoneyAnim(pId, -value);
+                });
+                handleFantasyMoneyAnim(activePlayerId, totalReceived);
+                break;
+            }
             // --- EVENTOS DE MOVIMIENTO : carcel ---
             case 'goToJail':
                 if (activePlayer) activePlayer.jailRemainingTurns = 3;
@@ -722,12 +852,18 @@ export class GameLogicManager {
             
             // --- EVENTOS DE MOVIMIENTO ---
             case 'goToStart':
-            case 'moveOpponentAnywhereRandom':
             case 'moveAnywhereRandom':
                 const newPos = this.model.getPlayerPosition(activePlayerId);
                 EventBus.emit('view-teleport-player', {
                     playerId: activePlayerId,
                     targetTileId: newPos
+                });
+                break;
+            case 'moveOpponentAnywhereRandom':
+                const pos = this.model.getPlayerPosition(result?.target_player);
+                EventBus.emit('view-teleport-player', {
+                    playerId: result?.target_player,
+                    targetTileId: pos
                 });
                 break;
 
@@ -789,9 +925,17 @@ export class GameLogicManager {
             
             case 'doubleOrNothing':
                 if (result?.doubled) {
-                    console.log("¡Suerte! El dinero se ha duplicado");
+                    handleFantasyMoneyAnim(activePlayerId, value);
+                    EventBus.emit('show-toast', {
+                        message: "¡Suerte! El dinero se ha duplicado",
+                        duration: 2000
+                    });
                 } else {
-                    console.log("Mala suerte, lo has perdido todo (en este evento)");
+                    handleFantasyMoneyAnim(activePlayerId, -value);
+                    EventBus.emit('show-toast', {
+                        message: "Mala suerte, lo has perdido todo",
+                        duration: 2000
+                    });
                 }
                 break;
 

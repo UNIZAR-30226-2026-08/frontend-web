@@ -73,7 +73,7 @@ export const TramOverlay = () => {
         const me = gameModel.getPlayer(myId);
         if (me && me.balance < cost) {
             EventBus.emit('show-toast', {
-                message: `No tienes suficientes créditos (${cost}M necesarios)`,
+                message: `No tienes suficiente dinero`,
             });
             return;
         }
@@ -86,6 +86,7 @@ export const TramOverlay = () => {
 		setSelectedTram(null);
         setCurrentTileId(null);
         EventBus.emit('dark-mode', false);
+        EventBus.emit('close-overlay');
     };
 
     return (

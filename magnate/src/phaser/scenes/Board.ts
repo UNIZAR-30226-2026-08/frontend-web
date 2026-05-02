@@ -49,7 +49,7 @@ export class Board extends Phaser.Scene {
     public selectedPlayer: any | null = null;
     
     private pendingParkingData: { tile: Tile, playerId: string } | null = null;
-    private pendingBillData: { playerId: string, bills: number , amount: string } | null = null;
+    private pendingBillData: { playerId: string, numBills: number , amount: string } | null = null;
     private lastTurnPlayerId: string | null = null;
 
     constructor() {
@@ -86,9 +86,10 @@ export class Board extends Phaser.Scene {
         this.createBoard();
         this.setupEventBus();
 
+        const currentModel = this.GamelogicManager.model;
         console.log("BOARD CREATE: Comprobando jugadores iniciales", this.GamelogicManager.model.orderedPlayers);
         // Check if GameLogicManager already has data
-        if (this.GamelogicManager && this.GamelogicManager.model.orderedPlayers.length > 0) {
+        if (currentModel && currentModel.orderedPlayers && currentModel.orderedPlayers.length > 0) {
             this.syncPlayers(this.GamelogicManager.model);
         }
     }
@@ -281,10 +282,12 @@ export class Board extends Phaser.Scene {
         // Evento para que camara vuelva a la vista general
         EventBus.on('close-overlay', () => {
             this.cameraController.resetView(2000);
+
             this.time.delayedCall(2000, () => {
                 this.showUI();
                 if (this.pendingBillData) {
-                    this.animationManager.BillAnimation(this.pendingBillData.playerId, 15, this.pendingBillData.amount);
+                    console.log("Ejecutando animación de dinero cuando cierra overlay");
+                    this.animationManager.BillAnimation(this.pendingBillData.playerId, this.pendingBillData.numBills, this.pendingBillData.amount);
                     this.pendingBillData = null;
                 }
                 if (this.pendingParkingData) {
@@ -393,11 +396,13 @@ export class Board extends Phaser.Scene {
             });
         });
 
-        // evento para enseñar animacion dinero
-        EventBus.on('view-animate-money', (data: { playerId: string, numBill?: number, amount: string }) => {
-            const bills = data.numBill ?? 6;
-            this.animationManager.BillAnimation(data.playerId, bills, data.amount);
+        // evento para guardar animacion dinero, se muestra cuando se cierra overlay
+        EventBus.on('save-pending-bill', (data: any) => {
+            this.pendingBillData = { playerId: data.playerId, amount: data.amount, numBills: data.numBill};
+        });
 
+        EventBus.on('view-animate-money', (data: any) => {
+            this.animationManager.BillAnimation(data.playerId, data.numBill, data.amount);
         });
 
         // evento para actualizar marcadores
@@ -634,41 +639,6 @@ export class Board extends Phaser.Scene {
             }
         });
     }
-
-    // private syncPlayerPositions(gameModel: any) {
-    //     this.players.forEach(p => {
-    //         const modelPos = gameModel.getPlayerPosition(p.model.id);
-            
-    //         // Si la pieza en Phaser no está donde dice el servidor
-    //         if (p.model.currentTileId !== modelPos) {
-    //             const targetTile = this.tiles.find(t => t.tileConfig.id === modelPos);
-                
-    //             if (targetTile) {
-    //                 console.log(`Corrección de posición para ${p.model.name}: ${modelPos}`);
-    //                 p.model.currentTileId = modelPos;
-
-    //                 // Animación de teletransporte/movimiento rápido para sincronizar
-    //                 this.tweens.add({
-    //                     targets: p.token,
-    //                     alpha: 0.5,
-    //                     scale: 0.8,
-    //                     duration: 300,
-    //                     onComplete: () => {
-    //                         p.token.setPosition(targetTile.x, targetTile.y);
-    //                         this.tweens.add({
-    //                             targets: p.token,
-    //                             alpha: 1,
-    //                             scale: 1,
-    //                             duration: 300,
-    //                             ease: 'Power2'
-    //                         });
-    //                     }
-    //                 });
-    //             }
-    //         }
-    //     });
-    // }
-
     private async handleNewTurn(gameModel: any) {
         //const player = gameModel.getPlayer(gameModel.getCurrentTurnPlayerId());
         const playerId = gameModel.getCurrentTurnPlayerId();

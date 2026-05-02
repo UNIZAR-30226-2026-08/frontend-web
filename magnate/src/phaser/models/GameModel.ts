@@ -211,6 +211,10 @@ export class GameModel {
 	public getPropertyOwnerId(propertyId: string): string | null {
         return this.boardProperties[propertyId]?.ownerId ?? null;
     }
+
+    public getPropertyPrice(propertyId: string): number {
+        return this.boardProperties[propertyId]?.buyPrice ?? 0;
+    }
 	
 	public isPropertyOwned(propertyId: string): boolean {
         const owner = this.getPropertyOwnerId(propertyId);
