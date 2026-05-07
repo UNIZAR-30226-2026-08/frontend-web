@@ -87,16 +87,27 @@ export class GameLogicManager {
 
         });
 
-
         EventBus.on('report-response-throw-dices', (data: any) => {
             // TODO: --- inicio dados
             console.log("Manager: Rolling dices...", data);
-            EventBus.emit('trigger-dice-roll', {
-                dice1: data.dice1,
-                dice2: data.dice2,
-                dice_bus: data.dice_bus,
-                destinations: data.destinations || []
-            });
+            const activePlayer = this.model.getPlayer(String(data.active_turn_player));
+            const isInJail = activePlayer?.currentTileId === '201';
+            const isNormalRoll = data.dice_bus !== undefined && data.dice_bus !== 0 && data.dice_bus !== null;
+
+            if(!isNormalRoll) {
+                EventBus.emit('trigger-dice-roll-jail', {
+                    dice1: data.dice1,
+                    dice2: data.dice2,
+                    destinations: data.destinations || []
+                });
+            } else {
+                EventBus.emit('trigger-dice-roll', {
+                    dice1: data.dice1,
+                    dice2: data.dice2,
+                    dice_bus: data.dice_bus,
+                    destinations: data.destinations || []
+                });
+            }
 
             if (data.fantasy_event) { // para guardar proximo evento fantasía
                 this.model.setFantasyEvent(data.fantasy_event.fantasy_type, data.fantasy_event.value);
@@ -121,9 +132,9 @@ export class GameLogicManager {
                         });
                         
                         EventBus.emit('model-updated', this.model);
+
                     }, 1800);
                 });
-
             }
 
             if (data.dice1 === data.dice2 && data.dice1 !== data.dice3) {
@@ -134,6 +145,7 @@ export class GameLogicManager {
                 }
 
                 if (this.model.streak === 3) {
+                    console.log("racha: ", this.model.streak);
                     this.model.streak = 0;
 
                     EventBus.once('dice-roll-complete', () => {
@@ -143,6 +155,17 @@ export class GameLogicManager {
                         }, 1800); 
                     });
                 }
+            }
+
+            const isTriple = data.dice1 === data.dice2 && data.dice1 === data.dice_bus && data.triple;
+            if (isTriple) {
+                console.log("¡TRIPLE! El jugador elige cualquier casilla.");
+                EventBus.once('dice-roll-complete', () => {
+                    EventBus.emit('show-toast', { 
+                        message: "¡TRIPLE! Elige cualquier casilla del tablero", 
+                        duration: 5000 
+                    });
+                });
             }
             
             EventBus.emit('model-updated', this.model);
@@ -383,8 +406,8 @@ export class GameLogicManager {
                 return; 
             }
 
-            const offeringPlayer = this.model.getPlayer(String(data.player));
-            const askedPlayer = this.model.getPlayer(String(data.destination_user));
+            const offeringPlayer = this.model.getPlayer(String(data.player)); // inicia tradeo
+            const askedPlayer = this.model.getPlayer(String(data.destination_user)); // el otro
 
             // Función para convertir IDs de propiedades en objetos para la UI
             const mapProperties = (ids: string[]) => {
@@ -399,6 +422,8 @@ export class GameLogicManager {
             };
 
             const proposalData = {
+                game: data.game,
+                
                 offeringPlayer: {
                     id: offeringPlayer?.id,
                     name: offeringPlayer?.name,
@@ -425,6 +450,7 @@ export class GameLogicManager {
             const player = data.player;
             console.log("Manager: ¿Trato aceptado?", accepted);
             console.log("ultima propuesta", this.lastPendingProposal);
+            console.log("JUgador que ha enviado tradeo:", player);
             
             if (accepted && this.lastPendingProposal) {
                 this.executeTradeTransfer(this.lastPendingProposal);
@@ -625,16 +651,43 @@ export class GameLogicManager {
         });
 
         // CARCEL
+        EventBus.once('jail-animation-finished', () => {
+            console.log("Manager: Procesando fin animacion ir a la cárcel");
+            
+            EventBus.emit('clear-dice');
+            EventBus.emit('close-overlay');
+
+            EventBus.emit('action-next-phase');
+        });
+
         EventBus.on('report-action-pay-bail', (data: WSTypes.GameReportJail) => {
             const playerId = String(data.player);
-            const toPay = data.to_pay; // true si pago, false si se queda
-
-            if (toPay) {
-                EventBus.emit('show-toast', { message: "Fianza pagada" });
-            } else {
-                EventBus.emit('show-toast', { message: "Permaneces en Secretaría" });
+            const player = this.model.getPlayer(playerId);
+            const isMe = playerId === this.model.myId;
+            if (player && data.to_pay) {
+                player.jailRemainingTurns = 0;
+                player.emitUpdate();
+                EventBus.emit('model-updated', this.model);
             }
-            EventBus.emit('close-overlay');
+
+            if (isMe) {
+                const toPay = data.to_pay; 
+                console.log("entrando en report-action-pay-bail con data: ", data);
+                
+                if (toPay) {
+                    EventBus.emit('show-toast', { message: "Fianza pagada" });
+                } else {
+                    EventBus.emit('show-toast', { message: "Permaneces en Secretaría" });
+                }
+                
+                EventBus.emit('close-overlay');
+            } else {
+                const message = data.to_pay 
+                    ? `${player?.name} ha pagado la fianza` 
+                    : `${player?.name} se queda en Secretaría`;
+                    
+                EventBus.emit('show-toast', { message: message });
+            }
         });
 
 		EventBus.on('pause-game', () => {
@@ -647,13 +700,29 @@ export class GameLogicManager {
     private updateHUDControls(phase: string) {
         const isMe = this.model.isMyTurn();
         const myId = this.model.myId;
+        const me = this.model.getPlayer(myId);
         
         if (phase === 'roll_the_dices') {
+            
+            if (isMe && (me?.currentTileId === '201')) {
+                console.log("Manager: estoy en la carcel");
+                me.jailRemainingTurns += 1;
+                if (me.jailRemainingTurns >= 3) me.jailRemainingTurns = 3;
+                setTimeout(() => {
+                    EventBus.emit('open-jail-overlay', { 
+                        tileId: me.currentTileId,
+                        turnCount: me.jailRemainingTurns,
+                        isPrisoner: me.jailRemainingTurns >= 1 
+                    });
+                }, 3000);
+                EventBus.emit('update-turn-controls', false); 
+                return;
+            }
             EventBus.emit('update-turn-controls', isMe);
         } else if (phase === 'business') {
             const tile = this.model.getPlayerPosition(this.model.myId);
-            
-            // Si me muevo a otra casilla de tranvía, mo vuelvo a interactuar -> tienen que habilitarse los botones de business
+            console.log("Entrando en business");
+            // Si me muevo a otra casilla de tranvía, no vuelvo a interactuar -> tienen que habilitarse los botones de business
             if (tile in ["010", "030", "100", "107"]) {
                 EventBus.emit('update-controls-state', {
                     roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
@@ -662,16 +731,19 @@ export class GameLogicManager {
                 
             } 
             if ((tile in this.model.boardProperties) && this.model.boardProperties[tile].ownerId !== null) {
-                if (this.model.boardProperties[tile].ownerId === myId) {
+                if (this.model.boardProperties[tile].ownerId === myId || this.model.boardProperties[tile].isMortgaged) {
                     EventBus.emit('update-controls-state', {
                         roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
                     });
                     return; // es propiedad/server/puente y tiene dueño -> sale porque tiene que ir al overlay de pagar primero
-                } else {
+                } else { // propiedad que tiene dueño (no soy yo) 
+                    EventBus.emit('update-controls-state', {
+                        roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
+                    });
                     console.log("Manager: Casilla de otro jugador");
                     return;
                 }
-            } 
+            }
 
             EventBus.emit('update-controls-state', {
                 roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
@@ -830,7 +902,10 @@ export class GameLogicManager {
             }
             // --- EVENTOS DE MOVIMIENTO : carcel ---
             case 'goToJail':
-                if (activePlayer) activePlayer.jailRemainingTurns = 3;
+                if (activePlayer) {
+                    activePlayer.jailRemainingTurns = 1;
+                    activePlayer.emitUpdate();
+                }
                 EventBus.emit('view-send-to-jail', { playerId: activePlayerId });
                 break;
             
@@ -838,7 +913,8 @@ export class GameLogicManager {
                 const victimId = String(result?.target_player);
                 const victim = this.model.getPlayer(victimId);
                 if (victim) {
-                    victim.jailRemainingTurns = 3;
+                    victim.jailRemainingTurns = 1;
+                    victim.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: victimId });
                 }
                 break;

@@ -220,6 +220,24 @@ export class GameModel {
         const owner = this.getPropertyOwnerId(propertyId);
         return owner !== null && owner !== "";
     }
+
+    public getCurrentRent(propertyId: string): number {
+        const prop = this.getProperty(propertyId);
+        if (!prop || prop.isMortgaged || !prop.ownerId) return 0;
+
+        if (prop.group === 13 || prop.group === 14) {
+            const count = this.getCountOwnedInGroup(prop.group, prop.ownerId);
+            return prop.rentPrices[count] || 0;
+        }
+        console.log("casas de la propiedad", prop.houseCount);
+        const baseRent = prop.rentPrices[prop.houseCount] || 0;
+
+        if (prop.houseCount === 0 && this.ownsFullGroup(prop.group, prop.ownerId)) {
+            return baseRent * 2;
+        }
+
+        return baseRent;
+    }
 	// ---- Modificaciones
 	public setPropertyOwner(propertyId: string, newOwnerId: string | null): void {
 		const property = this.getProperty(propertyId);

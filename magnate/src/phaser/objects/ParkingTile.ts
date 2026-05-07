@@ -4,6 +4,7 @@ import { IParkingTile } from '../types/TileTypes';
 export class ParkingTile extends Tile {
     private icon: Phaser.GameObjects.Image;
     private subText: Phaser.GameObjects.Text;
+    private priceText: Phaser.GameObjects.Text;
 
     constructor(scene: Phaser.Scene, config: IParkingTile) {
         super(scene, config);
@@ -36,5 +37,30 @@ export class ParkingTile extends Tile {
         .setPosition(1, 1);
         
         this.add(this.subText);
+
+        this.priceText = this.scene.add.text(0, 0, "0M", {
+            fontFamily: 'LTSuperior',
+            fontSize: '20px',
+            color: '#242424',
+            fontStyle: 'bold'
+        })
+        .setOrigin(0.5, -2.5)
+        .setAngle(-45)
+        .setPosition(1, 1);
+
+        this.add(this.priceText);
+    }
+    
+    public updatePrice(amount: number) {
+        this.priceText.setText(`${amount}M`);
+        
+        if (amount > 0) {
+            this.scene.tweens.add({
+                targets: this.priceText,
+                scale: 1.2,
+                duration: 100,
+                yoyo: true
+            });
+        }
     }
 }

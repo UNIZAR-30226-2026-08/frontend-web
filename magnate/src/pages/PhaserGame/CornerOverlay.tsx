@@ -31,7 +31,10 @@ export const CornerOverlay = () => {
         EventBus.emit('close-overlay');
 		if (propData.tileText == 'Tranvía') {
 		 	// Funcionamiento del tranvía
-		    EventBus.emit('open-tram-overlay', { currentTileId: propData.id, playerId: propData.playerId });
+		    EventBus.emit('open-tram-overlay', { 
+                id: String(propData.id), 
+                playerId: propData.playerId 
+            });
 		} else if (propData.tileText == 'Parking Gratuito') {
             EventBus.emit('collect-parking-money', { currentTileId: propData.id, playerId: propData.playerId });
         }

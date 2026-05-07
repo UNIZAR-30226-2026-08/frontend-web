@@ -149,130 +149,32 @@ export class EventManager {
 
     private setupJailEvent() {
 
-        EventBus.on('start-jail-roll-sequence', () => {  
-            this.tiles.forEach(t => {
-                t.removeAllListeners('pointerdown');
-                t.disableInteractive();
-             });
-            this.scene.cameraController.resetView(1500);
-            this.scene.time.delayedCall(1700, () => {
-                EventBus.emit('dark-mode', true);
-                this.scene.diceManager.handleJailDiceRoll(this.tiles, this.players, [1, 2]); // TODO: dados carcel
-            });
-        });
-
-        // resultados dados
         EventBus.on('jail-dice-rolled', (res: { val1: number, val2: number }) => {
-            //const p = this.scene.getLocalPlayer();
-            const p = this.getActivePlayer();
-            console.log("Jugador actual in jail-dice-rolled:", p?.model.id);
-            if (!p) return;
-
             const isDouble = res.val1 === res.val2;
-            const steps = res.val1 + res.val2;
-            
-            const currentIndex = this.tiles.findIndex(t => t.tileConfig.id === p.model.currentTileId);
-            //const targetTile = this.tiles[(currentIndex + steps) % this.tiles.length];
-            const targetId = "108"; // TODO: resultados de los dados
-            const jailId = "104";
-
             if (isDouble) {
-                BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p=>p.token));
                 this.scene.showToast('¡Dobles! Sales libre.');
-                p.model.jailRemainingTurns = 0;
-                p.model.emitUpdate();
-                this.scene.time.delayedCall(1500, () => {
-                    this.scene.diceManager.clearDice();
-                    EventBus.emit('close-overlay');
-                    EventBus.emit('dark-mode', false);
-                    EventBus.emit('execute-in-jail-travel', { targetId: targetId });
-                });
-                
-            } else {
-                if (p.model.jailRemainingTurns >= 3) {
-                    BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p=>p.token));
-                    this.scene.showToast('¡Tercer turno! Debes pagar la fianza obligatoriamente');
-                    this.setupJailClick(targetId, 'pay');
-                } else {
-                    BoardEffects.setFocusByIds(this.tiles, [jailId, targetId], this.scene, this.players.map(p=>p.token));
-                    this.setupJailClick(jailId, 'stay');
-                    this.setupJailClick(targetId, 'pay');
-                }
-                p.model.jailRemainingTurns++;
-                p.model.emitUpdate();
-            }
-        });
-
-        // Pago de fianza 
-        EventBus.on('execute-jail-bail-payment', (pay: { amount: number }) => {
-            this.tiles.forEach(t => t.disableInteractive());
-            //const p = this.scene.getLocalPlayer();
-			//TODO quitar porque esto vendrá por una response
-            const p = this.getActivePlayer();
-            if (p && p.model.balance >= pay.amount) { // TODO: ajustar dinero players
-                p.model.balance -= pay.amount;
-                p.model.jailRemainingTurns = 0;
-                this.scene.showToast("Fianza pagada");
-                EventBus.emit('player-updated', p.model);
-                EventBus.emit('close-overlay');
-            } else {
-                this.scene.showToast("Saldo insuficiente."); // TODO: NO pasa esto, simplemente pasaría a fase de liquidación
             }
         });
 
         EventBus.on('jail-re-enable-selection', () => {
-			// TODO usar el modelo bueno 
-            //const p = this.scene.getLocalPlayer();
-            const p = this.getActivePlayer();
-            console.log("Jugador actual in jail-re-enalble:", p?.model.id);
-            if (!p) return;
-
-            const jailId = "104";
-            const targetId = "108"; // ID de destino tras los dados
-
-            if (p.model.jailRemainingTurns >= 3) {
-                BoardEffects.setFocusByIds(this.tiles, [targetId], this.scene, this.players.map(p => p.token));
-                this.setupJailClick(targetId, 'pay');
-            } else {
-                BoardEffects.setFocusByIds(this.tiles, [jailId, targetId], this.scene, this.players.map(p=>p.token));
-                this.setupJailClick(jailId, 'stay'); 
-                this.setupJailClick(targetId, 'pay');
-            }
+            console.log("EventManager: Re-habilitando selección de cárcel...");
         });
-
-        EventBus.on('execute-in-jail-travel', (data: {targetId: string }) => {
-        	//const p = this.scene.getLocalPlayer();
-            const p = this.getActivePlayer();
-            if (!p) return;
-
-			const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetId);
-            if (!targetTile) return;
-            this.tiles.forEach(t => t.disableInteractive());
-
-			const path = [{ x: targetTile?.x, y: targetTile?.y }];
-			p.token.moveToCoords(path, () => {
-				 this.scene.time.delayedCall(800, () => {
-				 	this.scene.tileLogicManager.checkTileLogic(p.model, targetTile, this.players);
-				 });
-			});
-		});
-
     }
     
-    private setupJailClick(tileId: string, mode: 'free' | 'pay' | 'stay') {
+    private setupJailClick(tileId: string, mode: 'free' | 'pay' | 'stay', playerModel?: PlayerModel) {
         const tile = this.tiles.find(t => t.tileConfig.id === tileId);
         if (!tile) return;
-
+        console.log("En setupJailClick con mode:", mode);
         tile.removeAllListeners('pointerdown');
         tile.setInteractive({ useHandCursor: true });
         
         tile.once('pointerdown', () => {
-            const p = this.scene.getLocalPlayer();
+            
             EventBus.emit('show-jail-decision-popup', {
                 tileId: tileId,
                 tileName: tile.tileConfig.name,
                 mode: mode, // 'pay' (50€) o 'stay' (pasar turno)
-                turnCount: p?.model.jailRemainingTurns || 0
+                turnCount: playerModel?.jailRemainingTurns || 0
             });
         });
     }

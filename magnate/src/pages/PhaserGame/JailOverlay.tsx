@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { EventBus } from '@/EventBus';
 import { Button } from '@/components/ui/button';
+import { GameLogicManager } from '@/phaser/managers/GameLogicManager';
 
 interface JailData {
     tileId: string;
@@ -33,20 +34,47 @@ export const JailOverlay = () => {
     };
 
     useEffect(() => {
+        const myId = localStorage.getItem('myId');
         const handleOpen = (data: JailData) => {
-            setpropData(data);
+            console.log("Entro en jail overlay", data);
+            let currentTurns = data.turnCount;
+            if (myId) {
+                const me = GameLogicManager.getInstance().model.getPlayer(myId);
+                if (me) currentTurns = me.jailRemainingTurns;
+            }
+            setpropData({ ...data, turnCount: currentTurns });
+            // setpropData(data);
             setDecisionData(null);
             setHasRolled(false);
             EventBus.emit('dark-mode', true);
         };
+        
         const handleDecision = (data: DecisionData) => {
-            setDecisionData(data);
+            let currentTurns = data.turnCount;
+            if (myId) {
+                const me = GameLogicManager.getInstance().model.getPlayer(myId);
+                if (me) currentTurns = me.jailRemainingTurns;
+            }
+            setDecisionData({ ...data, turnCount: currentTurns });
+            //setDecisionData(data);
         };
 
+        const handleModelUpdate = (model: any) => {
+            if (!myId) return;
+            const me = model.getPlayer(myId);
+
+            if (me && me.currentTileId === '201') {
+                setpropData(prev => prev ? { ...prev, turnCount: me.jailRemainingTurns } : null);
+                setDecisionData(prev => prev ? { ...prev, turnCount: me.jailRemainingTurns } : null);
+            }
+        };
+
+        EventBus.on('model-updated', handleModelUpdate);
         EventBus.on('open-jail-overlay', handleOpen);
         EventBus.on('show-jail-decision-popup', handleDecision);
 
         return () => { 
+            EventBus.off('model-updated', handleModelUpdate);
             EventBus.off('open-jail-overlay', handleOpen); 
             EventBus.off('show-jail-decision-popup', handleDecision); };
     }, []);
@@ -69,7 +97,7 @@ export const JailOverlay = () => {
 
     const reOpenSelection = () => {
         setDecisionData(null);
-        EventBus.emit('dark-mode', true);
+        // EventBus.emit('dark-mode', true);
         EventBus.emit('jail-re-enable-selection');
     };
 
@@ -79,7 +107,9 @@ export const JailOverlay = () => {
         EventBus.emit('dark-mode', false);
         EventBus.emit('close-overlay');
     };
-    console.log("turno; ", decisionData?.turnCount);
+    console.log("turno de decision; ", decisionData?.turnCount);
+    console.log("turno de propData; ", propData?.turnCount);
+    
     return (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/10 backdrop-blur-sm p-6 animate-in fade-in duration-300">
             
@@ -136,7 +166,8 @@ export const JailOverlay = () => {
                                     <Button disabled={hasRolled} 
                                         onClick={() => { 
                                             setHasRolled(true);
-                                            EventBus.emit('start-jail-roll-sequence'); 
+                                            //EventBus.emit('start-jail-roll-sequence'); 
+                                            EventBus.emit('action-throw-dices');
                                             setpropData(null);
                                         }}
                                         className={`w-38 h-10 bg-[var(--color-primary)] text-white rounded-full font-black uppercase text-[18px] ${bouncyAnimation}`}>
