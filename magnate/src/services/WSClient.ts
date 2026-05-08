@@ -157,7 +157,8 @@ export const WSClient = ( ) => {
 		if (!token && VERBOSE) {
 			console.log("NO COOKIE/TOKEN: login before entering room.");
 		}
-		const url = `ws://localhost:8000/ws/queue/private/${roomid}/?token=${token}`;
+		const url = `ws://${WS_URL}/ws/queue/private/${roomid}/?token=${token}`;
+
 		socket.current = new WebSocket(url);
 		socket.current.onopen = (event) => { EventBus.emit('private-connect-response', true); };
 
@@ -220,7 +221,8 @@ export const WSClient = ( ) => {
 		if (!token && VERBOSE) {
 			console.log("NO COOKIE/TOKEN: login before entering game.");
 		}
-		const url = `ws://localhost:8000/ws/game/${game_id}/?token=${token}`
+
+		const url = `ws://${WS_URL}/ws/game/${game_id}/?token=${token}`
 		socket.current = new WebSocket(url);
 
 
