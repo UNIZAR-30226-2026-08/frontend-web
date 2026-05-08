@@ -6,7 +6,10 @@ import { EventBus } from '@/EventBus';
 import { GameAction, PrivateCommand, ChatMessageContent, CheatMessage } from "@/services/types/socket";
 import { useAuth } from '@/context/AuthContext';
 
-const WS_URL = import.meta.env.VITE_WS_URL || '127.0.0.1:8000';
+const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const WS_URL = import.meta.env.VITE_WS_URL
+  ? `${WS_PROTOCOL}://${window.location.host}${import.meta.env.VITE_WS_URL}`
+  : 'ws://localhost:8000/ws';
 
 /**
  * When true, informs of errors related to websocket connection
@@ -89,7 +92,7 @@ export const WSClient = ( ) => {
 			console.log("NO COOKIE/TOKEN: login before entering room.");
 			console.log(token);
 		}
-		const url = `ws://${WS_URL}/ws/queue/public/?token=${token}`;
+		const url = `${WS_URL}/queue/public/?token=${token}`;
 		socket.current = new WebSocket(url);
 
 		socket.current.onmessage = (event) => {
@@ -157,7 +160,7 @@ export const WSClient = ( ) => {
 		if (!token && VERBOSE) {
 			console.log("NO COOKIE/TOKEN: login before entering room.");
 		}
-		const url = `ws://${WS_URL}/ws/queue/private/${roomid}/?token=${token}`;
+		const url = `${WS_URL}/queue/private/${roomid}/?token=${token}`;
 
 		socket.current = new WebSocket(url);
 		socket.current.onopen = (event) => { EventBus.emit('private-connect-response', true); };
@@ -222,7 +225,7 @@ export const WSClient = ( ) => {
 			console.log("NO COOKIE/TOKEN: login before entering game.");
 		}
 
-		const url = `ws://${WS_URL}/ws/game/${game_id}/?token=${token}`
+		const url = `${WS_URL}/game/${game_id}/?token=${token}`
 		socket.current = new WebSocket(url);
 
 
