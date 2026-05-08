@@ -1,8 +1,12 @@
+/// <reference types="vite/client" />
+
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation } from 'react-router-dom';
 import { EventBus } from '@/EventBus';
 import { GameAction, PrivateCommand, ChatMessageContent, CheatMessage } from "@/services/types/socket";
 import { useAuth } from '@/context/AuthContext';
+
+const WS_URL = import.meta.env.VITE_WS_URL || '127.0.0.1:8000';
 
 /**
  * When true, informs of errors related to websocket connection
@@ -85,7 +89,7 @@ export const WSClient = ( ) => {
 			console.log("NO COOKIE/TOKEN: login before entering room.");
 			console.log(token);
 		}
-		const url = `ws://localhost:8000/ws/queue/public/?token=${token}`;
+		const url = `ws://${WS_URL}/ws/queue/public/?token=${token}`;
 		socket.current = new WebSocket(url);
 
 		socket.current.onmessage = (event) => {
