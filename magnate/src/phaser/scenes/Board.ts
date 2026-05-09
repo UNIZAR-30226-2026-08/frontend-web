@@ -48,9 +48,13 @@ export class Board extends Phaser.Scene {
     private localPlayerId: string | null = null;
     public selectedPlayer: any | null = null;
     
+    
     private pendingParkingData: { tile: Tile, playerId: string } | null = null;
     private pendingBillData: { playerId: string, numBills: number , amount: string } | null = null;
     private lastTurnPlayerId: string | null = null;
+
+    private turnsLabel!: Phaser.GameObjects.Text;
+    private turnsDisplay!: Phaser.GameObjects.Text;
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -85,6 +89,7 @@ export class Board extends Phaser.Scene {
         this.createBackground();
         this.createBoard();
         this.setupEventBus();
+        this.createTurnsDisplay();
 
         const currentModel = this.GamelogicManager.model;
         console.log("BOARD CREATE: Comprobando jugadores iniciales", this.GamelogicManager.model.orderedPlayers);
@@ -192,6 +197,60 @@ export class Board extends Phaser.Scene {
         this.eventManager = new EventManager(this, this.tiles, this.players);
     }
 
+    // Funciones turnos en el tablero
+    private createTurnsDisplay() {
+        const centerX = this.cameras.main.centerX;
+        const centerY = this.cameras.main.centerY;
+
+        const baseStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+            fontFamily: 'LTSuperior',
+            color: '#ffffff',
+            align: 'center'
+        };
+
+        this.turnsLabel = this.add.text(centerX, centerY - 60, 'TURNO', {
+            ...baseStyle,
+            fontSize: '40px',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+        this.turnsLabel.setOrigin(0.5).setDepth(1);
+
+        this.turnsDisplay = this.add.text(centerX, centerY + 20, '1 / 20', {
+            ...baseStyle,
+            fontSize: '60px',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+        this.turnsDisplay.setOrigin(0.5).setDepth(1);
+
+        EventBus.on('model-updated', (model: any) => {
+            this.updateTurns(model.current_turn, 20);
+        });
+    }
+
+    private updateTurns(current: number, max: number) {
+        const newText = `${current} / ${max}`;
+        
+        if (this.turnsDisplay.text !== newText) {
+            this.turnsDisplay.setText(newText);
+
+            this.tweens.add({
+                targets: [this.turnsLabel, this.turnsDisplay],
+                scale: 1.1,
+                duration: 200,
+                yoyo: true,
+                ease: 'Quad.easeInOut',
+                onComplete: () => {
+                    this.turnsLabel.setScale(1);
+                    this.turnsDisplay.setScale(1);
+                }
+            });
+        }
+    }
+
     // --- EVENT BUS  ---
     private setupEventBus() {
         
@@ -209,7 +268,16 @@ export class Board extends Phaser.Scene {
             }
 
             const currentTurnId = gameModel.getCurrentTurnPlayerId();
+
             if (this.lastTurnPlayerId !== currentTurnId) {
+                if (this.lastTurnPlayerId === null) { // primer turno
+                    gameModel.firstPlayerId = currentTurnId;
+                } else if (currentTurnId === gameModel.firstPlayerId) {
+                    gameModel.current_turn++;
+                }
+                this.updateTurns(gameModel.current_turn, 20);
+
+                // banner de nuevo turno
                 const isFirstTurn = this.lastTurnPlayerId === null;
                 this.lastTurnPlayerId = currentTurnId;
     
@@ -229,7 +297,7 @@ export class Board extends Phaser.Scene {
         }, this);
 
         EventBus.on('trigger-dice-roll-jail', (data: any) => {
-            this.handleJailDiceRollPhaser(data);
+            this.handleJailDiceRoll(data);
         }, this);
 
         EventBus.on('view-animate-path', (data: any) => {
@@ -931,16 +999,6 @@ export class Board extends Phaser.Scene {
                             EventBus.emit('jail-animation-finished');
                         });
                     } 
-                    // } else {
-                    //     // this.cameraController.resetView(1500); 
-                    //     this.time.delayedCall(800, () => {
-                    //         this.cameraController.resetView(1500); 
-                    //         EventBus.emit('view-teleport-player', {
-                    //             playerId: playerId,
-                    //             targetTileId: "201"
-                    //         });
-                    //     });
-                    // }
                 }
             });
             this.showToast(`${p.model.name} ha sido enviado a Secretaría`);
@@ -971,7 +1029,7 @@ export class Board extends Phaser.Scene {
         );
     }
 
-    private handleJailDiceRollPhaser(diceData: { dice1: number, dice2: number, destinations?: number[] }) {
+    private handleJailDiceRoll(diceData: { dice1: number, dice2: number, destinations?: number[] }) {
         if (!diceData) return;
 
         const values: [number, number] = [diceData.dice1, diceData.dice2];

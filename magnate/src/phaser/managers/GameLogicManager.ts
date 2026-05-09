@@ -2,7 +2,6 @@ import { GameModel } from '@/phaser/models/GameModel';
 import { GameState } from '@/services/types/socket';
 import { EventBus } from '@/EventBus';
 import * as WSTypes from "@/services/types/socket";
-import { TramTile } from '../objects/TramTile';
 
 export class GameLogicManager {
     private static instance: GameLogicManager;
@@ -90,11 +89,9 @@ export class GameLogicManager {
         EventBus.on('report-response-throw-dices', (data: any) => {
             // TODO: --- inicio dados
             console.log("Manager: Rolling dices...", data);
-            const activePlayer = this.model.getPlayer(String(data.active_turn_player));
-            const isInJail = activePlayer?.currentTileId === '201';
-            const isNormalRoll = data.dice_bus !== undefined && data.dice_bus !== 0 && data.dice_bus !== null;
+            const isJailRoll = data.dice_bus === undefined || data.dice_bus === 0 || data.dice_bus === null;
 
-            if(!isNormalRoll) {
+            if(isJailRoll) {
                 EventBus.emit('trigger-dice-roll-jail', {
                     dice1: data.dice1,
                     dice2: data.dice2,
@@ -137,24 +134,28 @@ export class GameLogicManager {
                 });
             }
 
-            if (data.dice1 === data.dice2 && data.dice1 !== data.dice3) {
-                this.model.streak += 1;
+            if(!isJailRoll) { // solo procesamos racha y triples si no es lanzamiento de carcel
+                if (data.dice1 === data.dice2 && data.dice1 !== data.dice3) {
+                    this.model.streak += 1;
 
-                if (this.model.streak !== data.streak) {
-                    console.log("Error: no coincide la racha...")
+                    if (this.model.streak !== data.streak) {
+                        console.log("Error: no coincide la racha...")
+                    }
+
+                    if (this.model.streak === 3) {
+                        console.log("racha: ", this.model.streak);
+                        this.model.streak = 0;
+
+                        EventBus.once('dice-roll-complete', () => {
+                            setTimeout(() => {
+                                EventBus.emit('view-send-to-jail', { playerId: String(data.active_turn_player) });
+                                EventBus.emit('clear-dice'); 
+                            }, 1800); 
+                        });
+                    }
                 }
-
-                if (this.model.streak === 3) {
-                    console.log("racha: ", this.model.streak);
-                    this.model.streak = 0;
-
-                    EventBus.once('dice-roll-complete', () => {
-                        setTimeout(() => {
-                            EventBus.emit('view-send-to-jail', { playerId: String(data.active_turn_player) });
-                            EventBus.emit('clear-dice'); 
-                        }, 1800); 
-                    });
-                }
+            } else {
+                this.model.streak = 0;
             }
 
             const isTriple = data.dice1 === data.dice2 && data.dice1 === data.dice_bus && data.triple;
@@ -407,7 +408,7 @@ export class GameLogicManager {
             }
 
             const offeringPlayer = this.model.getPlayer(String(data.player)); // inicia tradeo
-            const askedPlayer = this.model.getPlayer(String(data.destination_user)); // el otro
+            const askedPlayer = this.model.getPlayer(String(data.destination_user));
 
             // Función para convertir IDs de propiedades en objetos para la UI
             const mapProperties = (ids: string[]) => {
@@ -732,14 +733,17 @@ export class GameLogicManager {
             } 
             if ((tile in this.model.boardProperties) && this.model.boardProperties[tile].ownerId !== null) {
                 if (this.model.boardProperties[tile].ownerId === myId || this.model.boardProperties[tile].isMortgaged) {
+                    console.log("En business: es mi propiedad o está hipotecada");
                     EventBus.emit('update-controls-state', {
                         roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
                     });
+                    EventBus.emit('model-updated', this.model);
                     return; // es propiedad/server/puente y tiene dueño -> sale porque tiene que ir al overlay de pagar primero
                 } else { // propiedad que tiene dueño (no soy yo) 
                     EventBus.emit('update-controls-state', {
                         roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
                     });
+                    EventBus.emit('model-updated', this.model);
                     console.log("Manager: Casilla de otro jugador");
                     return;
                 }
@@ -905,8 +909,8 @@ export class GameLogicManager {
                 if (activePlayer) {
                     activePlayer.jailRemainingTurns = 1;
                     activePlayer.emitUpdate();
+                    EventBus.emit('view-send-to-jail', { playerId: activePlayerId });
                 }
-                EventBus.emit('view-send-to-jail', { playerId: activePlayerId });
                 break;
             
             case 'sendToJail':
@@ -921,7 +925,8 @@ export class GameLogicManager {
             
             case 'everybodyToJail':
                 Object.values(this.model.players).forEach(p => {
-                    p.jailRemainingTurns = 3;
+                    p.jailRemainingTurns = 1;
+                    p.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: p.id });
                 });
                 break;

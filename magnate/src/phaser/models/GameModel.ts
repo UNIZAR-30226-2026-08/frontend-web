@@ -16,6 +16,7 @@ export class GameModel {
 	public streak: number = 0; // nº of doubles hits 3 -> go to jail
 	public parking_money : number = 0;
 	public current_turn : number = 0;	// round number
+    public firstPlayerId: string | null = null; // quien ha empezado
 
     public isPaused: boolean = false; // otro para isFinished?
     public boardProperties: Record<string, PropertyModel> = {}; // Record es como un diccionario https://typescriptutorial.com/es/diccionarios/
