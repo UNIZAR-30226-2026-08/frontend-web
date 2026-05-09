@@ -562,7 +562,7 @@ export const GameService = ( ) => {
 			case "ActionTradeProposal":
 				const reportTradeProposal : WSTypes.GameReportTradeProposal = {
 					"game": data.game,
-					"player": data.player,
+					"player": Number(data.player),
 					"destination_user": Number(data.destination_user),
 					"offered_money": data.offered_money,
 					"asked_money": data.asked_money,
@@ -574,7 +574,8 @@ export const GameService = ( ) => {
 			case "ActionTradeAnswer":
 				const reportTradeAnswer : WSTypes.GameReportTradeAnswer = {
 					"player": data.player,
-					"accept": data.accept
+					"accept": data.accept,
+					"game": data.game
 				};
 				EventBus.emit('report-action-trade-answer', reportTradeAnswer);
 				break;

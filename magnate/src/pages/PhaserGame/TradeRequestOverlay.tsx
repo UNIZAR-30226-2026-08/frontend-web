@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { EventBus } from '@/EventBus';
-
+import { GameLogicManager } from '@/phaser/managers/GameLogicManager';
 
 const TradeHeader = ({ player, isSender, isMe }: { player: any, isSender: boolean, isMe?: boolean }) => (
     <div className={`py-6 pb-2 flex flex-col ${isSender ? 'items-start' : 'items-end'}`}>
@@ -88,10 +88,16 @@ export const TradeRequestOverlay = () => {
     const handleAnswer = (accepted: boolean) => {
         if (!proposal) return;
         console.log("en trade request, la propuesta ha sido:", accepted);
+        const id = localStorage.getItem('myId');
+        
+        console.log("ENVIANDO: accept", accepted);
+        console.log("ENVIANDO: player", id);
+        console.log("ENVIANDO: game", GameLogicManager.getInstance().model.gameId);
         
         EventBus.emit('action-trade-answer', {
             accept: accepted,
-            player: proposal.offeringPlayer.id
+            player: Number(id),
+            game: GameLogicManager.getInstance().model.gameId
         });
 
         setIsOpen(false);

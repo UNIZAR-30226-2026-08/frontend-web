@@ -12,11 +12,13 @@ export class DiceManager {
     private isRolling: boolean = false;
     private currentDice: any[] = [];
     private diceBg: any = null;
+    private lastJailDestinations: string[] = [];
 
     constructor(board: any) {
         this.board = board;
         EventBus.on('clear-jail-dice', this.clearDice, this);
         EventBus.on('clear-dice', this.clearDice, this);
+        EventBus.on('jail-re-enable-selection', this.reEnableJailInteraction, this);
     }
 
     public handleDiceRoll(
@@ -151,9 +153,15 @@ export class DiceManager {
     public handleJailDiceRoll(
         tiles: Tile[], 
         players: { model: PlayerModel, token: PlayerToken }[], 
-        forcedValues?: [number, number]
+        forcedValues?: [number, number],
+        destinations?: string[],
+        isMyTurn?: boolean
     ) {
         if (this.isRolling) return;
+        console.log("Entrando a dados carcel");
+        console.log("Entrando a dados carcel con dados:", forcedValues);
+        console.log("Entrando a dados carcel con destinos:", destinations);
+        this.lastJailDestinations = destinations || [];
 
         this.board.hideUI();
         this.isRolling = true;
@@ -200,6 +208,7 @@ export class DiceManager {
                     const moveDuration = 800;
 
                     const moveDiceToCorner = (dieObj: any, targetX: number, targetY: number, onCompleteCallback?: () => void) => {
+
                         this.board.tweens.add({
                             targets: dieObj.mesh,
                             x: targetX,
@@ -214,17 +223,61 @@ export class DiceManager {
                     };
 
                     EventBus.emit('play-sfx', 'dice_throw');
+                    const isDouble = val1 === val2;
+                    const activePlayerPair = players.find(p => p.model.id === localStorage.getItem('myId'));
 
                     moveDiceToCorner(dice1, bgX + 60, bgY + 50);
                     moveDiceToCorner(dice2, bgX + 150, bgY + 50, () => {
+                        EventBus.emit('dice-roll-complete');
                         EventBus.emit('jail-dice-rolled', { val1, val2 });
+                        
+                        console.log("entrando en eventmanager para destinations");
+                        if (destinations && destinations.length > 0 && isMyTurn && activePlayerPair) {
+                            const turns = activePlayerPair.model.jailRemainingTurns;
+                            console.log("Turnos en DiceManager:", turns);
+
+                            if (isDouble || turns >= 3) { // caso 1: saco dobles -> salida gratis; caso 2: salgo obligatoriamente y pago
+                                console.log("Saliendo de la cárcel tengo dobles");
+                                activePlayerPair.model.jailRemainingTurns = 0;
+                                activePlayerPair.model.emitUpdate();
+                                BoardEffects.setFocusByIds(tiles, destinations, this.board, players.map(p => p.token));
+                                
+                            } else { // caso 3: turnos 1 y 2
+                                this.setupJailInteraction(tiles, players, destinations);
+                            }
+                        }
+                    
                     });
+
                 });
             }
         };
 
         dice1.roll((val: any) => { val1 = val; checkDone(); }, forcedValues?.[0]);
         dice2.roll((val: any) => { val2 = val; checkDone(); }, forcedValues?.[1]);
+    }
+
+    private reEnableJailInteraction() {
+        const players = this.board.players;
+        const tiles = this.board.tiles;
+        this.setupJailInteraction(tiles, players, this.lastJailDestinations);
+    }
+
+    private setupJailInteraction(tiles: Tile[], players: any[], destinations: string[]) {
+        const activePlayerPair = players.find(p => p.model.id === localStorage.getItem('myId'));
+        
+        BoardEffects.setFocusByIds(tiles, [...destinations, '201'], this.board, players.map(p => p.token));
+
+        tiles.forEach(tile => {
+            tile.off('pointerdown');
+            if (tile.tileConfig.id === '201') {
+                this.board.eventManager.setupJailClick('201', 'stay', activePlayerPair?.model);
+            } else if (destinations.includes(tile.tileConfig.id)) {
+                this.board.eventManager.setupJailClick(tile.tileConfig.id, 'pay', activePlayerPair?.model);
+            } else {
+                tile.disableInteractive();
+            }
+        });
     }
 
     public clearDice() {

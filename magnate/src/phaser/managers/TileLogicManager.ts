@@ -16,6 +16,7 @@ import { CornerData } from '@/components/layout/CornerLayout';
 import { GameLogicManager } from './GameLogicManager';
 import { propEffect } from 'framer-motion';
 import { CameraController } from '../utils/CameraController';
+import { VisitTile } from '../objects/VisitTile';
 
 const CORNER_VISUALS = new Map<Function, CornerData>([
     [GoToJailTile, { image: 'images/bodyguard.png', tileText: 'Ve a Secretaría', buttonText: 'Aceptar', sound: 'jail_door' }],
@@ -60,6 +61,7 @@ export class TileLogicManager {
             
             const idProp = String(tile.tileConfig.id).padStart(3, '0');
             const propModel = gameModel.getProperty(idProp);
+            const rentToPay = gameModel.getCurrentRent(idProp);
             
             if(propModel) {
                 EventBus.emit('show-property-card', {
@@ -70,9 +72,10 @@ export class TileLogicManager {
                     buildPrice: propModel.buildPrice,
                     rentPrices: propModel.rentPrices, 
                     ownerId: propModel.ownerId,
+                    houseCount: propModel.houseCount,
                     player: player,
                     isMortgaged: propModel.isMortgaged,
-                    currentRent: propModel.getCurrentRent()
+                    currentRent: rentToPay
                 });
             }
         }
@@ -119,8 +122,8 @@ export class TileLogicManager {
 
         else if (tile instanceof GoToJailTile) {
             console.log("Estoy en secretaría");
-            player.jailRemainingTurns = 1;
-            player.emitUpdate();
+            // player.jailRemainingTurns = 1;
+            // player.emitUpdate();
             this.scene.sendToSecretary(player.id);
         }
 
@@ -137,10 +140,17 @@ export class TileLogicManager {
         }
 
         else if (tile instanceof JailTile) {
+            // EventBus.emit('open-jail-overlay', { 
+            //     tileId: tile.tileConfig.id,
+            //     turnCount: player.jailRemainingTurns,
+            //     isPrisoner: player.jailRemainingTurns >= 1 
+            // });
+        }
+        else if (tile instanceof VisitTile) {
             EventBus.emit('open-jail-overlay', { 
                 tileId: tile.tileConfig.id,
                 turnCount: player.jailRemainingTurns,
-                isPrisoner: player.jailRemainingTurns >= 1 
+                isPrisoner: false
             });
         }
         

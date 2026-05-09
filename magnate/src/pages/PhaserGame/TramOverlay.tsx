@@ -7,7 +7,7 @@ import { GameLogicManager } from '@/phaser/managers/GameLogicManager';
 export const TramOverlay = () => {
     // ESTADOS DEL OVERLAY
     const [isOpen, setIsOpen] = useState(false);
-    const [currentTileId, setCurrentTileId] = useState<string | null>(null); 
+    const [currentTileId, setCurrentTileId] = useState<any>(null); 
     const [selectedTram, setSelectedTram] = useState<any>(null); 
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
@@ -27,6 +27,7 @@ export const TramOverlay = () => {
     useEffect(() => {
         // From CornerOverlay if click on "Gestionar Desplazamiento"
         const handleOpen = (data: any) => {
+            console.log("data recibido en tranvías:", data);
             setCurrentTileId(data);
             setIsOpen(false);
             setSelectedTram(null);
@@ -37,7 +38,8 @@ export const TramOverlay = () => {
 
         const handleTramSelected = (tileData: any) => {
 			playSound('tram_bell');
-			console.log("entré a handleTramSelected");
+			console.log("entré a handleTramSelected con info:", tileData);
+            setSelectedTram(tileData);
             if (!isOpen) {
 				console.log("no está open");
                 setSelectedTram(tileData);
@@ -65,6 +67,8 @@ export const TramOverlay = () => {
 
     const confirmTramTravel = () => {
 		console.log("dentro de tram travel");
+        console.log("selectedTram.id", selectedTram.id);
+        console.log("currentTileId", currentTileId);
         const cost = (selectedTram.id === currentTileId) ? 0 : 30;
 		console.log(selectedTram.id)
 
@@ -88,7 +92,7 @@ export const TramOverlay = () => {
         EventBus.emit('dark-mode', false);
         EventBus.emit('close-overlay');
     };
-
+    
     return (
         <div className="fixed inset-0 z-[9999] pointer-events-none">
             
@@ -117,15 +121,17 @@ export const TramOverlay = () => {
                                     className={`w-full h-[50px] bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase text-[14px] tracking-wide rounded-full shadow-lg flex items-center justify-center px-4 ${bouncyAnimation}`} >
                                     <div className="flex flex-col items-center leading-tight">
                                         <span>
-                                            {selectedTram.id === currentTileId
+                                            {selectedTram.id === currentTileId.id
                                                 ? 'Permanecer aquí'
                                                 : 'Cambiar de estación'}
                                         </span>
-                                        {selectedTram.id !== currentTileId && (
-                                            <span className="text-[12px] opacity-80 font-bold tracking-tighter">
-                                                Coste: 30M
-                                            </span>
-                                        )}
+                                        
+                                        <span className="text-[12px] opacity-80 font-bold tracking-tighter">
+                                            {selectedTram.id === currentTileId.id
+                                                ? 'Coste 0M'
+                                                : 'Coste 30M'}
+                                        </span>
+                                        
                                     </div>
                                 </Button>
 

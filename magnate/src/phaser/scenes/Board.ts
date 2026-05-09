@@ -41,16 +41,20 @@ export class Board extends Phaser.Scene {
     public animationManager!: AnimationManager;
     public tileLogicManager!:  TileLogicManager;
     public cameraController!: CameraController;
-    private eventManager!: EventManager;
+    public eventManager!: EventManager;
 
     // -- Estado Global --
     private GamelogicManager!: GameLogicManager;
     private localPlayerId: string | null = null;
     public selectedPlayer: any | null = null;
     
+    
     private pendingParkingData: { tile: Tile, playerId: string } | null = null;
     private pendingBillData: { playerId: string, numBills: number , amount: string } | null = null;
     private lastTurnPlayerId: string | null = null;
+
+    private turnsLabel!: Phaser.GameObjects.Text;
+    private turnsDisplay!: Phaser.GameObjects.Text;
 
     constructor() {
         super({ key: 'BoardScene' });
@@ -85,6 +89,7 @@ export class Board extends Phaser.Scene {
         this.createBackground();
         this.createBoard();
         this.setupEventBus();
+        this.createTurnsDisplay();
 
         const currentModel = this.GamelogicManager.model;
         console.log("BOARD CREATE: Comprobando jugadores iniciales", this.GamelogicManager.model.orderedPlayers);
@@ -192,6 +197,60 @@ export class Board extends Phaser.Scene {
         this.eventManager = new EventManager(this, this.tiles, this.players);
     }
 
+    // Funciones turnos en el tablero
+    private createTurnsDisplay() {
+        const centerX = this.cameras.main.centerX;
+        const centerY = this.cameras.main.centerY;
+
+        const baseStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+            fontFamily: 'LTSuperior',
+            color: '#ffffff',
+            align: 'center'
+        };
+
+        this.turnsLabel = this.add.text(centerX, centerY - 60, 'TURNO', {
+            ...baseStyle,
+            fontSize: '40px',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+        this.turnsLabel.setOrigin(0.5).setDepth(1);
+
+        this.turnsDisplay = this.add.text(centerX, centerY + 20, '1 / 20', {
+            ...baseStyle,
+            fontSize: '60px',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 2
+        });
+        this.turnsDisplay.setOrigin(0.5).setDepth(1);
+
+        EventBus.on('model-updated', (model: any) => {
+            this.updateTurns(model.current_turn, 20);
+        });
+    }
+
+    private updateTurns(current: number, max: number) {
+        const newText = `${current} / ${max}`;
+        
+        if (this.turnsDisplay.text !== newText) {
+            this.turnsDisplay.setText(newText);
+
+            this.tweens.add({
+                targets: [this.turnsLabel, this.turnsDisplay],
+                scale: 1.1,
+                duration: 200,
+                yoyo: true,
+                ease: 'Quad.easeInOut',
+                onComplete: () => {
+                    this.turnsLabel.setScale(1);
+                    this.turnsDisplay.setScale(1);
+                }
+            });
+        }
+    }
+
     // --- EVENT BUS  ---
     private setupEventBus() {
         
@@ -202,8 +261,23 @@ export class Board extends Phaser.Scene {
             this.syncBuildingsAndMortgages(gameModel);
             //this.syncPlayerPositions(gameModel);
 
+            const parkingTile = this.tiles.find(t => t instanceof ParkingTile) as ParkingTile;
+            if (parkingTile) {
+                const currentParkingMoney = gameModel.getParkingMoney();
+                parkingTile.updatePrice(currentParkingMoney);
+            }
+
             const currentTurnId = gameModel.getCurrentTurnPlayerId();
+
             if (this.lastTurnPlayerId !== currentTurnId) {
+                if (this.lastTurnPlayerId === null) { // primer turno
+                    gameModel.firstPlayerId = currentTurnId;
+                } else if (currentTurnId === gameModel.firstPlayerId) {
+                    gameModel.current_turn++;
+                }
+                this.updateTurns(gameModel.current_turn, 20);
+
+                // banner de nuevo turno
                 const isFirstTurn = this.lastTurnPlayerId === null;
                 this.lastTurnPlayerId = currentTurnId;
     
@@ -220,6 +294,10 @@ export class Board extends Phaser.Scene {
 
         EventBus.on('trigger-dice-roll', (data: any) => {
             this.handleDiceRoll(data);
+        }, this);
+
+        EventBus.on('trigger-dice-roll-jail', (data: any) => {
+            this.handleJailDiceRoll(data);
         }, this);
 
         EventBus.on('view-animate-path', (data: any) => {
@@ -261,15 +339,51 @@ export class Board extends Phaser.Scene {
         EventBus.on('token-fin', () => {
             this.time.delayedCall(400, () => { });
             const gameModel = this.GamelogicManager.model;
+            const activePlayerId = gameModel.getCurrentTurnPlayerId();
+            const isMe = gameModel.isMyTurn();
+            const playerPair = this.players.find(p => p.model.id === activePlayerId);
+            if (!playerPair) return;
+            
+            const currentTileId = playerPair.model.currentTileId;
+            const prop = gameModel.getProperty(currentTileId);
             
             console.log(`[Token Fin] Verificando fase: ${gameModel.phase}`);
 
-            if (gameModel.phase === 'choose_fantasy') {
+            if (gameModel.phase === 'choose_fantasy' || gameModel.phase === 'management' || gameModel.phase === 'business') {
+                console.log("Entro en token-tile con phase:",gameModel.phase);
                 this.interactWithTile(gameModel);
-            } else if (gameModel.phase === 'management' || gameModel.phase === 'business') {
+
+            } else if (gameModel.phase === 'liquidation') {
+                if (currentTileId === '020') {
+                    console.log("Token llegó a Secretaría en liquidación. Abriendo overlay...");
+                    this.interactWithTile(gameModel);
+                }
+            } else if (gameModel.streak > 0 && gameModel.phase === 'roll_the_dices') {
+                if (!isMe) {
+                    this.time.delayedCall(800, () => {
+                        console.log("Volviendo a la vista de origen...");
+                        this.cameraController.resetView(1500); 
+                    }); 
+                    return;
+                }
                 this.interactWithTile(gameModel);
+                const isInteractiveProp = prop !== undefined; 
+
+                if (isInteractiveProp) {
+                    console.log("Dobles: Casilla con interacción. Esperando a que se cierre el overlay para habilitar el re-roll.");
+                    
+                    EventBus.once('close-overlay', () => {
+                        console.log("Overlay cerrado. Habilitando segundo tiro.");
+                        EventBus.emit('update-controls-state', {
+                            roll: true,  administer: false, trade: false, finishTurn: false, bankrupt: true });
+                    });
+                } else { // TODO: revisar 
+                    EventBus.emit('update-controls-state', {
+                        roll: true,  administer: false, trade: false, finishTurn: false, bankrupt: true });
+                }
             }
         });
+
         
         EventBus.on('view-new-turn', async (gameModel: any) => {
             await this.handleNewTurn(gameModel);
@@ -598,6 +712,7 @@ export class Board extends Phaser.Scene {
                 // Actualizamos solo datos lógicos
                 existingPlayer.model.name = pData.name;
                 existingPlayer.model.balance = pData.balance;
+                existingPlayer.model.jailRemainingTurns = pData.jailRemainingTurns;
 
                 if (!existingPlayer.token.isMoving) {
                     existingPlayer.model.currentTileId = pData.currentTileId;
@@ -657,9 +772,10 @@ export class Board extends Phaser.Scene {
         this.showUI();
         // Después de enseñar banner, empieza la fase
         this.handlePhaseLogic(gameModel);
+        // EventBus.emit('turn-announcement-finished', gameModel);
     }
 
-    private handlePhaseLogic(gameModel: any) { // TODO: pensar que hacer con esta función
+    private handlePhaseLogic(gameModel: any) {
         const isMe = gameModel.isMyTurn();
         console.log(`[Phase Check] Fase actual: "${gameModel.phase}" | ¿Es mi turno?: ${isMe}`);
         this.showUI();
@@ -816,8 +932,36 @@ export class Board extends Phaser.Scene {
         const jailTile = this.tiles.find(t => t instanceof JailTile);
         
         if (!p || !jailTile) return;
-     
-        await this.playSecretaryCutscene();
+        const oldTileId = p.model.currentTileId;
+        const myId = localStorage.getItem('myId');
+        const isMe = playerId === String(myId);
+        
+        if (isMe) {
+            await this.playSecretaryCutscene();
+        }
+
+        if(!isMe) {
+            console.log("Otro player ha ido a la cárcel, muevo token");
+            this.time.delayedCall(2000, () => { 
+                EventBus.emit('view-teleport-player', {
+                    playerId: playerId,
+                    targetTileId: jailTile
+
+                });
+                this.showToast(`${p.model.name} ha sido enviado a Secretaría`); 
+            });
+            this.time.delayedCall(800, () => {
+                console.log("Rset de la camra en secretaría");
+                this.cameraController.resetView(1500);
+            }); 
+            
+            return;
+        }
+        
+        // await this.playSecretaryCutscene();
+        p.model.currentTileId = jailTile.tileConfig.id;
+        p.token.isMoving = true;
+        this.organizeTokensOnTile(oldTileId);
 
         const othersCount = this.players.filter(other => 
             other.model.id !== playerId && 
@@ -832,7 +976,7 @@ export class Board extends Phaser.Scene {
             finalX += (othersCount % 2 === 0) ? spacing : -spacing;
             finalY += (othersCount > 1) ? spacing : -spacing;
         }
-     
+        
         p.model.currentTileId = jailTile.tileConfig.id; 
         p.token.setAlpha(0);
         p.token.setPosition(finalX, finalY - 600);
@@ -840,13 +984,22 @@ export class Board extends Phaser.Scene {
 
             p.token.setPosition(finalX, finalY - 600);
             p.token.setAlpha(1);
-
+            
             this.tweens.add({
                 targets: p.token,
                 y: finalY,
                 ease: 'Bounce.easeOut',
                 duration: 800,
-                onComplete: () => {}
+                onComplete: () => {
+                    const myId = localStorage.getItem('myId');
+                    this.organizeTokensOnTile(jailTile.tileConfig.id);
+                    p.token.isMoving = false;
+                    if (playerId === String(myId)) {
+                        this.time.delayedCall(1000, () => {
+                            EventBus.emit('jail-animation-finished');
+                        });
+                    } 
+                }
             });
             this.showToast(`${p.model.name} ha sido enviado a Secretaría`);
         });
@@ -873,6 +1026,27 @@ export class Board extends Phaser.Scene {
             values as [number, number, number],
             formattedDestinations,
             isMyTurn
+        );
+    }
+
+    private handleJailDiceRoll(diceData: { dice1: number, dice2: number, destinations?: number[] }) {
+        if (!diceData) return;
+
+        const values: [number, number] = [diceData.dice1, diceData.dice2];
+        
+        let formattedDestinations: string[] = [];
+        if (diceData.destinations) {
+            formattedDestinations = diceData.destinations.map(d => String(d).padStart(3, '0'));
+        }
+        const isMe = this.GamelogicManager.model.isMyTurn();
+        this.hideUI();
+
+        this.diceManager.handleJailDiceRoll(
+            this.tiles, 
+            this.players, 
+            values,
+            formattedDestinations,
+            isMe
         );
     }
 

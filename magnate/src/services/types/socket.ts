@@ -434,6 +434,7 @@ export interface GameReportFantasy {
 }
 
 export interface GameReportTradeAnswer {
+	game: string;
 	player: string;	// user id of player who sent the action
 	/** True if trade is accepted */
 	accept?: boolean; 
@@ -446,7 +447,7 @@ export interface GameReportBid {
 
 export interface GameReportTradeProposal {
 	game: string;
-	player: string;	// user id of player who sent the action
+	player: number;	// user id of player who sent the action
 	destination_user?: number;	// userid
 	offered_money?:	number;
 	asked_money?: number;
