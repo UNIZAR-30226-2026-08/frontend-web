@@ -66,7 +66,8 @@ export class Board extends Phaser.Scene {
     }
 
     preload() { // precargar imagenes...
-        this.load.video('background_video', 'videos/game_background.webm');
+        // this.load.video('background_video', 'videos/game_background.webm');
+        this.load.image('background', 'images/fondo.png');
         this.load.json('board', 'data/board.json');
         this.load.json('money', 'data/money.json');
         this.load.json('fantasyCards', 'data/fantasyCard.json');
@@ -106,30 +107,43 @@ export class Board extends Phaser.Scene {
         this.cameraController = new CameraController(this);
     }
 
-    private createBackground() {
-        const { width, height } = this.scale;
-        const bgVideo = this.add.video(width / 2, height / 2, 'background_video');
-        bgVideo.setOrigin(0.5, 0.5);
-        bgVideo.setDepth(-100);
+    // private createBackground() { // Para video
+    //     const { width, height } = this.scale;
+    //     const bgVideo = this.add.video(width / 2, height / 2, 'background_video');
+    //     bgVideo.setOrigin(0.5, 0.5);
+    //     bgVideo.setDepth(-100);
 
-        const resizeVideo = (screenWidth: number, screenHeight: number) => {
-            const videoW = bgVideo.width;
-            const videoH = bgVideo.height;
+    //     const resizeVideo = (screenWidth: number, screenHeight: number) => {
+    //         const videoW = bgVideo.width;
+    //         const videoH = bgVideo.height;
 
-            if (videoW === 0 || videoH === 0) return; 
+    //         if (videoW === 0 || videoH === 0) return; 
 
-            const scaleX = screenWidth / videoW;
-            const scaleY = screenHeight / videoH;
+    //         const scaleX = screenWidth / videoW;
+    //         const scaleY = screenHeight / videoH;
             
-            const scale = Math.max(scaleX, scaleY); 
-            bgVideo.setScale(scale);
-            bgVideo.setPosition(screenWidth / 2, screenHeight / 2);
-        };
+    //         const scale = Math.max(scaleX, scaleY); 
+    //         bgVideo.setScale(scale);
+    //         bgVideo.setPosition(screenWidth / 2, screenHeight / 2);
+    //     };
 
-        bgVideo.on('play', () => { resizeVideo(this.scale.width, this.scale.height); });
-        bgVideo.play(true);
+    //     bgVideo.on('play', () => { resizeVideo(this.scale.width, this.scale.height); });
+    //     bgVideo.play(true);
 
-        this.scale.on('resize', (gameSize: Phaser.Structs.Size) => { resizeVideo(gameSize.width, gameSize.height); }, this);
+    //     this.scale.on('resize', (gameSize: Phaser.Structs.Size) => { resizeVideo(gameSize.width, gameSize.height); }, this);
+    // }
+
+    private createBackground() {
+        const { width, height } = this.cameras.main;
+
+        const bgImage = this.add.image(width / 2, height / 2, 'background');
+        bgImage.setDepth(-100);
+
+        const scaleX = width / bgImage.width;
+        const scaleY = height / bgImage.height;
+     
+        const scale = Math.max(scaleX, scaleY);
+        bgImage.setScale(scale);
     }
 
     private createBoard() { 
