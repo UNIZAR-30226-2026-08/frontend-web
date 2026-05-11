@@ -447,7 +447,7 @@ export class GameLogicManager {
 
         EventBus.on('report-action-trade-answer', (data: any) => {
             console.log("action-trade-answer", data);
-            const accepted = data.accept;
+            const accepted = data.choose;
             const player = data.player;
             console.log("Manager: ¿Trato aceptado?", accepted);
             console.log("ultima propuesta", this.lastPendingProposal);

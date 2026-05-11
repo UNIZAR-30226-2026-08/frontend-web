@@ -95,7 +95,7 @@ export const TradeRequestOverlay = () => {
         console.log("ENVIANDO: game", GameLogicManager.getInstance().model.gameId);
         
         EventBus.emit('action-trade-answer', {
-            accept: accepted,
+            choose: accepted,
             player: Number(id),
             game: GameLogicManager.getInstance().model.gameId
         });
