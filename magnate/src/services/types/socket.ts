@@ -360,10 +360,13 @@ export interface GameState {
 	parking_money : number;
 	jail_remaining_turns : Record<string,number>; 	// Dict userid : left turns to serve in jail
 	finished : boolean; // When true, indicates the game has finished
-	kick_out_task_id : string;	// (timeouts)
-	next_phase_task_id:string;	// (timeouts)
-	current_turn : number;	// number of passed turns (TODO should be shown somewhere hehe)
+	kick_out_task_id? : string;	// (timeouts)
+	next_phase_task_id?:string;	// (timeouts)
+	current_turn : number;	// number of passed turns 
 	property_relationships : PropertyInfo[]; 
+	fantasy_event : FantasyCardDesc;
+	auction_task_id : string;
+	proposal: string; // ID of current unresolved trading proposal freezing phases
 }
 
 /* 
