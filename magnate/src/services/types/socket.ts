@@ -113,7 +113,7 @@ export interface GameAction {
 	offered_properties?: string[];  // tile id of property location
 	asked_properties?: string[];	// tile id of property location
 	// trade answer
-	accept?: boolean; 	// True if trade is accepted
+	choose?: boolean; 	// True if trade is accepted
 }
 
 export interface GameActionReport { 
@@ -133,7 +133,7 @@ export interface GameActionReport {
 	offered_properties?: string[];  // tile id of property location
 	asked_properties?: string[];	// tile id of property location
 	// trade answer
-	accept?: boolean; 	// True if trade is accepted
+	choose?: boolean; 	// True if trade is accepted
 	// jail
 	to_pay?: boolean;
 }
@@ -385,7 +385,7 @@ export interface GameAskFantasy {
 
 export interface GameAskTradeAnswer {
 	/** True if trade is accepted */
-	accept: boolean; 
+	choose: boolean; 
 	player: string;
 	game: string;
 }
@@ -437,7 +437,7 @@ export interface GameReportTradeAnswer {
 	game: string;
 	player: string;	// user id of player who sent the action
 	/** True if trade is accepted */
-	accept?: boolean; 
+	choose?: boolean; 
 }
 
 export interface GameReportBid {
