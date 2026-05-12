@@ -335,7 +335,6 @@ export class Board extends Phaser.Scene {
                 }
                 this.updateTurns(gameModel.current_turn, 20);
                 this.lastTurnPlayerId = currentTurnId;
-                
                 // banner de nuevo turno
                 await this.handleNewTurn(gameModel);
             } else {

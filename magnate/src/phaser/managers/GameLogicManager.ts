@@ -237,6 +237,8 @@ export class GameLogicManager {
 
             const property = this.model.getProperty(propId);
             const player = this.model.getPlayer(playerId);
+            console.log("Propiedad", property);
+            console.log("Tiene dueño", property?.ownerId);
 
             if (property && player) {
                 // Actualizamos el dueño en el modelo
