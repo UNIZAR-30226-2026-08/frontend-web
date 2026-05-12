@@ -10,6 +10,7 @@ const API_ENDPOINTS = {
   PROFILE: `${BASE_URL}/user/info/`,
   CHANGE_PIECE: `${BASE_URL}/user/change-piece/`,
   USER_NAME_PIECE: `${BASE_URL}/info/user-name-piece/`, 
+  ACTIVE_GAME: `${BASE_URL}/user/active-game/`,
   GAMES_PLAYED: `${BASE_URL}/user/games-played/`,
   GAME_SUMMARY: `${BASE_URL}/game/summary/`,
 

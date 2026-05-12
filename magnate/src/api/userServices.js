@@ -64,6 +64,28 @@ export const fetchUserNamePiece = async (pk, updateNamePiece) => {
   }
 };
 
+export const fetchActiveGame = async (accessToken, updateActiveGame) => {
+  try {
+    const response = await fetch(API_ENDPOINTS.ACTIVE_GAME, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("A ver si hay partida en curso", data);
+    if (updateActiveGame) updateActiveGame(data);
+  } catch(error) {
+    console.error('Error fetching user active game:', error);
+  }
+};
+
 export const fetchGamesPlayed = async (accessToken, updateGamesPlayed) => {
   try {
     const response = await fetch(API_ENDPOINTS.GAMES_PLAYED, {
