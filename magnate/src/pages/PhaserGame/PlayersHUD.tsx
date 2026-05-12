@@ -182,7 +182,6 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
                 const isMe = String(player.id) === String(myId);
                 const displayName = isMe ? "Tú" : player.name;
                 const isHisTurn = String(player.id) === currentTurnId;
-                console.log("es mi turno?", isHisTurn);
 
                 return (
                     <div 
