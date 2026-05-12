@@ -100,10 +100,14 @@ export class Board extends Phaser.Scene {
         });
         
         if (currentModel && currentModel.isModelReady && currentModel.orderedPlayers.length > 0) {
-            console.log("Board: Model was already ready, syncing players");
+            console.log("Board: Model was already ready, syncing players (reconnection case)");
             this.syncPlayers(this.GamelogicManager.model);
             this.syncPropertiesOwnership(this.GamelogicManager.model);
             this.syncBuildingsAndMortgages(this.GamelogicManager.model);
+            
+            // Emit setup-players for reconnection case
+            this.emitInitialPlayers();
+            this.showUI();
         } else {
             console.log("Board: Waiting for game-fully-initialized event");
         }
@@ -778,9 +782,12 @@ export class Board extends Phaser.Scene {
         });
 
         if (newPlayersAdded) {
-            this.emitInitialPlayers();
             this.showUI();
         }
+        
+        // Always emit initial players, whether they were added or synced
+        // This ensures PlayersHUD gets updated in both initial load and reconnection cases
+        this.emitInitialPlayers();
     }
 
     private syncPropertiesOwnership(gameModel: any) {
@@ -955,6 +962,7 @@ export class Board extends Phaser.Scene {
     }
 
     private emitInitialPlayers() {
+		console.log("inside emitInitialPlayers");
         const playerInitData = this.players.map(p => {
             const cssColor = '#' + p.model.color.toString(16).padStart(6, '0');
 

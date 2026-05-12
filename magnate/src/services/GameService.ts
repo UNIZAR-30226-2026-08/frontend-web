@@ -393,7 +393,9 @@ export const GameService = ( ) => {
 			"phase" : data.phase,
 			"parking_money": data.parking_money,
 			"fantasy_event": data.fantasy_event,
-			"positions": data.positions
+			"positions": data.positions,
+			"current_round" : data.current_round,
+			"max_rounds" : data.max_rounds
 		};
 		EventBus.emit('report-response', responseBasic);
 

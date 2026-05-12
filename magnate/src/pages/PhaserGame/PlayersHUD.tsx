@@ -42,6 +42,10 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
         }
     }, []);
 
+	useEffect(() => {
+		setPlayersList(initialPlayers);	
+	}, [initialPlayers]);
+
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             emitCoordinates();

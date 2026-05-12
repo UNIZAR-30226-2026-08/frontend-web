@@ -145,6 +145,8 @@ export interface GameResponse {
 	active_turn_player: number;
 	phase: Phase;
 	parking_money?: Number;
+	current_round: number;
+	max_rounds: number;
 	
     // movement
 	path?: string[];	// list of tile ids - serves as goable tiles if ChooseSquare
@@ -264,6 +266,8 @@ export interface GameInfoResponse {
 	parking_money?: Number;
 	fantasy_event?: FantasyEventType;
 	positions?: Record<string, string>;
+	current_round: number;
+	max_rounds: number;
 }
 
 export interface GameInfoMovement {
@@ -367,6 +371,8 @@ export interface GameState {
 	fantasy_event : FantasyCardDesc;
 	auction_task_id : string;
 	proposal: string; // ID of current unresolved trading proposal freezing phases
+	current_round: number;
+	max_rounds: number;
 }
 
 /* 

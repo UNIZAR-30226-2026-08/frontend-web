@@ -275,6 +275,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 	// Initial state of channels
 	const [volumes, setVolumes] = useState({ bg:0.5, sfx:0.8, ui:1.0 });
 	const [mutes, setMutes] = useState({ bg:false, sfx:false, ui:false });
+	const fadeOutTimeoutsRef = React.useRef<Partial<Record<SoundId, NodeJS.Timeout>>>({});
 
 	// Update volume
 	useEffect(() => {
@@ -308,14 +309,22 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 		const sound = audioRegistry[soundId];
 		if (!sound) return;
 
+		// Cancel any pending fadeOut for this sound
+		if (fadeOutTimeoutsRef.current[soundId]) {
+			clearTimeout(fadeOutTimeoutsRef.current[soundId]);
+		}
+
 		const currentVol = sound.howl.volume();
 		sound.howl.fade(currentVol, 0, duration);
 
-		setTimeout(() => {
+		const timeoutId = setTimeout(() => {
 			sound.howl.stop();
 			// In case we replay next time
 			sound.howl.volume(currentVol);
+			delete fadeOutTimeoutsRef.current[soundId];
 		}, duration);
+
+		fadeOutTimeoutsRef.current[soundId] = timeoutId;
 	};
 
 	const fadeInSound = (soundId: SoundId, duration = 1000) => {
@@ -332,15 +341,23 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
 	const changeMusic = (newMusicId: SoundId, duration = 2000) => {
 		const newMusic = audioRegistry[newMusicId];
 		if (!newMusic) return;
+		
+		const changeChannel = newMusic.channel;
+
+		// Cancel any fadeOut for the new music that might be in progress
+		if (fadeOutTimeoutsRef.current[newMusicId]) {
+			clearTimeout(fadeOutTimeoutsRef.current[newMusicId]);
+			delete fadeOutTimeoutsRef.current[newMusicId];
+		}
+
 		if (!newMusic.howl.playing()) {
-			const changeChannel = newMusic.channel;
 			(Object.keys(audioRegistry) as SoundId[]).forEach(soundId => {
 				const { howl, channel } = audioRegistry[soundId];
 				if (channel === changeChannel && howl.playing()) {
 					fadeOutSound(soundId, duration);
 				}
 			});
-			fadeInSound(newMusicId,duration);
+			fadeInSound(newMusicId, duration);
 		}
 	};
 

@@ -86,7 +86,8 @@ export const WSClient = ( ) => {
 		if (VERBOSE) {
 			console.log("DEBUG: entered handlePublicRoom");
 		}
-		//closeExistingSocket();
+
+		closeExistingSocket();
 
 		if (!token && VERBOSE) {
 			console.log("NO COOKIE/TOKEN: login before entering room.");
@@ -208,6 +209,7 @@ export const WSClient = ( ) => {
 	 * @fires many many event buses TODO
 	 */
 	const handleGame = (game_id: string) => {
+		closeExistingSocket();
 		gameIdRef.current = game_id;
 		sessionStorage.setItem('activeGameId', game_id);
 		if (VERBOSE) {

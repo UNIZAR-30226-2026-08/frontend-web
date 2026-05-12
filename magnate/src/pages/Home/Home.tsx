@@ -6,6 +6,7 @@ import { SettingsModal } from "@/components/layout/SettingsModal";
 import { useAudio } from "@/context/AudioContext";
 // @ts-ignore
 import { fetchActiveGame } from '@/api/userServices';
+import { EventBus } from '@/EventBus';
 
 const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, sub?: string, pos: string, iconUrl: string }, gridImageUrl: string }) => (
   <>
@@ -44,10 +45,20 @@ export function Home() {
   const [activeGame, setActiveGame] = useState(null);
 
   useEffect(() => {
+	const handleEnterGame = () => {
+		navigate('/phaser-game');
+	};
+	EventBus.on('you-may-now-enter-the-game', handleEnterGame);
+  }, [navigate]);
+
+  useEffect(() => {
     if (token) {
         fetchActiveGame(token, (data: any) => {
           setActiveGame(data);
-          console.log("Partida activa cargada:", data);
+		  if (data.active_game !== null) { 
+			console.log("No nulo:", data.active_game);
+		  	EventBus.emit('handle-enter-game', data.active_game);
+		  }
         });
     }
   }, []);
