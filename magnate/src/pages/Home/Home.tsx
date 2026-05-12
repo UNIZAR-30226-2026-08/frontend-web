@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from "react-router-dom";
 import { SettingsModal } from "@/components/layout/SettingsModal";
+// @ts-ignore
+import { fetchActiveGame } from '@/api/userServices';
 
 const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, sub?: string, pos: string, iconUrl: string }, gridImageUrl: string }) => (
   <>
@@ -33,8 +36,19 @@ const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, sub?: stri
 
 export function Home() {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const gridImageUrl = "/images/bg_city_white.jpg";
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeGame, setActiveGame] = useState(null);
+
+  useEffect(() => {
+    if (token) {
+        fetchActiveGame(token, (data: any) => {
+          setActiveGame(data);
+          console.log("Partida activa cargada:", data);
+        });
+    }
+  }, []);
 
   const gridButtonEffect = `
     transition-all duration-300 ease-out
