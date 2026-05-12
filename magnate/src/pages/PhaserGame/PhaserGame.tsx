@@ -30,6 +30,7 @@ import { fetchProfile } from "@/api/userServices";
 import { AuctionResults } from './AuctionResults';
 import { TradeMessage } from '@/components/layout/TradeMessage';
 import { PlayerModel } from '@/phaser/models/PlayerModel';
+import { AdminExit } from '@/components/layout/AdminExit';
 
 // interface PlayerInitData {
 //     id: string;
@@ -161,6 +162,7 @@ export const PhaserGame = () => {
             <TramOverlay />
             
             <PropertyAdminOverlay />
+            <AdminExit />
             
             <GameOver />
             <JailOverlay/>

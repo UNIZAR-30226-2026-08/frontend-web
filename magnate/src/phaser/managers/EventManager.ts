@@ -73,13 +73,16 @@ export class EventManager {
 
         // Lógica de administración
         EventBus.on('open-property-selection-mode', (model: GameModel, playerId: string) => {
+
             // propiedades del player
             const propertyIds = model.getPlayerProperties(playerId);
             if (propertyIds.length === 0) {
+                EventBus.emit('toggle-admin-exit-button', false);
                 EventBus.emit('show-toast', { message: "No tienes propiedades para administrar", duration: 3000 });
                 EventBus.emit('dark-mode', false);
                 return;
             }
+            EventBus.emit('toggle-admin-exit-button', true);
             BoardEffects.setFocusByIds(this.tiles, propertyIds, this.scene, []);
             this.tiles.forEach(tile => {
                 const tileId = tile.tileConfig.id;
@@ -88,6 +91,7 @@ export class EventManager {
                     tile.removeAllListeners('pointerdown');
 
                     tile.once('pointerdown', () => {
+                        EventBus.emit('toggle-admin-exit-button', false);
                         BoardEffects.setFocusByIds(this.tiles, null, this.scene, this.players.map(p=>p.token));
                         const prop = model.getProperty(tileId);
                         if (!prop) return;
