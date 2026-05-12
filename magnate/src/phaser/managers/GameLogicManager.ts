@@ -28,12 +28,25 @@ export class GameLogicManager {
 			if (!this.populated) {
                 await this.model.populate(new_state);
 				this.populated = true;
+                EventBus.emit('model-updated', this.model);
+                EventBus.emit('view-new-turn', this.model);
 			} else {
             	this.model.updateState(new_state);
+                EventBus.emit('model-updated', this.model);
 			}
-            EventBus.emit('model-updated', this.model);
         });
 
+        EventBus.on('board-ready', () => {
+            console.log("MANAGER: Phaser listo, Comprobando estado");
+            // console.log("Poblado?", this.populated);
+            // console.log("orderedplayers",this.model.orderedPlayers);
+            
+            if (this.populated && this.model.orderedPlayers.length > 0) {
+                console.log("MANAGER: Enviando estado inicial a phaserr");
+                EventBus.emit('model-updated', this.model);
+                EventBus.emit('view-new-turn', this.model);
+            }
+        });
         // Response general
         EventBus.on('report-response', (data: any) => {
             console.log("Modelo actual:", this.model);
