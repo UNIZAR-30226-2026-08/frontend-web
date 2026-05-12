@@ -10,6 +10,7 @@ import { Profile } from "@/pages/Profile/Profile";
 import { PrivateRoom } from "@/pages/PrivateRoom/PrivateRoom";
 import { PhaserGame } from "@/pages/PhaserGame/PhaserGame";
 import { Shop } from "@/pages/Shop/Shop";
+import { GameIntro } from "@/pages/GameIntro/GameIntro";
 import { WSTest } from "@/pages/WSTest";
 import { WSClient } from "@/services/WSClient";
 import { GameService } from "@/services/GameService";
@@ -30,7 +31,8 @@ function App() {
           
           <Routes>
             { /* Rutas públicas */ }
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<GameIntro />} />
+            <Route path="/welcome" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/basic-rules" element={<BasicRules />} />
