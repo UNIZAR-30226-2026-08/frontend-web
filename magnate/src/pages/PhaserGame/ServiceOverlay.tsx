@@ -51,6 +51,8 @@ export const ServiceOverlay = () => {
 	// Just in case they are not set
     const hasOwner = propData.ownerId !== null && propData.ownerId !== undefined && propData.ownerId !== "";
     const isMine = propData.ownerId === currentPlayerId;
+    console.log("caigo en puente o server: tiene dueño?", hasOwner);
+    console.log("caigo en puente o server: es mía?", isMine);
 
 	if (propData.isMortgaged) { 
 		return ( // mortgage view
@@ -81,7 +83,7 @@ export const ServiceOverlay = () => {
             	    />
 	                <Button onClick={closeOverlay} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
-	                            Pagar {propData.buyPrice}M
+	                            Pagar {propData.currentRent}M
 	                </Button>
 				</div>
 			</div>

@@ -297,6 +297,7 @@ export class Board extends Phaser.Scene {
     
                 // Algo de tiempo antes del primer turno
                 if (isFirstTurn) {
+                    console.log("");
                     this.time.delayedCall(800, async () => {
                         await this.handleNewTurn(gameModel);
                     });

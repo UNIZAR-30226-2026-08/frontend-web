@@ -84,7 +84,8 @@ export class TileLogicManager {
 		else if (tile instanceof ServerTile) {
             const idService = String(tile.tileConfig.id).padStart(3, '0');
             const serviceModel = gameModel.getProperty(idService);
-            
+            const rentToPay = gameModel.getCurrentRent(idService);
+
             if(serviceModel) {
                 console.log(serviceModel);
                 EventBus.emit('show-service-card', {
@@ -97,6 +98,7 @@ export class TileLogicManager {
                     isMortgaged: serviceModel.isMortgaged,
                     ownerId: serviceModel.ownerId,
                     player: player,
+                    currentRent: rentToPay
                 });
             }
 		}
@@ -104,7 +106,8 @@ export class TileLogicManager {
 		else if (tile instanceof BridgeTile) {
 			const idService = String(tile.tileConfig.id).padStart(3, '0');
             const serviceModel = gameModel.getProperty(idService);
-
+            const rentToPay = gameModel.getCurrentRent(idService);
+            
             if(serviceModel) {
                 EventBus.emit('show-service-card', {
                     id: serviceModel.id,
@@ -116,6 +119,7 @@ export class TileLogicManager {
                     isMortgaged: serviceModel.isMortgaged,
                     ownerId: serviceModel.ownerId,
                     player: player,
+                    currentRent: rentToPay
                 });
             }
 		}
