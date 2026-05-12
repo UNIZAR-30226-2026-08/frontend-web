@@ -691,11 +691,11 @@ export class GameLogicManager {
             }
         });
 
-		EventBus.on('pause-game', () => {
-			this.model.isPaused = true;
-            EventBus.emit('model-updated', this.model);
-			// whatevs you need now (?) TODO
-		});
+		//EventBus.on('pause-game', () => {
+		//	this.model.isPaused = true;
+        //    EventBus.emit('model-updated', this.model);
+		//	// whatevs you need now (?) TODO
+		//});
     }
 
     private updateHUDControls(phase: string) {

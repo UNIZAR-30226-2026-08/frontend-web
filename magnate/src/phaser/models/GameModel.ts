@@ -18,12 +18,15 @@ export class GameModel {
 	public current_turn : number = 0;	// round number
     public firstPlayerId: string | null = null; // quien ha empezado
 
-    public isPaused: boolean = false; // otro para isFinished?
+    public isFinished: boolean = false;
     public boardProperties: Record<string, PropertyModel> = {}; // Record es como un diccionario https://typescriptutorial.com/es/diccionarios/
     public players: Record<string, PlayerModel> = {};
 	public orderedPlayers: string[] = [];
 
     public currentFantasyEvent: { type: string, value: number | null } | null = null;
+
+	public auction_task_id : string | null = null;
+	public proposal : string | null = null;
 
     public updateState(new_state: GameState) { 
 		this.active_phase_player = new_state.active_phase_player;
@@ -35,7 +38,20 @@ export class GameModel {
 
         if (this.phase !== 'choose_fantasy') { // si salimos de la fase, limpiamos
             this.currentFantasyEvent = null;
-        }
+        } else {
+			if (new_state.fantasy_event !== null) {
+				this.setFantasyEvent(new_state.fantasy_event?.fantasy_type,
+							   new_state.fantasy_event?.value);
+			}
+		}
+
+		if (new_state.auction_task_id !== null) {
+			this.auction_task_id = new_state.auction_task_id;
+		}
+
+		if (new_state.proposal !== null) {
+			this.proposal = new_state.proposal;
+		}
 
 		// Players
 		this.orderedPlayers.forEach((playerId) => {
@@ -68,9 +84,24 @@ export class GameModel {
 		this.streak = new_state.streak;
 		this.parking_money = new_state.parking_money;
 		this.current_turn = new_state.current_turn;
-		this.isPaused = false; // TODO ?
+		this.isFinished = new_state.finished; 
 		this.orderedPlayers = new_state.ordered_players.map(id => String(id));
 		
+		if (new_state.fantasy_event !== null) {
+			this.setFantasyEvent(new_state.fantasy_event?.fantasy_type,
+						   new_state.fantasy_event?.value);
+		} else {
+			this.currentFantasyEvent = null;	
+		}
+
+		if (new_state.auction_task_id !== null) {
+			this.auction_task_id = new_state.auction_task_id;
+		}
+
+		if (new_state.proposal !== null) {
+			this.proposal = new_state.proposal;
+		}
+
 		const colorPalette = boardConfig.playerColors.map(c => parseInt(c.replace('#', '0x')));
 
 		const peticiones = this.orderedPlayers.map((playerId, index) => {
