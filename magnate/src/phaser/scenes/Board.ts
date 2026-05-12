@@ -341,6 +341,7 @@ export class Board extends Phaser.Scene {
                 this.lastTurnPlayerId = currentTurnId;
                 // banner de nuevo turno
                 await this.handleNewTurn(gameModel);
+   
             } else {
                 this.handlePhaseLogic(gameModel);
             }
@@ -606,6 +607,22 @@ export class Board extends Phaser.Scene {
             EventBus.emit('dark-mode', true);
             EventBus.emit('show-players-hud', true);
             EventBus.emit('open-property-selection-mode', model, myId);
+        });
+
+        EventBus.on('stop-administer', () => {
+            console.log("Manager: Finalizando administración...");
+       
+            EventBus.emit('dark-mode', false);
+            EventBus.emit('show-players-hud', false);
+            
+            BoardEffects.setFocusByIds(this.tiles, null, this, this.players.map(p => p.token));
+            
+            this.tiles.forEach(tile => {
+                tile.removeAllListeners('pointerdown');
+                tile.setInteractive(); 
+            });
+
+            EventBus.emit('toggle-admin-exit-button', false);
         });
 
         EventBus.on('update-tile-mortgage-visual', (data: { tileId: string, isMortgaged: boolean }) => {

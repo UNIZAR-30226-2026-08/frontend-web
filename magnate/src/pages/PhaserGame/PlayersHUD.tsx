@@ -19,9 +19,12 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [canClick, setCanClick] = useState(false);
     const [activeEmojis, setActiveEmojis] = useState<{ [key: string]: string }>({});
+    const [currentTurnId, setCurrentTurnId] = useState<string | null>(null);
 
     const playerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
     const emojiTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
+
+    const myId = localStorage.getItem('myId');
 
     const emitCoordinates = useCallback(() => {
         const positions: Record<string, { x: number, y: number }> = {};
@@ -67,6 +70,11 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
         };
         const handleModelUpdate = (gameModel: any) => {
             if (!gameModel || !gameModel.players) return;
+
+            if (gameModel.active_turn_player) {
+                setCurrentTurnId(String(gameModel.active_turn_player));
+            }
+
             const updatedPlayers = Object.values(gameModel.players).map((p: any) => ({
                 id: p.id,
                 name: p.name,
@@ -175,12 +183,18 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
             {playersList?.map((player) => {
                 const isEmojiActive = activeEmojis[String(player.id)];
 
+                const isMe = String(player.id) === String(myId);
+                const displayName = isMe ? "Tú" : player.name;
+                const isHisTurn = String(player.id) === currentTurnId;
+
                 return (
                     <div 
                         key={player.id} 
                         ref={(el) => { playerRefs.current[player.id] = el; }}
-                        className={`relative w-fit ${canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}`}
-                    >
+                        className={`relative w-fit transition-transform duration-300 ease-out
+                            ${canClick ? "pointer-events-auto cursor-pointer" : "pointer-events-none"}
+                            ${isHisTurn ? "scale-110 z-50 translate-x-[-10px]" : "scale-100 z-10 translate-x-0"}`}>
+                        
                         {isEmojiActive && (
                             <div 
                                 className="absolute top-1/2 left-0 -translate-y-[100%] -translate-x-[25%] z-[100] pointer-events-none"
@@ -196,7 +210,7 @@ export const PlayersHUD = ({ players: initialPlayers, dynamicScale, onPlayerClic
                         )}
                         <PlayerHUD 
                             playerId={player.id} 
-                            initialName={player.name} 
+                            initialName={displayName} 
                             initialColor={player.color} 
                             initialBalance={player.balance}
                             isClickable={canClick}

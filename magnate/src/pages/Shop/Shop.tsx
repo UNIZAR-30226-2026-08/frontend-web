@@ -12,8 +12,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
 // @ts-ignore 
 import { fetchShopItems, buyItem, fetchUserPieces } from '@/api/shopServices';
+// @ts-ignore
+import { fetchProfile } from '@/api/userServices';
 import { useItemData } from '@/context/ItemContext'; 
 import { useAudio } from '@/context/AudioContext'; 
+
 
 const stripedBackgroundStyle = { backgroundImage: `
         linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
@@ -30,6 +33,7 @@ export function Shop() {
     const [skinsList, setSkinsList] = useState<any[]>([]);
     const [emojisList, setEmojisList] = useState<any[]>([]);
     const [ownedIds, setOwnedIds] = useState<number[]>([1]);
+    const [userPoints, setUserPoints] = useState<number>(0);
     
     const { token } = useAuth();
     const { getItemInfo, loading: isContextLoading } = useItemData();
@@ -41,6 +45,13 @@ export function Shop() {
 
     useEffect(() => {
         if (token && !isContextLoading) {
+
+            fetchProfile(token, (data: any) => {
+                if (data && data.points !== undefined) {
+                    setUserPoints(data.points);
+                }
+            });
+
             fetchShopItems(token, (data : any) => {
                 if (data && data.length > 0) {
                     const mappedSkins: any[] = [];
@@ -85,17 +96,22 @@ export function Shop() {
         }
     }, [token, isContextLoading, getItemInfo]);
 
-    const handleBuy = (id: number) => {
+    const handleBuy = (item: any) => {
         // TODO: cuando se compra, guardar para el jugador
         if (token) {
-            buyItem(token, id, () => {
-                setOwnedIds((prev) => Array.from(new Set([...prev, id])));
+            if (userPoints < item.price) {
+                alert("No tienes suficientes monedas");
+                return;
+            }
+            buyItem(token, item.id, () => {
+                setOwnedIds((prev) => Array.from(new Set([...prev, item.id])));
+                setUserPoints(prev => prev - item.price);
             }, (error : any) => {
                 console.error("Error al comprar", error);
             });
         } else {
-            if (!ownedIds.includes(id)) {
-                setOwnedIds((prev) => [...prev, id]);
+            if (!ownedIds.includes(item.id)) {
+                setOwnedIds((prev) => [...prev, item.id]);
             }
         }
     };
@@ -103,6 +119,11 @@ export function Shop() {
     return (
         <div className="relative min-h-screen bg-cover bg-center bg-no-repeat overflow-hidden select-none bg-slate-50">
             <PageHeader title="Tienda" />
+            
+            <div className="absolute top-24 right-10 z-50 bg-white px-6 py-2 rounded-full border-2 border-[var(--color-primary)] shadow-lg flex items-center gap-2">
+                <span className="text-slate-500 font-bold uppercase text-xs">Tus Monedas:</span>
+                <span className="text-[var(--color-primary)] font-black text-xl">{userPoints} M</span>
+            </div>
 
             <div className="flex flex-col gap-12 py-12 px-20 overflow-y-auto"
                 style={{
@@ -212,7 +233,7 @@ function ShopSection({ title, items, onBuy, ownedIds = [] }: any) {
                 price={pendingItem?.price} 
                 onCancel={() => setPendingItem(null)} 
                 onConfirm={() => {
-                    onBuy(pendingItem.id);
+                    onBuy(pendingItem);
                     setPendingItem(null);
                 }}
             />
