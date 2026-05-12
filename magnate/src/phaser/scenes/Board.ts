@@ -94,6 +94,7 @@ export class Board extends Phaser.Scene {
 
         const currentModel = this.GamelogicManager.model;
         console.log("BOARD CREATE: Comprobando jugadores iniciales", this.GamelogicManager.model.orderedPlayers);
+        EventBus.emit('board-ready');
         // Check if GameLogicManager already has data
         if (currentModel && currentModel.orderedPlayers && currentModel.orderedPlayers.length > 0) {
             this.syncPlayers(this.GamelogicManager.model);
@@ -282,6 +283,12 @@ export class Board extends Phaser.Scene {
             }
 
             const currentTurnId = gameModel.getCurrentTurnPlayerId();
+            
+            if (this.lastTurnPlayerId === null && currentTurnId) {
+                this.lastTurnPlayerId = currentTurnId;
+                this.updateTurns(gameModel.current_turn, 20);
+                return;
+            }
 
             if (this.lastTurnPlayerId !== currentTurnId) {
                 if (this.lastTurnPlayerId === null) { // primer turno
@@ -292,15 +299,15 @@ export class Board extends Phaser.Scene {
                 this.updateTurns(gameModel.current_turn, 20);
 
                 // banner de nuevo turno
-                const isFirstTurn = this.lastTurnPlayerId === null;
+                // const isFirstTurn = this.lastTurnPlayerId === null;
                 this.lastTurnPlayerId = currentTurnId;
     
                 // Algo de tiempo antes del primer turno
-                if (isFirstTurn) {
-                    this.time.delayedCall(800, async () => {
-                        await this.handleNewTurn(gameModel);
-                    });
-                }
+                // if (isFirstTurn) {
+                //     this.time.delayedCall(800, async () => {
+                //         await this.handleNewTurn(gameModel);
+                //     });
+                // }
             } else {
                 this.handlePhaseLogic(gameModel);
             }
