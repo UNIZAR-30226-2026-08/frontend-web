@@ -259,10 +259,9 @@ export class GameModel {
 
         if (prop.group === 13 || prop.group === 14) {
             const count = this.getCountOwnedInGroup(prop.group, prop.ownerId);
-            return prop.rentPrices[count] || 0;
+            return prop.rentPrices[count - 1] || prop.rentPrices[0];
         }
-        console.log("casas de la propiedad", prop.houseCount);
-        const baseRent = prop.rentPrices[prop.houseCount] || 0;
+        const baseRent = prop.rentPrices[prop.houseCount] || prop.rentPrices[0];
 
         if (prop.houseCount === 0 && this.ownsFullGroup(prop.group, prop.ownerId)) {
             return baseRent * 2;
@@ -335,8 +334,7 @@ export class GameModel {
         if (!playerId) return 0;
 
         return Object.values(this.boardProperties).filter(
-            prop => prop.group === groupId && prop.ownerId === playerId
-        ).length;
+            prop => prop.group === groupId && prop.ownerId === playerId).length;
     }
 
 

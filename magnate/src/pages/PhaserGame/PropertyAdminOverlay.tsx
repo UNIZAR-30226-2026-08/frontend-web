@@ -40,7 +40,9 @@ export const PropertyAdminOverlay = () => {
     if (!propData) return null;
 
     const currentIndex = levels.indexOf(constructionLevel); // nivel actual
+    console.log("Current index", currentIndex);
     const diff = currentIndex - propData.houseCount;
+    console.log("diff: número de casas que puedo", diff);
     const totalCost = diff * (propData.buildPrice || 0);
     const isSpecial = propData.isSpecial;
     
