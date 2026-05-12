@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 // @ts-ignore 
 import { registerUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
+import { useAudio } from '@/context/AudioContext';
+import { useEffect } from 'react';
 
 interface SignUpProps {
     onBack?: () => void;
@@ -13,6 +15,7 @@ interface SignUpProps {
 export function SignUp({ onBack }: SignUpProps) {
     const navigate = useNavigate();
     const { login } = useAuth();
+    const { changeMusic } = useAudio();
 
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -21,6 +24,10 @@ export function SignUp({ onBack }: SignUpProps) {
     const usernameRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
     const confirmPasswordRef = useRef<HTMLInputElement>(null); 
+
+    useEffect(() => {
+        changeMusic('bg_menu', 1000);
+    }, [changeMusic]); 
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 

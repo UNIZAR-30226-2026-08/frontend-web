@@ -3,7 +3,7 @@ import { CoinToken } from '../objects/CoinToken';
 import { BillToken } from '../objects/BillToken';
 import { Tile } from '../objects/Tile';
 import { PlayerToken } from '../objects/PlayerToken';
-import { useAudio } from '@/context/AudioContext';
+import { playSoundEffect } from '@/context/AudioContext';
 
 export class AnimationManager {
 
@@ -45,9 +45,12 @@ export class AnimationManager {
 
     // Animación billetes (cuando los players ganan/pierden dinero)
     public BillAnimation(playerId: string, count: number = 6, textAmount?: string) {
-		//const { playSound } = useAudio();
+		const isNegative = textAmount?.startsWith('-');
+		if (textAmount) {
+			playSoundEffect(isNegative ? 'money_lose' : 'money_win');
+		}
+
         const hudPos = PlayerToken.hudPositions[playerId] || { x: this.scene.scale.width - 200, y: this.scene.scale.height / 2 };
-        const isNegative = textAmount?.startsWith('-');
         const color = isNegative ? '#ff4d4d' : '#22c55e';
 
         for (let i = 0; i < count; i++) {

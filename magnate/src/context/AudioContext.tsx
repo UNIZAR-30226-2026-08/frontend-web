@@ -376,3 +376,10 @@ export const useAudio = (): AudioContextType => {
 	}
 	return context;
 }
+
+// Outside the audio context for direct use in Phaser scenes and other non-React code
+export const playSoundEffect = (soundId: SoundId): number | undefined => {
+	const sound = audioRegistry[soundId];
+	if (!sound) return;
+	return sound.howl.play();
+}

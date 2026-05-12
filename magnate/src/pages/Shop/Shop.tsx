@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 // @ts-ignore 
 import { fetchShopItems, buyItem, fetchUserPieces } from '@/api/shopServices';
 import { useItemData } from '@/context/ItemContext'; 
+import { useAudio } from '@/context/AudioContext'; 
 
 const stripedBackgroundStyle = { backgroundImage: `
         linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
@@ -32,6 +33,11 @@ export function Shop() {
     
     const { token } = useAuth();
     const { getItemInfo, loading: isContextLoading } = useItemData();
+    const { changeMusic } = useAudio();
+
+    useEffect(() => {
+        changeMusic('bg_menu', 1000);
+    }, [changeMusic]);
 
     useEffect(() => {
         if (token && !isContextLoading) {

@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 // @ts-ignore 
 import { loginUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
+import { useAudio } from '@/context/AudioContext';
+import { useEffect } from 'react';
 
 
 interface LoginProps {
@@ -14,12 +16,17 @@ interface LoginProps {
 export function Login({ onBack }: LoginProps) {
     const navigate = useNavigate();
     const { login } = useAuth();
+    const { changeMusic } = useAudio();
 
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
 
     const usernameRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        changeMusic('bg_menu', 1000);
+    }, [changeMusic]);
 
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     

@@ -17,6 +17,7 @@ import { useItemData } from '@/context/ItemContext';
 import { fetchUserPieces } from '@/api/shopServices';
 // @ts-ignore 
 import { fetchProfile, changeUserPiece, fetchGamesPlayed, fetchGameSummary } from '@/api/userServices';
+import { useAudio } from '@/context/AudioContext'; 
 
 const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
 
@@ -88,6 +89,11 @@ export function Profile() {
     const [profile, setProfile] = useState<any>(null);
     const [userSkins, setUserSkins] = useState<any[]>([]);
     const [gameHistory, setGameHistory] = useState<any[]>([]);
+    const { changeMusic } = useAudio();
+
+    useEffect(() => {
+        changeMusic('bg_menu', 1000);
+    }, [changeMusic]);
 
     useEffect(() => {
         if (token) {

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { SettingsModal } from "@/components/layout/SettingsModal";
+import { useAudio } from "@/context/AudioContext";
+import { useEffect } from "react";
 
 const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, sub?: string, pos: string, iconUrl: string }, gridImageUrl: string }) => (
   <>
@@ -33,8 +35,13 @@ const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, sub?: stri
 
 export function Home() {
   const navigate = useNavigate();
+  const { changeMusic } = useAudio();
   const gridImageUrl = "/images/bg_city_white.jpg";
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    changeMusic('bg_menu', 1000);
+  }, [changeMusic]);
 
   const gridButtonEffect = `
     transition-all duration-300 ease-out

@@ -17,6 +17,7 @@ export class GameModel {
 	public parking_money : number = 0;
 	public current_turn : number = 0;	// round number
     public firstPlayerId: string | null = null; // quien ha empezado
+	public isModelReady: boolean = false; // sincronization flag for game entering
 
     public isFinished: boolean = false;
     public boardProperties: Record<string, PropertyModel> = {}; // Record es como un diccionario https://typescriptutorial.com/es/diccionarios/
@@ -27,6 +28,8 @@ export class GameModel {
 
 	public auction_task_id : string | null = null;
 	public proposal : string | null = null;
+	
+	private syncMutex: Promise<void> = Promise.resolve();
 
     public updateState(new_state: GameState) { 
 		this.active_phase_player = new_state.active_phase_player;
@@ -171,6 +174,8 @@ export class GameModel {
                 }
             }
         });
+		
+		this.markAsReady();
     }
 
 	// ---- FUNCIONES PLAYERS ----
@@ -445,4 +450,15 @@ export class GameModel {
     public clearFantasyEvent(): void {
         this.currentFantasyEvent = null;
     }
+
+	// Avoid race conditions
+	public async syncStateUpdate(updateFn: () => Promise<void>): Promise<void> {
+		this.syncMutex = this.syncMutex.then(updateFn);
+		await this.syncMutex;
+	}
+
+	// Check when model is created
+	public markAsReady(): void {
+		this.isModelReady = true;
+	}
 }

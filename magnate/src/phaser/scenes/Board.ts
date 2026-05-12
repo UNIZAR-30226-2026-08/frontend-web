@@ -93,10 +93,19 @@ export class Board extends Phaser.Scene {
         this.createTurnsDisplay();
 
         const currentModel = this.GamelogicManager.model;
-        console.log("BOARD CREATE: Comprobando jugadores iniciales", this.GamelogicManager.model.orderedPlayers);
-        // Check if GameLogicManager already has data
-        if (currentModel && currentModel.orderedPlayers && currentModel.orderedPlayers.length > 0) {
+        console.log("BOARD CREATE: Comprobando modelo", {
+            isReady: currentModel.isModelReady,
+            orderedPlayers: currentModel.orderedPlayers.length,
+            hasPlayers: Object.keys(currentModel.players).length > 0
+        });
+        
+        if (currentModel && currentModel.isModelReady && currentModel.orderedPlayers.length > 0) {
+            console.log("Board: Model was already ready, syncing players");
             this.syncPlayers(this.GamelogicManager.model);
+            this.syncPropertiesOwnership(this.GamelogicManager.model);
+            this.syncBuildingsAndMortgages(this.GamelogicManager.model);
+        } else {
+            console.log("Board: Waiting for game-fully-initialized event");
         }
     }
 
@@ -268,12 +277,47 @@ export class Board extends Phaser.Scene {
     // --- EVENT BUS  ---
     private setupEventBus() {
         
-        EventBus.on('model-updated', async (gameModel: any) => {
-            // Sincronizamos quién está en la partida (Crear/Actualizar nombres)
+        EventBus.on('game-fully-initialized', async (gameModel: any) => {
+            console.log("Board: game-fully-initialized received");
+            
+            // Validación: asegurarse de que el modelo está realmente listo
+            if (gameModel.orderedPlayers.length === 0) {
+                console.warn("Board: Model not ready yet (no players)");
+                return;
+            }
+
+            // Primera sincronización con validación
             this.syncPlayers(gameModel);
             this.syncPropertiesOwnership(gameModel);
             this.syncBuildingsAndMortgages(gameModel);
-            //this.syncPlayerPositions(gameModel);
+
+            const parkingTile = this.tiles.find(t => t instanceof ParkingTile) as ParkingTile;
+            if (parkingTile) {
+                const currentParkingMoney = gameModel.getParkingMoney();
+                parkingTile.updatePrice(currentParkingMoney);
+            }
+
+            const currentTurnId = gameModel.getCurrentTurnPlayerId();
+            
+            if (!gameModel.firstPlayerId && currentTurnId) {
+                gameModel.firstPlayerId = currentTurnId;
+            }
+
+            this.lastTurnPlayerId = currentTurnId;
+
+            // Iniciar el primer turno después de animación
+            this.time.delayedCall(800, async () => {
+                await this.handleNewTurn(gameModel);
+            });
+        });
+
+        EventBus.on('game-state-updated', async (gameModel: any) => {
+            console.log("Board: game-state-updated received");
+            
+            // Sincronizaciones incrementales
+            this.syncPlayers(gameModel);
+            this.syncPropertiesOwnership(gameModel);
+            this.syncBuildingsAndMortgages(gameModel);
 
             const parkingTile = this.tiles.find(t => t instanceof ParkingTile) as ParkingTile;
             if (parkingTile) {
@@ -290,20 +334,18 @@ export class Board extends Phaser.Scene {
                     gameModel.current_turn++;
                 }
                 this.updateTurns(gameModel.current_turn, 20);
-
-                // banner de nuevo turno
-                const isFirstTurn = this.lastTurnPlayerId === null;
                 this.lastTurnPlayerId = currentTurnId;
-    
-                // Algo de tiempo antes del primer turno
-                if (isFirstTurn) {
-                    this.time.delayedCall(800, async () => {
-                        await this.handleNewTurn(gameModel);
-                    });
-                }
+                
+                // banner de nuevo turno
+                await this.handleNewTurn(gameModel);
             } else {
                 this.handlePhaseLogic(gameModel);
             }
+        });
+
+        EventBus.on('model-updated', async (gameModel: any) => {
+            // Solo sincronizar fase si es necesario
+            this.handlePhaseLogic(gameModel);
         });
 
         EventBus.on('trigger-dice-roll', (data: any) => {
@@ -784,9 +826,11 @@ export class Board extends Phaser.Scene {
 
         await this.announceTurn(bannerText, playerColor);
         this.showUI();
+        
+        EventBus.emit('turn-announcement-finished', gameModel);
+        
         // Después de enseñar banner, empieza la fase
         this.handlePhaseLogic(gameModel);
-        // EventBus.emit('turn-announcement-finished', gameModel);
     }
 
     private handlePhaseLogic(gameModel: any) {

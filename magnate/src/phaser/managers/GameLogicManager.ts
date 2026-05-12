@@ -28,10 +28,14 @@ export class GameLogicManager {
 			if (!this.populated) {
                 await this.model.populate(new_state);
 				this.populated = true;
+				console.log("Manager: Model fully populated, emitting game-fully-initialized");
+				EventBus.emit('game-fully-initialized', this.model);
 			} else {
-            	this.model.updateState(new_state);
+            	await this.model.syncStateUpdate(async () => {
+					this.model.updateState(new_state);
+				});
+				EventBus.emit('game-state-updated', this.model);
 			}
-            EventBus.emit('model-updated', this.model);
         });
 
         // Response general
@@ -59,10 +63,10 @@ export class GameLogicManager {
             if(isNewTurn) {
                 console.log(`Cambio de Turno: turno del jugador ${data.active_turn_player}`);
                 EventBus.emit('view-new-turn', this.model);
-                setTimeout(() => {
-                    this.updateHUDControls(data.phase);
-                    EventBus.emit('model-updated', this.model);
-                }, 2800);
+				EventBus.once('turn-announcement-finished', () => {
+					this.updateHUDControls(data.phase);
+					EventBus.emit('model-updated', this.model);
+				});
 
             } else if (isNewPhase) {
                 console.log(`Cambio de Fase: pasamos a ${data.phase}`);
