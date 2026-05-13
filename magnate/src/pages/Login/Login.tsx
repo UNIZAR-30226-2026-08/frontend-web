@@ -7,6 +7,9 @@ import { loginUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
 import { useAudio } from '@/context/AudioContext';
 import { useEffect } from 'react';
+// @ts-ignore 
+import { fetchActiveGame } from '@/api/userServices';
+import { EventBus } from '@/EventBus';
 
 
 interface LoginProps {
@@ -24,6 +27,16 @@ export function Login({ onBack }: LoginProps) {
     const usernameRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
 
+	const [activeGame, setActiveGame] = useState(null);
+	
+	useEffect(() => {
+	  const handleEnterGame = () => {
+	  	navigate('/phaser-game');
+	  };
+	  EventBus.on('you-may-now-enter-the-game', handleEnterGame);
+	}, [navigate]);
+
+
     useEffect(() => {
         changeMusic('bg_menu', 1000);
     }, [changeMusic]);
@@ -39,8 +52,19 @@ export function Login({ onBack }: LoginProps) {
                 if (data && data.tokens && data.user && data.user.pk) {
                     login(data.tokens.access, data.tokens.refresh, String(data.user.pk));
                 }
-                navigate('/home');
-            },
+				if(data.tokens.access) {
+					fetchActiveGame(data.tokens.access, (res: any) => {
+	        			setActiveGame(res);
+	  	  				if (res.active_game !== null) { 
+	  	  				 	console.log("No nulo:", res.active_game);
+	  	  					EventBus.emit('handle-enter-game', res.active_game);
+	  	  				}		
+						else {
+            	    		navigate('/home');
+						}
+	      			});
+				}             
+			},
             // (error : any) => {
             //     const pInput = passwordRef.current;
             //     if (pInput) {

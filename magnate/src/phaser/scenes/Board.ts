@@ -292,7 +292,7 @@ export class Board extends Phaser.Scene {
             this.syncPropertiesOwnership(gameModel);
             this.syncBuildingsAndMortgages(gameModel);
 
-            const parkingTile = this.tiles.find(t => t instanceof ParkingTile) as ParkingTile;
+		    const parkingTile = this.tiles.find(t => t instanceof ParkingTile) as ParkingTile;
             if (parkingTile) {
                 const currentParkingMoney = gameModel.getParkingMoney();
                 parkingTile.updatePrice(currentParkingMoney);

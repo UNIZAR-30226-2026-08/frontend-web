@@ -124,8 +124,8 @@ export class GameModel {
 					this.players[playerId] = player;
 
 					this.updatePlayerPosition(playerId, new_state.positions[playerId]);
-                    
-                    resolve();
+
+					resolve();
                 });
             });
         });

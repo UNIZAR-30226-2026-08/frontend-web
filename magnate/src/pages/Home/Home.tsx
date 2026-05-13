@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { SettingsModal } from "@/components/layout/SettingsModal";
 import { useAudio } from "@/context/AudioContext";
 // @ts-ignore
-import { fetchActiveGame } from '@/api/userServices';
-import { EventBus } from '@/EventBus';
 
 const ModeContent = ({ mode, gridImageUrl }: { mode: { title: string, sub?: string, pos: string, iconUrl: string }, gridImageUrl: string }) => (
   <>
@@ -42,26 +40,6 @@ export function Home() {
   const { token } = useAuth();
   const gridImageUrl = "/images/bg_city_white.jpg";
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [activeGame, setActiveGame] = useState(null);
-
-  useEffect(() => {
-	const handleEnterGame = () => {
-		navigate('/phaser-game');
-	};
-	EventBus.on('you-may-now-enter-the-game', handleEnterGame);
-  }, [navigate]);
-
-  useEffect(() => {
-    if (token) {
-        fetchActiveGame(token, (data: any) => {
-          setActiveGame(data);
-		  if (data.active_game !== null) { 
-			console.log("No nulo:", data.active_game);
-		  	EventBus.emit('handle-enter-game', data.active_game);
-		  }
-        });
-    }
-  }, []);
 
   useEffect(() => {
     changeMusic('bg_menu', 1000);
