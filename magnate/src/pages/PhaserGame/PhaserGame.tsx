@@ -131,6 +131,14 @@ export const PhaserGame = () => {
         };
     }, []);
 
+    // Cleanup game state when leaving the page
+    useEffect(() => {
+        return () => {
+            console.log("PhaserGame component unmounting - calling handle-leave-game");
+            EventBus.emit('handle-leave-game');
+        };
+    }, []);
+
     return (
         <div className="relative flex items-center justify-center w-screen h-screen overflow-hidden bg-[var(--color-black)]">
             <div 

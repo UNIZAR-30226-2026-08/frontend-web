@@ -21,6 +21,10 @@ export class DiceManager {
         EventBus.on('jail-re-enable-selection', this.reEnableJailInteraction, this);
     }
 
+    public async init(): Promise<void> {
+        // Aquí irá cualquier inicialización asincrónica que sea necesaria
+    }
+
     public handleDiceRoll(
         tiles: Tile[], 
         players: { model: PlayerModel, token: PlayerToken }[], 

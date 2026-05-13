@@ -38,6 +38,10 @@ export class TileLogicManager {
         this.scene = scene;
     }
 
+    public async init(): Promise<void> {
+        // Aquí irá cualquier inicialización asincrónica que sea necesaria
+    }
+
     public checkTileLogic(player: PlayerModel, tile: Tile, allPlayers: { model: PlayerModel, token: any }[]) {
         const gameModel = GameLogicManager.getInstance().model;
         const config = tile.tileConfig;

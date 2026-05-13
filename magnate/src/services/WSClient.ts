@@ -266,7 +266,8 @@ export const WSClient = ( ) => {
 							playersIdsRef.current = gameStateData.players;
 						}
                         EventBus.emit('new-game-state', gameStateData);
-						if (!inside) {
+						if (!insideRef.current) {
+							insideRef.current = true;
 							EventBus.emit('you-may-now-enter-the-game');
 							setInsideFlag(true);
 						}
@@ -350,8 +351,8 @@ export const WSClient = ( ) => {
 		const validGameRoutes = ['/lobby', '/phaser-game', '/loading'];
 		const isGameRoute = validGameRoutes.some(route => location.pathname.includes(route));
 		if (!isGameRoute && socket.current && socket.current.readyState === WebSocket.OPEN) {
-			console.log("Out of game");
-			closeExistingSocket(4100);
+			console.log("Out of game - calling handle-leave-game");
+			EventBus.emit('handle-leave-game');
 		} 
 		else if (!hasAttemptedReconnection.current) {
 			hasAttemptedReconnection.current = true;
@@ -385,6 +386,8 @@ export const WSClient = ( ) => {
 			closeExistingSocket(4102);
 		} );
 		EventBus.on('handle-leave-game', () => { 
+			console.log("EVENTBUS.ON HANDLE LEAVE GAME");
+			EventBus.emit('clean-game-state');
 			sessionStorage.removeItem('activeGameId');
 			insideRef.current = false;
 			setInsideFlag(false);

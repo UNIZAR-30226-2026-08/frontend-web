@@ -8,6 +8,7 @@ export class GameLogicManager {
 	private populated: boolean = false;
     public model: GameModel;
     private lastPendingProposal: any = null;
+    private currentGameId: string | null = null;
 
     private constructor() {
         this.model = new GameModel();
@@ -21,10 +22,24 @@ export class GameLogicManager {
         return GameLogicManager.instance;
     }
 
+    /**
+     * Reset the manager state for a new game (reconnection)
+     * Called when switching to a different game
+     */
+    public resetForNewGame(): void {
+        this.populated = false;
+        this.currentGameId = null;
+        this.lastPendingProposal = null;
+        this.model = new GameModel();
+        console.log("Manager: Reset for new game");
+    }
+
     private setupCentralListeners() {
         // -- Game State
         EventBus.on('new-game-state', async (new_state: GameState) => {
             console.log("Manager: Received new state", new_state.id);
+            
+            this.currentGameId = new_state.id;
 			if (!this.populated) {
                 await this.model.populate(new_state);
 				this.populated = true;
@@ -36,6 +51,10 @@ export class GameLogicManager {
                 EventBus.emit('game-state-updated', this.model);
 			}
         });
+
+		EventBus.on('clean-game-state', () => {
+			this.resetForNewGame();
+		});
 
         EventBus.on('board-ready', () => {
             console.log("MANAGER: Phaser listo, Comprobando estado");

@@ -9,6 +9,10 @@ export class AnimationManager {
 
     constructor(private scene: Phaser.Scene) {}
 
+    public async init(): Promise<void> {
+        // Aquí irá cualquier inicialización asincrónica que sea necesaria
+    }
+
     
     // Animación monedas (para parking)
     public CoinAnimation(tile: Tile, playerId?: string,  players?: { model: any, token: PlayerToken }[], count: number = 10) {

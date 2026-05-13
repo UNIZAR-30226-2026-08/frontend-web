@@ -85,8 +85,8 @@ export class Board extends Phaser.Scene {
 
     } 
 
-    create() { // crear escena
-        this.initManagers();
+    async create() { // crear escena
+        await this.initManagers();
         this.createBackground();
         this.createBoard();
         this.setupEventBus();
@@ -110,11 +110,18 @@ export class Board extends Phaser.Scene {
         }
     }
 
-    private initManagers() {
+    private async initManagers() {
         this.animationManager = new AnimationManager(this);
+        await this.animationManager.init();
+        
         this.diceManager = new DiceManager(this);
+        await this.diceManager.init();
+        
         this.tileLogicManager = new TileLogicManager(this);
+        await this.tileLogicManager.init();
+        
         this.cameraController = new CameraController(this);
+        await this.cameraController.init();
     }
 
     // private createBackground() { // Para video
@@ -792,7 +799,7 @@ export class Board extends Phaser.Scene {
             const existingPlayer = this.players.find(p => p.model.id === playerId);
 
             if (!existingPlayer) {
-                this.createPlayer(playerId, pData.name, index, pData.balance);
+                this.createPlayer(playerId, pData.name, index, pData.balance, pData.currentTileId);
                 newPlayersAdded = true;
             } else {
                 // Actualizamos solo datos lógicos
@@ -965,8 +972,8 @@ export class Board extends Phaser.Scene {
         });
     }
 
-    createPlayer(id: string, name: string, colorIndex: number, balance: number) {
-        const startTile = this.tiles[0];
+    createPlayer(id: string, name: string, colorIndex: number, balance: number, tileId: string) {
+		const startTile = this.tiles.find(t => t.tileConfig.id === tileId)!;
         
         const cIndex = colorIndex % this.colorPalette.length;
         const assignedColor = this.colorPalette[cIndex];

@@ -32,6 +32,8 @@ export class GameModel {
 	private syncMutex: Promise<void> = Promise.resolve();
 
     public updateState(new_state: GameState) { 
+		console.log("ENTRO A UPDATE");
+
 		this.active_phase_player = new_state.active_phase_player;
         this.active_turn_player = new_state.active_turn_player;
         this.phase = new_state.phase;
@@ -78,6 +80,7 @@ export class GameModel {
 	}
 
 	public async populate(new_state: GameState) {
+		console.log("ENTRO A POPULATE");
 		
 		// Initial setting
 		this.gameId = new_state.id;
@@ -105,33 +108,7 @@ export class GameModel {
 			this.proposal = new_state.proposal;
 		}
 
-		const colorPalette = boardConfig.playerColors.map(c => parseInt(c.replace('#', '0x')));
-
-		const peticiones = this.orderedPlayers.map((playerId, index) => {
-            return new Promise<void>((resolve) => {
-                
-                fetchUserNamePiece(playerId, (data : any) => {
-                    // En cuanto llega el username, creamos el PlayerModel con el nombre real y su color
-                    const finalName = (data && data.username) ? data.username : "Jugador";
-					const playerColor = colorPalette[index % colorPalette.length];
-                    const playerMoney = new_state.money[playerId]
-                    const player = new PlayerModel(playerId, finalName, playerColor, playerMoney);
-
-                    player.currentTileId = String(new_state.positions[playerId]).padStart(3, '0');
-                    player.jailRemainingTurns = new_state.jail_remaining_turns[playerId] || 0;
-                    player.properties = new_state.property_relationships.filter(p => String(p.owner) === playerId).map(p => p.square);
-                    
-					this.players[playerId] = player;
-
-					this.updatePlayerPosition(playerId, new_state.positions[playerId]);
-
-					resolve();
-                });
-            });
-        });
-		await Promise.all(peticiones);
-
-        boardConfig.tiles.forEach((tile: any) => {
+		boardConfig.tiles.forEach((tile: any) => {
             // Solo procesamos casillas de tipo propiedad, servidor o puente
             if (!["property", "server", "bridge"].includes(tile.type)) return;
 
@@ -159,7 +136,33 @@ export class GameModel {
             this.boardProperties[propId] = model;
         });
 
-		new_state.property_relationships.forEach((p: any) => {
+		const colorPalette = boardConfig.playerColors.map(c => parseInt(c.replace('#', '0x')));
+
+		const peticiones = this.orderedPlayers.map((playerId, index) => {
+            return new Promise<void>((resolve) => {
+                
+                fetchUserNamePiece(playerId, (data : any) => {
+                    // En cuanto llega el username, creamos el PlayerModel con el nombre real y su color
+                    const finalName = (data && data.username) ? data.username : "Jugador";
+					const playerColor = colorPalette[index % colorPalette.length];
+                    const playerMoney = new_state.money[playerId]
+                    const player = new PlayerModel(playerId, finalName, playerColor, playerMoney);
+
+                    player.currentTileId = String(new_state.positions[playerId]).padStart(3, '0');
+                    player.jailRemainingTurns = new_state.jail_remaining_turns[playerId] || 0;
+                    player.properties = new_state.property_relationships.filter(p => String(p.owner) === playerId).map(p => p.square);
+                    
+					this.players[playerId] = player;
+
+					this.updatePlayerPosition(playerId, new_state.positions[playerId]);
+
+					resolve();
+                });
+            });
+        });
+		await Promise.all(peticiones);
+
+        new_state.property_relationships.forEach((p: any) => {
             const propId = String(p.square).padStart(3, '0');
             const property = this.boardProperties[propId];
             
@@ -219,6 +222,7 @@ export class GameModel {
 
 	public getPlayerPosition(playerId: string): string {
 		const player = this.getPlayer(playerId);
+		console.log("El player ",playerId," que es ",player, " está en ",player?.currentTileId);
         return player?.currentTileId ?? "000";
     }
 	
