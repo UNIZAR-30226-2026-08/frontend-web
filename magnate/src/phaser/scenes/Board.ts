@@ -692,8 +692,7 @@ export class Board extends Phaser.Scene {
 
         });
 
-        this.events.on('shutdown', () => { 
-
+        this.events.on('shutdown', () => {
             EventBus.off('model-updated');
             EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
             EventBus.off('view-animate-path');
@@ -715,6 +714,7 @@ export class Board extends Phaser.Scene {
             EventBus.off('request-next-phase');
             this.tweens.killAll();
             this.time.removeAllEvents();
+            
 
             this.tiles.forEach(tile => tile.destroy());
             this.players.forEach(p => p.token.destroy());

@@ -61,7 +61,10 @@ export const FantasyOverlay = () => {
 
         setHasChosen(true);
         
-        EventBus.emit('action-choose-card', { revealed: isRevealedChoice });
+        EventBus.emit('action-choose-card', { 
+            player: cardData.player,
+            revealed: isRevealedChoice 
+        });
 
         if (isRevealedChoice) {
             // Caso Izquierda:
@@ -102,9 +105,9 @@ export const FantasyOverlay = () => {
                 
                     {/* CARTA INTERACTIVA */}
                     <div className={`flex flex-col items-center gap-4 cursor-pointer transition-all duration-300 [perspective:1000px]
-                                    ${!isRevealed && !hasChosen ? 'hover:scale-105 hover:drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]' : ''}
-                                    ${hasChosen && isRevealed ? 'pointer-events-none' : ''}`}
-                                    onClick={() => handleSelect(false) } >
+                        ${!isRevealed && !hasChosen ? 'hover:scale-105 hover:drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]' : ''}
+                        ${hasChosen && isRevealed ? 'pointer-events-none' : ''}`}
+                        onClick={() => handleSelect(false) } >
                         <div className="flex flex-col items-center gap-4">
 
                             <GameCard 
