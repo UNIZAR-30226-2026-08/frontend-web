@@ -212,7 +212,7 @@ export class GameLogicManager {
             console.log("El mensajito", data);
             
             const senderName = data.user;
-            const messageText = data.msg?.text || "";
+            const messageText = data.msg || "";
 
             const player = Object.values(this.model.players).find(p => p.name === senderName);
             

@@ -251,7 +251,7 @@ export const WSClient = ( ) => {
 					if (data.game === gameIdRef.current) {
 						const chatMessage : ChatMessageContent = {
 							"user": data.user,
-							"msg":  data.msg
+							"msg":  data.msg.text
 						};
 						EventBus.emit('new-chat-message',chatMessage);
 					} else if (VERBOSE) {
