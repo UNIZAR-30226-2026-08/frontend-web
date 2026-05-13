@@ -96,7 +96,6 @@ export class GameLogicManager {
             }
             console.log("Response general:", data);
             console.log("Modelo actual:", this.model);
-
         });
 
         EventBus.on('report-response-throw-dices', (data: any) => {
@@ -166,6 +165,8 @@ export class GameLogicManager {
                             }, 1800); 
                         });
                     }
+                } else {
+                    this.model.streak = 0;
                 }
             } else {
                 this.model.streak = 0;
@@ -719,7 +720,6 @@ export class GameLogicManager {
         const me = this.model.getPlayer(myId);
         
         if (phase === 'roll_the_dices') {
-            
             if (isMe && (me?.currentTileId === '201')) {
                 console.log("Manager: estoy en la carcel");
                 me.jailRemainingTurns += 1;
