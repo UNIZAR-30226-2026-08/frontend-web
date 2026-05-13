@@ -28,11 +28,12 @@ export class GameLogicManager {
 			if (!this.populated) {
                 await this.model.populate(new_state);
 				this.populated = true;
-                EventBus.emit('model-updated', this.model);
+                console.log("Manager: Players fully loaded, emitting game-fully-initialized");
+                EventBus.emit('game-fully-initialized', this.model);
                 EventBus.emit('view-new-turn', this.model);
 			} else {
             	this.model.updateState(new_state);
-                EventBus.emit('model-updated', this.model);
+                EventBus.emit('game-state-updated', this.model);
 			}
         });
 
@@ -42,8 +43,8 @@ export class GameLogicManager {
             // console.log("orderedplayers",this.model.orderedPlayers);
             
             if (this.populated && this.model.orderedPlayers.length > 0) {
-                console.log("MANAGER: Enviando estado inicial a phaserr");
-                EventBus.emit('model-updated', this.model);
+                console.log("MANAGER: Enviando estado inicial a phaser");
+                EventBus.emit('game-fully-initialized', this.model);
                 EventBus.emit('view-new-turn', this.model);
             }
         });

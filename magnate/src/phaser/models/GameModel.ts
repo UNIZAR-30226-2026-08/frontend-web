@@ -122,6 +122,8 @@ export class GameModel {
                     player.properties = new_state.property_relationships.filter(p => String(p.owner) === playerId).map(p => p.square);
                     
 					this.players[playerId] = player;
+
+					this.updatePlayerPosition(playerId, new_state.positions[playerId]);
                     
                     resolve();
                 });
