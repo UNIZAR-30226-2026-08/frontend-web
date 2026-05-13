@@ -196,7 +196,7 @@ export function Profile() {
                     </> 
                 ) : (
                     <>
-                        <StatsSection title="Estadísticas de partidas" stats={{ "Partidas Jugadas": profile?.num_played_games || 0, "Victorias": profile?.num_won_games || 0, "Puntos Totales": profile?.points || 0 }} />
+                        <StatsSection title="Estadísticas de partidas" stats={{ "Partidas Jugadas": profile?.num_played_games || 0, "Victorias": profile?.num_won_games || 0, "Puntos Totales": profile?.elo || 0 }} />
                         <GameHistSection title="Historial de partidas" items={gameHistory} />
                     </>
                 )}

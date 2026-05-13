@@ -72,7 +72,7 @@ export function Lobby() {
 
         	const newPlayers = [...prevPlayers];
         	//const newBot = { title: `bot ${index + 1}`, bgImg:gridImageUrl , isBot:true, ready:false };
-        	const newBot = { title: "", bgImg:gridImageUrl , isBot:true, ready:false };
+        	const newBot = { title: "", bgImg:gridImageUrl , isBot:true, ready:true };
         	newPlayers[index] = newBot;
 			return newPlayers;
 		});
