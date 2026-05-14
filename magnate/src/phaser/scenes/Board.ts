@@ -396,7 +396,9 @@ export class Board extends Phaser.Scene {
                     const targetTile = this.tiles.find(t => t.tileConfig.id === tileId);
                     return targetTile ? { x: targetTile.x, y: targetTile.y } : null; 
                 }).filter((coord: { x: number, y: number } | null): coord is { x: number, y: number } => coord !== null);
-        
+
+                const isMe = this.GamelogicManager.model.isMyTurn();
+
                 this.cameraController.followToken(playerToMove.token, 2.2, () => {
                     playerToMove.token.moveToCoords(pathCoordinates, () => {
                         // Actualizamos los jugadores en la casilla que abandona
@@ -409,7 +411,17 @@ export class Board extends Phaser.Scene {
                         // Actualizamos los jugadores en la casilla a la que llega
                         this.organizeTokensOnTile(newTileId);
         
+                        this.time.delayedCall(2000, () => {
+                            if (!isMe && newTileId === "020") {
+                                EventBus.emit('view-teleport-player', {
+                                    playerId: playerToMove.model.id,
+                                    targetTileId: "201"
+                                });
+                            }
+                        });
+
                         this.time.delayedCall(1000, () => { });
+
                         EventBus.emit('token-fin');
                     });
                 });
