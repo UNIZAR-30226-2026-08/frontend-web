@@ -412,9 +412,7 @@ export class Board extends Phaser.Scene {
                         this.organizeTokensOnTile(newTileId);
         
                         this.time.delayedCall(2000, () => {
-                            console.log("Tiene que salir");
                             if (!isMe && newTileId === "020") {
-                                console.log("Deberia salir");
                                 EventBus.emit('view-teleport-player', {
                                     playerId: playerToMove.model.id,
                                     targetTileId: "201"
