@@ -147,7 +147,6 @@ export class GameLogicManager {
             }
             console.log("Response general:", data);
             console.log("Modelo actual:", this.model);
-
         });
 
         EventBus.on('report-response-throw-dices', (data: any) => {
@@ -217,6 +216,8 @@ export class GameLogicManager {
                             }, 1800); 
                         });
                     }
+                } else {
+                    this.model.streak = 0;
                 }
             } else {
                 this.model.streak = 0;
@@ -263,7 +264,7 @@ export class GameLogicManager {
             console.log("El mensajito", data);
             
             const senderName = data.user;
-            const messageText = data.msg?.text || "";
+            const messageText = data.msg || "";
 
             const player = Object.values(this.model.players).find(p => p.name === senderName);
             
@@ -770,7 +771,6 @@ export class GameLogicManager {
         const me = this.model.getPlayer(myId);
         
         if (phase === 'roll_the_dices') {
-            
             if (isMe && (me?.currentTileId === '201')) {
                 console.log("Manager: estoy en la carcel");
                 me.jailRemainingTurns += 1;
@@ -786,38 +786,40 @@ export class GameLogicManager {
                 return;
             }
             EventBus.emit('update-turn-controls', isMe);
+
         } else if (phase === 'business') {
             const tile = this.model.getPlayerPosition(this.model.myId);
             console.log("Entrando en business");
+            const controls = {
+                roll: false, 
+                administer: isMe, 
+                trade: isMe, 
+                finishTurn: isMe, 
+                bankrupt: true 
+            };
+            EventBus.emit('update-controls-state', controls);
             // Si me muevo a otra casilla de tranvía, no vuelvo a interactuar -> tienen que habilitarse los botones de business
             if (tile in ["010", "030", "100", "107"]) {
-                EventBus.emit('update-controls-state', {
-                    roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
-                });
                 return;
-                
             } 
             if ((tile in this.model.boardProperties) && this.model.boardProperties[tile].ownerId !== null) {
                 if (this.model.boardProperties[tile].ownerId === myId || this.model.boardProperties[tile].isMortgaged) {
                     console.log("En business: es mi propiedad o está hipotecada");
-                    EventBus.emit('update-controls-state', {
-                        roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
-                    });
+                    // console.log("quien soy", isMe);
+                    // EventBus.emit('update-controls-state', {
+                    //     roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
+                    // });
                     EventBus.emit('model-updated', this.model);
                     return; // es propiedad/server/puente y tiene dueño -> sale porque tiene que ir al overlay de pagar primero
                 } else { // propiedad que tiene dueño (no soy yo) 
-                    EventBus.emit('update-controls-state', {
-                        roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
-                    });
+                    // EventBus.emit('update-controls-state', {
+                    //     roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
+                    // });
                     EventBus.emit('model-updated', this.model);
                     console.log("Manager: Casilla de otro jugador");
                     return;
                 }
             }
-
-            EventBus.emit('update-controls-state', {
-                roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
-            });
         } else if (phase === 'auction') {
             console.log("Empieza subastaaaa!!");
             EventBus.emit('update-controls-state', {
@@ -972,48 +974,60 @@ export class GameLogicManager {
             }
             // --- EVENTOS DE MOVIMIENTO : carcel ---
             case 'goToJail':
-                if (activePlayer) {
-                    activePlayer.jailRemainingTurns = 1;
+                if(activePlayer && activePlayerId === myId) {
+                    this.model.updatePlayerPosition(activePlayerId, '201');
+                    activePlayer.jailRemainingTurns = 0;
                     activePlayer.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: activePlayerId });
+                } else {
+                    Object.keys(this.model.players).forEach(playerId => {
+                        const newPos = this.model.getPlayerPosition(playerId);
+                        EventBus.emit('view-teleport-player', {
+                            playerId: playerId,
+                            targetTileId: newPos
+                        });
+                    });
                 }
+               
                 break;
             
             case 'sendToJail':
                 const victimId = String(result?.target_player);
                 const victim = this.model.getPlayer(victimId);
+                
                 if (victim) {
-                    victim.jailRemainingTurns = 1;
+                    this.model.updatePlayerPosition(victimId, '201');
+                    victim.jailRemainingTurns = 0;
                     victim.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: victimId });
+
+                    EventBus.emit('show-toast', { 
+                        message: `${activePlayer?.name} ha enviado a ${victim.name} a Secretaría`,
+                        duration: 3000 
+                    });
+                } else {
+                    Object.keys(this.model.players).forEach(playerId => {
+                        const newPos = this.model.getPlayerPosition(playerId);
+                        EventBus.emit('view-teleport-player', {
+                            playerId: playerId,
+                            targetTileId: newPos
+                        });
+                    });
                 }
                 break;
             
-            case 'everybodyToJail':
+            case 'everybodyToJail': // mueve bien
                 Object.values(this.model.players).forEach(p => {
-                    p.jailRemainingTurns = 1;
+                    p.jailRemainingTurns = 0;
                     p.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: p.id });
                 });
                 break;
             
-            // --- EVENTOS DE MOVIMIENTO ---
+            // --- EVENTOS DE MOVIMIENTO: CHECK ---
             case 'goToStart':
             case 'moveAnywhereRandom':
-                const newPos = this.model.getPlayerPosition(activePlayerId);
-                EventBus.emit('view-teleport-player', {
-                    playerId: activePlayerId,
-                    targetTileId: newPos
-                });
-                break;
             case 'moveOpponentAnywhereRandom':
-                const pos = this.model.getPlayerPosition(result?.target_player);
-                EventBus.emit('view-teleport-player', {
-                    playerId: result?.target_player,
-                    targetTileId: pos
-                });
-                break;
-
             case 'magnetism':
             case 'shufflePositions':
                 Object.keys(this.model.players).forEach(playerId => {

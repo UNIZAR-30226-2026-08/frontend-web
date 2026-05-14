@@ -116,6 +116,7 @@ export class EventManager {
                                 buyPrice: prop.buyPrice,
                                 rentPrices: prop.rentPrices,
                                 isMortgaged: prop.isMortgaged,
+                                isSpecial: prop.group === 13 || prop.group === 14
                             },
                         });
                     });

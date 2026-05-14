@@ -41,6 +41,15 @@ export const ServiceOverlay = () => {
         closeOverlay();
     };
 
+    const handlePay = () => {
+        EventBus.emit('save-pending-bill', {
+            playerId: currentPlayerId,
+            amount: `-${propData.currentRent}`, 
+            numBill: 5
+        });
+        closeOverlay();
+    };
+
     const closeOverlay = () => {
         EventBus.emit('close-overlay');
         setPropData(null);
@@ -81,7 +90,7 @@ export const ServiceOverlay = () => {
             	        front={<ServiceCardContent data={propData} />}
             	        back={<div />} 
             	    />
-	                <Button onClick={closeOverlay} 
+	                <Button onClick={handlePay} 
 	                        className={`px-8 py-3 bg-[var(--color-primary)] text-[var(--color-text)] font-black uppercase rounded-full ${bouncyAnimation}`}>
 	                            Pagar {propData.currentRent}M
 	                </Button>

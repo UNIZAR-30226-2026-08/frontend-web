@@ -426,8 +426,15 @@ export class Board extends Phaser.Scene {
             
             console.log(`[Token Fin] Verificando fase: ${gameModel.phase}`);
 
-            if (gameModel.phase === 'choose_fantasy' || gameModel.phase === 'management' || gameModel.phase === 'business') {
+            if (gameModel.phase === 'choose_fantasy' || gameModel.phase === 'management') {
                 console.log("Entro en token-tile con phase:",gameModel.phase);
+                this.interactWithTile(gameModel);
+
+            } else if (gameModel.phase === 'business') {
+                console.log("Fase Business: Interactuando y asegurando UI visible");
+                this.diceManager.clearDice();
+                this.showUI();
+                // this.diceManager.clearDice(); // Por si acaso sigue activo
                 this.interactWithTile(gameModel);
 
             } else if (gameModel.phase === 'liquidation') {
@@ -436,6 +443,7 @@ export class Board extends Phaser.Scene {
                     this.interactWithTile(gameModel);
                 }
             } else if (gameModel.streak > 0 && gameModel.phase === 'roll_the_dices') {
+                this.diceManager.clearDice();
                 if (!isMe) {
                     this.time.delayedCall(800, () => {
                         console.log("Volviendo a la vista de origen...");
@@ -457,6 +465,8 @@ export class Board extends Phaser.Scene {
                 } else { // TODO: revisar 
                     EventBus.emit('update-controls-state', {
                         roll: true,  administer: false, trade: false, finishTurn: false, bankrupt: true });
+                    // EventBus.emit('update-controls-state', {
+                    //         roll: true,  administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true });
                 }
             }
         });
@@ -686,7 +696,8 @@ export class Board extends Phaser.Scene {
         // para mover fichas
         EventBus.on('view-teleport-player', (data: { playerId: string, targetTileId: string }) => {
             const playerPair = this.players.find(p => p.model.id === data.playerId);
-            const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetTileId);
+            const targetId = String(data.targetTileId).padStart(3, '0');
+            const targetTile = this.tiles.find(t => t.tileConfig.id === targetId);
 
             if (playerPair && targetTile) {
                 const oldTileId = playerPair.model.currentTileId;
@@ -703,8 +714,7 @@ export class Board extends Phaser.Scene {
                     scale: 0.5,
                     duration: 300,
                     onComplete: () => {
-                        playerPair.model.currentTileId = data.targetTileId;
-                
+                        playerPair.model.currentTileId = targetId;
                         playerPair.token.setPosition(targetTile.x, targetTile.y);
                         
                         this.tweens.add({
@@ -716,7 +726,7 @@ export class Board extends Phaser.Scene {
                             onComplete: () => {
                                 // Terminó de aparecer. Liberamos y organizamos
                                 playerPair.token.isMoving = false;
-                                this.organizeTokensOnTile(data.targetTileId);
+                                this.organizeTokensOnTile(targetId);
                             }
                         });
                     }
@@ -726,6 +736,7 @@ export class Board extends Phaser.Scene {
 
         // evento que muestra animacion para ir a la carcel
         EventBus.on('view-send-to-jail', (data: { playerId: string }) => {
+            console.log("Entro en view-send-to-jail");
             this.sendToSecretary(data.playerId);
         });
 
@@ -749,6 +760,7 @@ export class Board extends Phaser.Scene {
         });
     }
 
+<<<<<<< HEAD
 	private cleanup() {
 		this.diceManager?.destroy();
 		this.eventManager?.destroy();
@@ -789,7 +801,6 @@ export class Board extends Phaser.Scene {
             this.time.removeAllEvents();
 			this.events.removeAllListeners();
 			this.input.removeAllListeners();
-
             this.tiles.forEach(tile => tile.destroy());
             this.players.forEach(p => p.token.destroy());
 			this.children.removeAll(true);
@@ -1059,7 +1070,7 @@ export class Board extends Phaser.Scene {
 
         if(!isMe) {
             console.log("Otro player ha ido a la cárcel, muevo token");
-            this.time.delayedCall(2000, () => { 
+            this.time.delayedCall(500, () => { 
                 EventBus.emit('view-teleport-player', {
                     playerId: playerId,
                     targetTileId: jailTile
@@ -1067,7 +1078,7 @@ export class Board extends Phaser.Scene {
                 });
                 this.showToast(`${p.model.name} ha sido enviado a Secretaría`); 
             });
-            this.time.delayedCall(800, () => {
+            this.time.delayedCall(1500, () => {
                 console.log("Rset de la camra en secretaría");
                 this.cameraController.resetView(1500);
             }); 
