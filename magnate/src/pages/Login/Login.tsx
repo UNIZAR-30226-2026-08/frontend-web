@@ -7,9 +7,9 @@ import { loginUser } from '@/api/authServices';
 import { useAuth } from '@/context/AuthContext';
 import { useAudio } from '@/context/AudioContext';
 import { useEffect } from 'react';
+import { EventBus } from '@/EventBus';
 // @ts-ignore 
 import { fetchActiveGame } from '@/api/userServices';
-import { EventBus } from '@/EventBus';
 
 
 interface LoginProps {

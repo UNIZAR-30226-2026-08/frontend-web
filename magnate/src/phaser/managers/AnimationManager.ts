@@ -9,11 +9,10 @@ export class AnimationManager {
 
     constructor(private scene: Phaser.Scene) {}
 
-    public async init(): Promise<void> {
-        // Aquí irá cualquier inicialización asincrónica que sea necesaria
+    public destroy(): void {
+        // AnimationManager doesn't set up event listeners, so nothing to clean up
     }
 
-    
     // Animación monedas (para parking)
     public CoinAnimation(tile: Tile, playerId?: string,  players?: { model: any, token: PlayerToken }[], count: number = 10) {
         const playerPair = players?.find(p => p.model.id === playerId);

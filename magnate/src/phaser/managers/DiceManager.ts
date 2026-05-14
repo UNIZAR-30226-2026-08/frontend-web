@@ -21,9 +21,20 @@ export class DiceManager {
         EventBus.on('jail-re-enable-selection', this.reEnableJailInteraction, this);
     }
 
-    public async init(): Promise<void> {
-        // Aquí irá cualquier inicialización asincrónica que sea necesaria
-    }
+	public destroy() {
+		EventBus.off('clear-jail-dice', this.clearDice, this);
+        EventBus.off('clear-dice', this.clearDice, this);
+        EventBus.off('jail-re-enable-selection', this.reEnableJailInteraction, this);
+		this.clearDice();
+		// Clear geometry
+		this.currentDice?.forEach((die: any) => {
+			die.destroy?.();
+		});
+		//
+		this.currentDice = [];
+		this.diceBg?.destroy?.();
+		this.diceBg = null;
+	}
 
     public handleDiceRoll(
         tiles: Tile[], 

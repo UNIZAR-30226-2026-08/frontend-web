@@ -85,8 +85,8 @@ export class Board extends Phaser.Scene {
 
     } 
 
-    async create() { // crear escena
-        await this.initManagers();
+    create() { // crear escena
+        this.initManagers();
         this.createBackground();
         this.createBoard();
         this.setupEventBus();
@@ -110,18 +110,11 @@ export class Board extends Phaser.Scene {
         }
     }
 
-    private async initManagers() {
+    private initManagers() {
         this.animationManager = new AnimationManager(this);
-        await this.animationManager.init();
-        
         this.diceManager = new DiceManager(this);
-        await this.diceManager.init();
-        
         this.tileLogicManager = new TileLogicManager(this);
-        await this.tileLogicManager.init();
-        
         this.cameraController = new CameraController(this);
-        await this.cameraController.init();
     }
 
     // private createBackground() { // Para video
@@ -282,8 +275,15 @@ export class Board extends Phaser.Scene {
         }
     }
 
+	private handleCleanupAndExit() {
+		this.cleanup();
+		this.scene.stop('Board');
+		this.scene.remove('Board');
+	}
+
     // --- EVENT BUS  ---
     private setupEventBus() {
+		EventBus.on('escoba', () => { this.handleCleanupAndExit(); });
         
         EventBus.on('game-fully-initialized', async (gameModel: any) => {
             console.log("Board: game-fully-initialized received");
@@ -747,36 +747,54 @@ export class Board extends Phaser.Scene {
             EventBus.emit('action-next-phase');
 
         });
+    }
 
-        this.events.on('shutdown', () => { 
+	private cleanup() {
+		this.diceManager?.destroy();
+		this.eventManager?.destroy();
+		this.animationManager?.destroy();
+		this.tileLogicManager?.destroy();
+        
+        EventBus.off('model-updated');
+        EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
+        EventBus.off('trigger-dice-roll-jail', this.handleDiceRoll, this);
+        EventBus.off('view-animate-path');
+        EventBus.off('token-fin');
+        EventBus.off('view-new-turn');
+        EventBus.off('property-bought', this.handlePurchase, this);
+        EventBus.off('close-overlay');
+        EventBus.off('dark-mode');
+        EventBus.off('execute-tram-travel');
+        EventBus.off('start-trade');
+        EventBus.off('show-trading-mode');
+        EventBus.off('view-animate-money');
+        EventBus.off('update-tile-owner-visual');
+        EventBus.off('collect-parking-money');
+        EventBus.off('start-administer');
+        EventBus.off('stop-administer');
+        EventBus.off('update-tile-mortgage-visual');
+        EventBus.off('view-update-tile-construction');
+        EventBus.off('view-remove-player');
+        EventBus.off('request-next-phase');
+        EventBus.off('escoba');
+        EventBus.off('save-pending-bill');
+        EventBus.off('game-fully-initialized');
+        EventBus.off('game-state-updated');
+        EventBus.off('view-send-to-jail');
+        EventBus.off('view-teleport-player');
+		
+		EventBus.removeAllListeners?.();
 
-            EventBus.off('model-updated');
-            EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
-            EventBus.off('view-animate-path');
-            EventBus.off('token-fin');
-            EventBus.off('view-new-turn');
-            EventBus.off('property-bought');
-            EventBus.off('close-overlay');
-            EventBus.off('dark-mode');
-            EventBus.off('execute-tram-travel');
-            EventBus.off('start-trade');
-            EventBus.off('show-trading-mode');
-            EventBus.off('view-animate-money');
-            EventBus.off('update-tile-owner-visual');
-            EventBus.off('collect-parking-money');
-            EventBus.off('start-administer');
-            EventBus.off('update-tile-mortgage-visual');
-            EventBus.off('view-update-tile-construction');
-            EventBus.off('view-remove-player');
-            EventBus.off('request-next-phase');
             this.tweens.killAll();
             this.time.removeAllEvents();
+			this.events.removeAllListeners();
+			this.input.removeAllListeners();
 
             this.tiles.forEach(tile => tile.destroy());
             this.players.forEach(p => p.token.destroy());
+			this.children.removeAll(true);
             this.tiles = [];
             this.players = [];
-        });
     }
 
     private syncPlayers(gameModel: any) {
@@ -1105,6 +1123,7 @@ export class Board extends Phaser.Scene {
     }
 
     private handleDiceRoll(diceData?: { dice1: number, dice2: number, dice_bus?: number, destinations?: number[] }) {
+		console.log("ROLL FROM ", this); // DEBUGPRINT
         if (!diceData) return;
 
         const values = [diceData.dice1, diceData.dice2];

@@ -15,10 +15,6 @@ export class CameraController {
         this.mainCam.setBounds(-100, -100, 10000, 10000);
     }
 
-    public async init(): Promise<void> {
-        // Aquí irá cualquier inicialización asincrónica que sea necesaria
-    }
-
     public followToken(token: any, zoom: number = 2.2, onArrived?: () => void) {
         this.mainCam.stopFollow();
 

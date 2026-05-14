@@ -36,7 +36,15 @@ export class EventManager {
         this.init();
     }
 
-    private init() {
+	public destroy() {
+	    EventBus.off('start-selection-mode');
+	    EventBus.off('open-property-selection-mode');
+	    EventBus.off('start-tram-selection');
+	    EventBus.off('jail-dice-rolled');
+	    EventBus.off('jail-re-enable-selection');
+	}
+    
+	private init() {
         this.setupControlsEvents();
         this.setupTramEvents();
         this.setupJailEvent();

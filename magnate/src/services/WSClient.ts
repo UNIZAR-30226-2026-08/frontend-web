@@ -350,6 +350,15 @@ export const WSClient = ( ) => {
 	useEffect(() => {
 		const validGameRoutes = ['/lobby', '/phaser-game', '/loading'];
 		const isGameRoute = validGameRoutes.some(route => location.pathname.includes(route));
+		const handleLeaveGame = () => { 
+			console.log("EVENTBUS.ON HANDLE LEAVE GAME");
+			EventBus.emit('clean-game-state');
+			EventBus.emit('escoba');
+			sessionStorage.removeItem('activeGameId');
+			insideRef.current = false;
+			setInsideFlag(false);
+			closeExistingSocket(4103);
+		}
 		if (!isGameRoute && socket.current && socket.current.readyState === WebSocket.OPEN) {
 			console.log("Out of game - calling handle-leave-game");
 			EventBus.emit('handle-leave-game');
@@ -385,14 +394,7 @@ export const WSClient = ( ) => {
 			sessionStorage.removeItem('roomCode');
 			closeExistingSocket(4102);
 		} );
-		EventBus.on('handle-leave-game', () => { 
-			console.log("EVENTBUS.ON HANDLE LEAVE GAME");
-			EventBus.emit('clean-game-state');
-			sessionStorage.removeItem('activeGameId');
-			insideRef.current = false;
-			setInsideFlag(false);
-			closeExistingSocket(4103);
-		} );
+		EventBus.on('handle-leave-game', handleLeaveGame);
 		EventBus.on('handle-enter-game', handleGame);
 		EventBus.on('send-message', gameSendMessage);
 		EventBus.on('send-cheat', gameSendCheat);
@@ -402,7 +404,7 @@ export const WSClient = ( ) => {
 			EventBus.off('handle-public-connect', handlePublicRoom);
 			EventBus.off('handle-public-cancel');
 			EventBus.off('handle-private-cancel');
-			EventBus.off('handle-leave-game');
+			EventBus.off('handle-leave-game', handleLeaveGame);
 			EventBus.off('handle-enter-game', handleGame);
 			EventBus.off('send-message', gameSendMessage);
 			EventBus.off('handle-private-connect', handlePrivateRoom);

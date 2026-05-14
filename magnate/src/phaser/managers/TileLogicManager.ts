@@ -38,8 +38,8 @@ export class TileLogicManager {
         this.scene = scene;
     }
 
-    public async init(): Promise<void> {
-        // Aquí irá cualquier inicialización asincrónica que sea necesaria
+    public destroy(): void {
+        // TileLogicManager doesn't set up event listeners, so nothing to clean up
     }
 
     public checkTileLogic(player: PlayerModel, tile: Tile, allPlayers: { model: PlayerModel, token: any }[]) {

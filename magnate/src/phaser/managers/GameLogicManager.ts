@@ -27,46 +27,77 @@ export class GameLogicManager {
      * Called when switching to a different game
      */
     public resetForNewGame(): void {
+        // Clean up old event listeners before resetting
+        // this.destroy();
+        
         this.populated = false;
         this.currentGameId = null;
         this.lastPendingProposal = null;
         this.model = new GameModel();
+        
+        // Re-setup listeners for the new game
+        // this.setupCentralListeners();
+        
         console.log("Manager: Reset for new game");
     }
 
+    /**
+     * Destroy the manager and clean up all event listeners
+     */
+    public destroy(): void {
+        EventBus.off('new-game-state', this.handleNewGameState);
+        EventBus.off('clean-game-state', this.resetForNewGame);
+        EventBus.off('board-ready', this.handleBoardReady);
+        EventBus.off('report-response');
+        EventBus.off('report-response-throw-dices');
+        EventBus.off('report-response-choose-square');
+        EventBus.off('new-chat-message');
+        EventBus.off('report-response-movement');
+        EventBus.off('report-action-buy-square');
+        EventBus.off('report-action-drop-purchase');
+        EventBus.off('report-response-auction');
+        EventBus.off('report-action-finish-auction');
+        EventBus.off('report-response-property-trade');
+        EventBus.off('report-response-fantasy');
+        console.log("Manager: Destroyed and cleaned up event listeners");
+    }
+	private handleNewGameState = async (new_state: GameState) => {
+        console.log("Manager: Received new state", new_state.id);
+        
+        this.currentGameId = new_state.id;
+		if (!this.populated) {
+            await this.model.populate(new_state);
+			this.populated = true;
+            console.log("Manager: Players fully loaded, emitting game-fully-initialized");
+            EventBus.emit('game-fully-initialized', this.model);
+            EventBus.emit('view-new-turn', this.model);
+		} else {
+        	this.model.updateState(new_state);
+            EventBus.emit('game-state-updated', this.model);
+			console.log("Manager: Asked for update");
+		}
+    };
+	private handleBoardReady = () => {
+        console.log("MANAGER: Phaser listo, Comprobando estado");
+		console.log("populated es ",this.populated," y hay ",this.model.orderedPlayers.length, " jugadores.");
+        // console.log("Poblado?", this.populated);
+        // console.log("orderedplayers",this.model.orderedPlayers);
+        
+        if (this.populated && this.model.orderedPlayers.length > 0) {
+            console.log("MANAGER: Enviando estado inicial a phaser");
+            EventBus.emit('game-fully-initialized', this.model);
+            EventBus.emit('view-new-turn', this.model);
+		}
+    };
+
     private setupCentralListeners() {
         // -- Game State
-        EventBus.on('new-game-state', async (new_state: GameState) => {
-            console.log("Manager: Received new state", new_state.id);
-            
-            this.currentGameId = new_state.id;
-			if (!this.populated) {
-                await this.model.populate(new_state);
-				this.populated = true;
-                console.log("Manager: Players fully loaded, emitting game-fully-initialized");
-                EventBus.emit('game-fully-initialized', this.model);
-                EventBus.emit('view-new-turn', this.model);
-			} else {
-            	this.model.updateState(new_state);
-                EventBus.emit('game-state-updated', this.model);
-			}
-        });
+		EventBus.on('new-game-state', this.handleNewGameState);
 
-		EventBus.on('clean-game-state', () => {
-			this.resetForNewGame();
-		});
+		EventBus.on('clean-game-state', this.resetForNewGame);
 
-        EventBus.on('board-ready', () => {
-            console.log("MANAGER: Phaser listo, Comprobando estado");
-            // console.log("Poblado?", this.populated);
-            // console.log("orderedplayers",this.model.orderedPlayers);
-            
-            if (this.populated && this.model.orderedPlayers.length > 0) {
-                console.log("MANAGER: Enviando estado inicial a phaser");
-                EventBus.emit('game-fully-initialized', this.model);
-                EventBus.emit('view-new-turn', this.model);
-            }
-        });
+        EventBus.on('board-ready', this.handleBoardReady);
+
         // Response general
         EventBus.on('report-response', (data: any) => {
             console.log("Modelo actual:", this.model);

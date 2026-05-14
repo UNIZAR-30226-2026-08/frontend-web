@@ -15,6 +15,16 @@ export const create3DDice = (x: number, y: number, scene: Phaser.Scene, duration
 
     return {
         mesh: dice,
+		destroy : () => {
+			try {
+				scene.tweens.killTweensOf(dice);
+				scene.tweens.killTweensOf(shadowFX);
+				dice.removeInteractive?.();
+				dice.postFX?.clear?.();
+				dice.clearFX?.();
+				dice.destroy?.();
+			} catch (err) { console.warn("destroy dice failed", err); }	
+		},
         roll: (callback?: (val: number) => void, forcedValue?: number) => {
             if (!diceIsRolling) {
                 diceIsRolling = true;
