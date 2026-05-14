@@ -78,7 +78,7 @@ export class Board extends Phaser.Scene {
         this.load.image('icon_gotojail', 'images/bodyguard.png'); // background go_to_jail tile
         this.load.image('icon_jail', 'images/secretary.png'); // background jail tile
         this.load.image('icon_server', 'images/server.png'); // icon server tile
-        this.load.image('icon_bridge', 'icons/bridge.svg'); // icon bridge tile
+        this.load.image('icon_bridge', 'images/bridge.png'); // icon bridge tile
         this.load.image("dice-albedo", "dice-albedo.png");
         this.load.image("dice-bus-albedo", "dice-bus-albedo.png");
         this.load.obj("dice-obj", "dice.obj");

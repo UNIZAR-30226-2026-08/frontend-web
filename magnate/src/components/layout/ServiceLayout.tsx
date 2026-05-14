@@ -56,7 +56,7 @@ export const ServiceCardContent = ({ data }: any ) => {
 				<div className="border-b-2 border-black flex justify-center items-center h-40 p-4">
                     <img src={ data.group === 13 || data.typeName === "Servidor" 
                                 ? "/images/server.png" 
-                                : "/icons/bridge.svg"
+                                : "images/bridge.png"
                             }
                         alt="tile icon"
                         className="max-h-full max-w-full object-contain"
