@@ -169,7 +169,7 @@ export function PrivateRoom () {
                             <Input                 
                                 id="room-code"
 								ref={codeRef}
-                                placeholder="123456789" 
+                                placeholder="1A2B5C" 
                                 onChange={(e) => {
 										if (codeRef.current) codeRef.current.setCustomValidity("");
 								}}

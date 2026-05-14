@@ -640,7 +640,8 @@ export class Board extends Phaser.Scene {
         // para mover fichas
         EventBus.on('view-teleport-player', (data: { playerId: string, targetTileId: string }) => {
             const playerPair = this.players.find(p => p.model.id === data.playerId);
-            const targetTile = this.tiles.find(t => t.tileConfig.id === data.targetTileId);
+            const targetId = String(data.targetTileId).padStart(3, '0');
+            const targetTile = this.tiles.find(t => t.tileConfig.id === targetId);
 
             if (playerPair && targetTile) {
                 const oldTileId = playerPair.model.currentTileId;
@@ -657,8 +658,7 @@ export class Board extends Phaser.Scene {
                     scale: 0.5,
                     duration: 300,
                     onComplete: () => {
-                        playerPair.model.currentTileId = data.targetTileId;
-                
+                        playerPair.model.currentTileId = targetId;
                         playerPair.token.setPosition(targetTile.x, targetTile.y);
                         
                         this.tweens.add({
@@ -670,7 +670,7 @@ export class Board extends Phaser.Scene {
                             onComplete: () => {
                                 // Terminó de aparecer. Liberamos y organizamos
                                 playerPair.token.isMoving = false;
-                                this.organizeTokensOnTile(data.targetTileId);
+                                this.organizeTokensOnTile(targetId);
                             }
                         });
                     }

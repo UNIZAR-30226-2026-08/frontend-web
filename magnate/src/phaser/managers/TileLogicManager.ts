@@ -53,6 +53,7 @@ export class TileLogicManager {
                     type: currentFantasy.type,
                     value: currentFantasy.value,
                     player: player.id,
+                    balance: player.balance
                 });
             } else {
                 console.warn("Error: tileLogicManager está en fantasía y no hay carta");

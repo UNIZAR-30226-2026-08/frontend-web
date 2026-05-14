@@ -171,14 +171,14 @@ export const PropertyAdminOverlay = () => {
             <div className="flex flex-col gap-4 ml-10">
                 <Button
                     onClick={handleAddHouse}
-                    disabled={isMortgaged || !gameModel.canBuildOneMore(propData.id, myId) || currentIndex === 5}
+                    disabled={isMortgaged || !gameModel.canBuildOneMore(propData.id, myId) || currentIndex === 5 || isSpecial}
                     size="icon"
                     className={`bg-[var(--color-text)] select-none rounded-full flex items-center justify-center w-20 h-20 ${bouncyAnimation}`}>
                     <img src="/icons/add_house.svg" className="w-12 h-12" alt="Add" />
                 </Button>
                 <Button
                     onClick={handleRemoveHouse}
-                    disabled={isMortgaged || !gameModel.canSellOneMore(propData.id) || currentIndex === 0}
+                    disabled={isMortgaged || !gameModel.canSellOneMore(propData.id) || currentIndex === 0 || isSpecial}
                     size="icon"
                     className={`bg-[var(--color-text)] select-none rounded-full flex items-center justify-center w-20 h-20 ${bouncyAnimation}`}>
                     <img src="/icons/remove_house.svg" className="w-12 h-12" alt="Remove" />

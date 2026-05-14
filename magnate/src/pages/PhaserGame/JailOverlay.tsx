@@ -80,13 +80,25 @@ export const JailOverlay = () => {
     }, []);
 
     if (!propData && !decisionData) return null;
+    
+    const canAffordBail = () => {
+        const myId = localStorage.getItem('myId');
+        if (!myId) return false;
+        const me = GameLogicManager.getInstance().model.getPlayer(myId);
+        return (me?.balance || 0) >= 50;
+    };
 
     const confirmDecision = () => {
         if (!decisionData) return;
 
         if (decisionData.mode === 'pay') {
-            //EventBus.emit('execute-jail-bail-payment', { amount: 50 });
-            //EventBus.emit('execute-in-jail-travel', { targetId: decisionData.tileId });
+            if (!canAffordBail()) {
+                EventBus.emit('show-toast', {
+                    message: "No tienes suficiente dinero (50M) para pagar la fianza.",
+                    type: 'error'
+                });
+                return;
+            }
             EventBus.emit('action-pay-bail', { to_pay: true });
         } else if (decisionData.mode === 'stay') {
             EventBus.emit('action-pay-bail', { to_pay: false });
