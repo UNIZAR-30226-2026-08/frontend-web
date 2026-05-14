@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { EventBus } from '@/EventBus';
 import { GameAction, PrivateCommand, ChatMessageContent, CheatMessage } from "@/services/types/socket";
 import { useAuth } from '@/context/AuthContext';
+import { GameLogicManager } from "@/phaser/managers/GameLogicManager";
 
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss' : 'ws';
 const WS_URL = import.meta.env.VITE_WS_URL
@@ -265,8 +266,10 @@ export const WSClient = ( ) => {
 						if (gameStateData.players && (playersIdsRef.current.length === 0)) {
 							playersIdsRef.current = gameStateData.players;
 						}
+						console.log("Enviando new-game-state");
                         EventBus.emit('new-game-state', gameStateData);
 						if (!insideRef.current) {
+							console.log("Entro insideRef: ",insideRef.current);
 							insideRef.current = true;
 							EventBus.emit('you-may-now-enter-the-game');
 							setInsideFlag(true);
@@ -358,6 +361,7 @@ export const WSClient = ( ) => {
 			insideRef.current = false;
 			setInsideFlag(false);
 			closeExistingSocket(4103);
+			GameLogicManager.destroyInstance();
 		}
 		if (!isGameRoute && socket.current && socket.current.readyState === WebSocket.OPEN) {
 			console.log("Out of game - calling handle-leave-game");

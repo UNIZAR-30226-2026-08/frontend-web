@@ -280,8 +280,8 @@ export class Board extends Phaser.Scene {
 
 	private handleCleanupAndExit() {
 		this.cleanup();
-		this.scene.stop('Board');
-		this.scene.remove('Board');
+		this.scene.stop('BoardScene');
+		this.scene.remove('BoardScene');
 	}
 
     // --- EVENT BUS  ---
@@ -768,6 +768,11 @@ export class Board extends Phaser.Scene {
 		this.eventManager?.destroy();
 		this.animationManager?.destroy();
 		this.tileLogicManager?.destroy();
+
+        this.diceManager = undefined as any;
+        this.eventManager = undefined as any;
+        this.animationManager = undefined as any;
+        this.tileLogicManager = undefined as any;
         
         EventBus.off('model-updated');
         EventBus.off('trigger-dice-roll', this.handleDiceRoll, this);
@@ -799,15 +804,15 @@ export class Board extends Phaser.Scene {
 		
 		EventBus.removeAllListeners?.();
 
-            this.tweens.killAll();
-            this.time.removeAllEvents();
-			this.events.removeAllListeners();
-			this.input.removeAllListeners();
-            this.tiles.forEach(tile => tile.destroy());
-            this.players.forEach(p => p.token.destroy());
-			this.children.removeAll(true);
-            this.tiles = [];
-            this.players = [];
+        this.tweens.killAll();
+        this.time.removeAllEvents();
+        this.events.removeAllListeners();
+        this.input.removeAllListeners();
+        this.tiles.forEach(tile => tile.destroy());
+        this.players.forEach(p => p.token.destroy());
+        this.children.removeAll(true);
+        this.tiles = [];
+        this.players = [];
     }
 
     private syncPlayers(gameModel: any) {

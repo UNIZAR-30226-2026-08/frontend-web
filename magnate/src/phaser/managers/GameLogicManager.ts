@@ -4,7 +4,7 @@ import { EventBus } from '@/EventBus';
 import * as WSTypes from "@/services/types/socket";
 
 export class GameLogicManager {
-    private static instance: GameLogicManager;
+    private static instance: GameLogicManager | null = null;;
 	private populated: boolean = false;
     public model: GameModel;
     private lastPendingProposal: any = null;
@@ -22,6 +22,12 @@ export class GameLogicManager {
         return GameLogicManager.instance;
     }
 
+    public static destroyInstance(): void {
+        if (GameLogicManager.instance) {
+            GameLogicManager.instance.destroy();
+            GameLogicManager.instance = null;
+        }
+    }
     /**
      * Reset the manager state for a new game (reconnection)
      * Called when switching to a different game
@@ -29,7 +35,7 @@ export class GameLogicManager {
     public resetForNewGame(): void {
         // Clean up old event listeners before resetting
         // this.destroy();
-        
+       //  GameLogicManager.destroyInstance();
         this.populated = false;
         this.currentGameId = null;
         this.lastPendingProposal = null;
@@ -61,9 +67,10 @@ export class GameLogicManager {
         EventBus.off('report-response-fantasy');
         console.log("Manager: Destroyed and cleaned up event listeners");
     }
+
 	private handleNewGameState = async (new_state: GameState) => {
         console.log("Manager: Received new state", new_state.id);
-        
+
         this.currentGameId = new_state.id;
 		if (!this.populated) {
             await this.model.populate(new_state);
@@ -77,6 +84,7 @@ export class GameLogicManager {
 			console.log("Manager: Asked for update");
 		}
     };
+
 	private handleBoardReady = () => {
         console.log("MANAGER: Phaser listo, Comprobando estado");
 		console.log("populated es ",this.populated," y hay ",this.model.orderedPlayers.length, " jugadores.");
@@ -1024,7 +1032,7 @@ export class GameLogicManager {
                         message: `${activePlayer?.name} ha enviado a ${victim.name} a Secretaría`,
                         duration: 3000 
                     });
-                } else {
+                
                     Object.keys(this.model.players).forEach(playerId => {
                         const newPos = this.model.getPlayerPosition(playerId);
                         EventBus.emit('view-teleport-player', {

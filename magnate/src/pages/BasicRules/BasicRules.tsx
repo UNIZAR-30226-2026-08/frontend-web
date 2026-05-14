@@ -14,8 +14,6 @@ export function BasicRules() {
         { title: "Reserva de Emergencia" , desc : "Nunca gastes todo tu dinero. Mantén siempre reserva para rentas inesperadas y oportunidades." },
         { title: "Naranjas y Rojas" , desc : "Las propiedades naranjas y rojas son las más rentables. Tienen alta probabilidad de caída y excelente retorno." },
         { title: "Monopolio Rápido" , desc : "Es mejor tener un grupo completo de propiedades baratas con casas que una propiedad cara sin nada." },
-        { title: "" , desc : "" },
-        { title: "" , desc : "" }
     ];
     const navButton = `
         border-slate-200 

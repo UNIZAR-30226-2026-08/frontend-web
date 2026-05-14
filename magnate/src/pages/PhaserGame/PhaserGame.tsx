@@ -124,6 +124,7 @@ export const PhaserGame = () => {
 
         return () => {
             EventBus.off('setup-players', handleSetupPlayers);
+            EventBus.emit('handle-leave-game');
             if (gameRef.current) {
                 gameRef.current.destroy(true);
                 gameRef.current = null;
