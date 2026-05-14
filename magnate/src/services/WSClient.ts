@@ -78,10 +78,10 @@ export const WSClient = ( ) => {
 	 * @fires many many event buses TODO
 	 */
 	const handlePublicRoom = () => {
-		if (socket.current && (socket.current.readyState === 0 || socket.current.readyState === 1)) {
-			if (VERBOSE) console.log("DEBUG: ya hay un intento de conexión en curso.");
-			return;
-		}
+		//if (socket.current && (socket.current.readyState === 0 || socket.current.readyState === 1)) {
+		//	if (VERBOSE) console.log("DEBUG: ya hay un intento de conexión en curso.");
+		//	return;
+		//}
 
 		if (VERBOSE) {
 			console.log("DEBUG: entered handlePublicRoom");
@@ -154,7 +154,7 @@ export const WSClient = ( ) => {
 		if (VERBOSE) {
 			console.log("DEBUG: entered handlePrivateRoom");
 		}
-		//closeExistingSocket();
+		closeExistingSocket();
 
 		if (!token && VERBOSE) {
 			console.log("NO COOKIE/TOKEN: login before entering room.");
@@ -266,6 +266,7 @@ export const WSClient = ( ) => {
 							playersIdsRef.current = gameStateData.players;
 						}
                         EventBus.emit('new-game-state', gameStateData);
+						console.log("yo envío el new-game-state");
 						if (!insideRef.current) {
 							insideRef.current = true;
 							EventBus.emit('you-may-now-enter-the-game');

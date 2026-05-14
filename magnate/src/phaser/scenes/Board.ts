@@ -95,9 +95,10 @@ export class Board extends Phaser.Scene {
         const currentModel = this.GamelogicManager.model;
 
         console.log("BOARD CREATE: Comprobando jugadores iniciales", this.GamelogicManager.model.orderedPlayers);
-        EventBus.emit('board-ready');
-        // Check if GameLogicManager already has data
-        if (currentModel && currentModel.orderedPlayers && currentModel.orderedPlayers.length > 0) {
+        
+        // Check if GameLogicManager already has data (reconnection case)
+        if (this.GamelogicManager.isPopulated()) {
+            console.log("Board: Ya hay datos en el modelo, sincronizando...");
             this.syncPlayers(this.GamelogicManager.model);
             this.syncPropertiesOwnership(this.GamelogicManager.model);
             this.syncBuildingsAndMortgages(this.GamelogicManager.model);
@@ -106,8 +107,11 @@ export class Board extends Phaser.Scene {
             this.emitInitialPlayers();
             this.showUI();
         } else {
-            console.log("Board: Waiting for game-fully-initialized event");
+            console.log("Board: Esperando game-fully-initialized event");
         }
+        
+        // Emitir board-ready DESPUÉS de setupEventBus
+        EventBus.emit('board-ready');
     }
 
     private initManagers() {
@@ -760,7 +764,6 @@ export class Board extends Phaser.Scene {
         });
     }
 
-<<<<<<< HEAD
 	private cleanup() {
 		this.diceManager?.destroy();
 		this.eventManager?.destroy();

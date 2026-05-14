@@ -15,6 +15,10 @@ export class GameLogicManager {
         this.setupCentralListeners();
     }
 
+	public isPopulated(): boolean {
+		return this.populated;
+	}
+
     public static getInstance(): GameLogicManager {
         if (!GameLogicManager.instance) {
             GameLogicManager.instance = new GameLogicManager();
@@ -28,44 +32,25 @@ export class GameLogicManager {
      */
     public resetForNewGame(): void {
         // Clean up old event listeners before resetting
-        // this.destroy();
+        this.destroy();
         
         this.populated = false;
+		console.log("populated set to false");
         this.currentGameId = null;
         this.lastPendingProposal = null;
         this.model = new GameModel();
         
         // Re-setup listeners for the new game
-        // this.setupCentralListeners();
+        this.setupCentralListeners();
         
         console.log("Manager: Reset for new game");
-    }
-
-    /**
-     * Destroy the manager and clean up all event listeners
-     */
-    public destroy(): void {
-        EventBus.off('new-game-state', this.handleNewGameState);
-        EventBus.off('clean-game-state', this.resetForNewGame);
-        EventBus.off('board-ready', this.handleBoardReady);
-        EventBus.off('report-response');
-        EventBus.off('report-response-throw-dices');
-        EventBus.off('report-response-choose-square');
-        EventBus.off('new-chat-message');
-        EventBus.off('report-response-movement');
-        EventBus.off('report-action-buy-square');
-        EventBus.off('report-action-drop-purchase');
-        EventBus.off('report-response-auction');
-        EventBus.off('report-action-finish-auction');
-        EventBus.off('report-response-property-trade');
-        EventBus.off('report-response-fantasy');
-        console.log("Manager: Destroyed and cleaned up event listeners");
     }
 	private handleNewGameState = async (new_state: GameState) => {
         console.log("Manager: Received new state", new_state.id);
         
         this.currentGameId = new_state.id;
 		if (!this.populated) {
+            console.log("Manager: Populating model with new state...");
             await this.model.populate(new_state);
 			this.populated = true;
             console.log("Manager: Players fully loaded, emitting game-fully-initialized");
@@ -80,14 +65,14 @@ export class GameLogicManager {
 	private handleBoardReady = () => {
         console.log("MANAGER: Phaser listo, Comprobando estado");
 		console.log("populated es ",this.populated," y hay ",this.model.orderedPlayers.length, " jugadores.");
-        // console.log("Poblado?", this.populated);
-        // console.log("orderedplayers",this.model.orderedPlayers);
         
         if (this.populated && this.model.orderedPlayers.length > 0) {
             console.log("MANAGER: Enviando estado inicial a phaser");
             EventBus.emit('game-fully-initialized', this.model);
             EventBus.emit('view-new-turn', this.model);
-		}
+		} else {
+            console.log("MANAGER: Esperando new-game-state (populated=false o sin jugadores)");
+        }
     };
 
     private setupCentralListeners() {
@@ -1106,6 +1091,27 @@ export class GameLogicManager {
         }
 
         EventBus.emit('model-updated', this.model);
+    }
+
+    /**
+     * Destroy the manager and clean up all event listeners
+     */
+    public destroy(): void {
+        EventBus.off('new-game-state', this.handleNewGameState);
+        EventBus.off('clean-game-state', this.resetForNewGame);
+        EventBus.off('board-ready', this.handleBoardReady);
+        EventBus.off('report-response');
+        EventBus.off('report-response-throw-dices');
+        EventBus.off('report-response-choose-square');
+        EventBus.off('new-chat-message');
+        EventBus.off('report-response-movement');
+        EventBus.off('report-action-buy-square');
+        EventBus.off('report-action-drop-purchase');
+        EventBus.off('report-response-auction');
+        EventBus.off('report-action-finish-auction');
+        EventBus.off('report-response-property-trade');
+        EventBus.off('report-response-fantasy');
+        console.log("Manager: Destroyed and cleaned up event listeners");
     }
 
 }
