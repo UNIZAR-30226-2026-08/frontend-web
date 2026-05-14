@@ -735,38 +735,40 @@ export class GameLogicManager {
                 return;
             }
             EventBus.emit('update-turn-controls', isMe);
+
         } else if (phase === 'business') {
             const tile = this.model.getPlayerPosition(this.model.myId);
             console.log("Entrando en business");
+            const controls = {
+                roll: false, 
+                administer: isMe, 
+                trade: isMe, 
+                finishTurn: isMe, 
+                bankrupt: true 
+            };
+            EventBus.emit('update-controls-state', controls);
             // Si me muevo a otra casilla de tranvía, no vuelvo a interactuar -> tienen que habilitarse los botones de business
             if (tile in ["010", "030", "100", "107"]) {
-                EventBus.emit('update-controls-state', {
-                    roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
-                });
                 return;
-                
             } 
             if ((tile in this.model.boardProperties) && this.model.boardProperties[tile].ownerId !== null) {
                 if (this.model.boardProperties[tile].ownerId === myId || this.model.boardProperties[tile].isMortgaged) {
                     console.log("En business: es mi propiedad o está hipotecada");
-                    EventBus.emit('update-controls-state', {
-                        roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
-                    });
+                    // console.log("quien soy", isMe);
+                    // EventBus.emit('update-controls-state', {
+                    //     roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
+                    // });
                     EventBus.emit('model-updated', this.model);
                     return; // es propiedad/server/puente y tiene dueño -> sale porque tiene que ir al overlay de pagar primero
                 } else { // propiedad que tiene dueño (no soy yo) 
-                    EventBus.emit('update-controls-state', {
-                        roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
-                    });
+                    // EventBus.emit('update-controls-state', {
+                    //     roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
+                    // });
                     EventBus.emit('model-updated', this.model);
                     console.log("Manager: Casilla de otro jugador");
                     return;
                 }
             }
-
-            EventBus.emit('update-controls-state', {
-                roll: false, administer: isMe, trade: isMe, finishTurn: isMe, bankrupt: true
-            });
         } else if (phase === 'auction') {
             console.log("Empieza subastaaaa!!");
             EventBus.emit('update-controls-state', {
@@ -922,7 +924,7 @@ export class GameLogicManager {
             // --- EVENTOS DE MOVIMIENTO : carcel ---
             case 'goToJail':
                 if (activePlayer) {
-                    activePlayer.jailRemainingTurns = 1;
+                    activePlayer.jailRemainingTurns = 0;
                     activePlayer.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: activePlayerId });
                 }
@@ -932,7 +934,7 @@ export class GameLogicManager {
                 const victimId = String(result?.target_player);
                 const victim = this.model.getPlayer(victimId);
                 if (victim) {
-                    victim.jailRemainingTurns = 1;
+                    victim.jailRemainingTurns = 0;
                     victim.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: victimId });
                 }
@@ -940,7 +942,7 @@ export class GameLogicManager {
             
             case 'everybodyToJail':
                 Object.values(this.model.players).forEach(p => {
-                    p.jailRemainingTurns = 1;
+                    p.jailRemainingTurns = 0;
                     p.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: p.id });
                 });
@@ -957,6 +959,7 @@ export class GameLogicManager {
                 break;
             case 'moveOpponentAnywhereRandom':
                 const pos = this.model.getPlayerPosition(result?.target_player);
+                console.log("Posicion del oponente", pos);
                 EventBus.emit('view-teleport-player', {
                     playerId: result?.target_player,
                     targetTileId: pos
