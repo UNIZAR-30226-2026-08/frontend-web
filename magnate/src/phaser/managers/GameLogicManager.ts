@@ -923,24 +923,49 @@ export class GameLogicManager {
             }
             // --- EVENTOS DE MOVIMIENTO : carcel ---
             case 'goToJail':
-                if (activePlayer) {
+                if(activePlayer && activePlayerId === myId) {
+                    this.model.updatePlayerPosition(activePlayerId, '201');
                     activePlayer.jailRemainingTurns = 0;
                     activePlayer.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: activePlayerId });
+                } else {
+                    Object.keys(this.model.players).forEach(playerId => {
+                        const newPos = this.model.getPlayerPosition(playerId);
+                        EventBus.emit('view-teleport-player', {
+                            playerId: playerId,
+                            targetTileId: newPos
+                        });
+                    });
                 }
+               
                 break;
             
             case 'sendToJail':
                 const victimId = String(result?.target_player);
                 const victim = this.model.getPlayer(victimId);
+                
                 if (victim) {
+                    this.model.updatePlayerPosition(victimId, '201');
                     victim.jailRemainingTurns = 0;
                     victim.emitUpdate();
                     EventBus.emit('view-send-to-jail', { playerId: victimId });
+
+                    EventBus.emit('show-toast', { 
+                        message: `${activePlayer?.name} ha enviado a ${victim.name} a Secretaría`,
+                        duration: 3000 
+                    });
+                } else {
+                    Object.keys(this.model.players).forEach(playerId => {
+                        const newPos = this.model.getPlayerPosition(playerId);
+                        EventBus.emit('view-teleport-player', {
+                            playerId: playerId,
+                            targetTileId: newPos
+                        });
+                    });
                 }
                 break;
             
-            case 'everybodyToJail':
+            case 'everybodyToJail': // mueve bien
                 Object.values(this.model.players).forEach(p => {
                     p.jailRemainingTurns = 0;
                     p.emitUpdate();
@@ -948,24 +973,10 @@ export class GameLogicManager {
                 });
                 break;
             
-            // --- EVENTOS DE MOVIMIENTO ---
+            // --- EVENTOS DE MOVIMIENTO: CHECK ---
             case 'goToStart':
             case 'moveAnywhereRandom':
-                const newPos = this.model.getPlayerPosition(activePlayerId);
-                EventBus.emit('view-teleport-player', {
-                    playerId: activePlayerId,
-                    targetTileId: newPos
-                });
-                break;
             case 'moveOpponentAnywhereRandom':
-                const pos = this.model.getPlayerPosition(result?.target_player);
-                console.log("Posicion del oponente", pos);
-                EventBus.emit('view-teleport-player', {
-                    playerId: result?.target_player,
-                    targetTileId: pos
-                });
-                break;
-
             case 'magnetism':
             case 'shufflePositions':
                 Object.keys(this.model.players).forEach(playerId => {
