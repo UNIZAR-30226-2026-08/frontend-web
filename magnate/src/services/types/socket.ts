@@ -168,6 +168,7 @@ export interface GameResponse {
 	is_tie?: boolean;		// deprecated? well I'm not passing these
 	bids?: Record<string, number>; // userid, money bidded
 	bonuses?: Record<string, BonusData>;
+	last_money : Record<string, number>;
 }
 
 export interface PrivateCommand {
@@ -330,6 +331,7 @@ export interface BonusData {
 
 export interface GameInfoBonus {
 	money : Record<string, number>; // Dict userid: number
+	last_money : Record<string, number>; // Dict userid: number
 	active_phase_player: number;
     active_turn_player: number;
     phase: Phase;

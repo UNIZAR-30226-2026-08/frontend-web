@@ -16,6 +16,8 @@ export class GameModel {
 	public streak: number = 0; // nº of doubles hits 3 -> go to jail
 	public parking_money : number = 0;
 	public current_turn : number = 0;	// round number
+    public current_round : number = 0;
+    public max_rounds: number = 0;
     public firstPlayerId: string | null = null; // quien ha empezado
 	public isModelReady: boolean = false; // sincronization flag for game entering
 
@@ -40,6 +42,8 @@ export class GameModel {
         this.streak = new_state.streak;
         this.parking_money = new_state.parking_money;
         this.current_turn = new_state.current_turn;
+        this.current_round = new_state.current_round;
+        this.max_rounds = new_state.max_rounds;
 
         if (this.phase !== 'choose_fantasy') { // si salimos de la fase, limpiamos
             this.currentFantasyEvent = null;
@@ -92,6 +96,8 @@ export class GameModel {
 		this.current_turn = new_state.current_turn;
 		this.isFinished = new_state.finished; 
 		this.orderedPlayers = new_state.ordered_players.map(id => String(id));
+        this.current_round = new_state.current_round;
+        this.max_rounds = new_state.max_rounds;
 		
 		if (new_state.fantasy_event !== null) {
 			this.setFantasyEvent(new_state.fantasy_event?.fantasy_type,

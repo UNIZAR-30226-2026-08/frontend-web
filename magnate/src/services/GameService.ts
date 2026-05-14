@@ -465,12 +465,14 @@ export const GameService = ( ) => {
 			case "ResponseBonus":
 				const responseBonus: WSTypes.GameInfoBonus = {
 					"money": data.money,
+					"last_money": data.last_money,
 					"active_phase_player": data.active_phase_player,
 					"active_turn_player": data.active_turn_player,
 					"phase": data.phase,
 					"bonuses": data.bonuses || {}, // Aquí vienen los ganadores y cantidades
 				};
-				EventBus.emit('show-final-results', responseBonus);
+				// EventBus.emit('show-final-results', responseBonus);
+				EventBus.emit('report-response-bonus', responseBonus);
 				break;
 			case "ResponseAuction":
 				const auctionInfo :  WSTypes.AuctionData = {

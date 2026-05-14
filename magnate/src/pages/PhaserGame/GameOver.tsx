@@ -27,20 +27,21 @@ export function GameOver() {
     };
 
     useEffect(() => {
-        const handleResults = (data: any) => { // ojo del backend solo recibimos el bonuses, el resto está vacio
+        const handleResults = (data: any) => {
             const model = GameLogicManager.getInstance().model;
             if (!model) return;
 
             const initialPlayers = model.orderedPlayers.map((id: string) => {
                 const p = model.getPlayer(id);
-                const currentBalance = p?.balance || 0;
+                // const currentBalance = p?.balance || 0;
+                const finalBalance = data.last_money[id] || 0;
 
                 return {
                     id: String(id),
                     name: p?.name || `Jugador ${id}`,
                     color: p?.color ? `#${p.color.toString(16).padStart(6, '0')}` : "#222222",
-                    currentPoints: currentBalance * 0.75,
-                    baseBalance: currentBalance
+                    currentPoints: finalBalance,
+                    baseBalance: finalBalance
                 };
             });
 
@@ -148,8 +149,7 @@ export function GameOver() {
                                                 initial={{ width: "0%" }}
                                                 animate={{ width: `${Math.max(widthPercentage, 2)}%` }}
                                                 transition={{ duration: 1, ease: "easeOut" }}
-                                                style={{ backgroundColor: player.color }}
-                                            >
+                                                style={{ backgroundColor: player.color }} >
                                                 <div className="absolute inset-0 bg-white/20 skew-x-[-20deg] translate-x-[-50%] animate-pulse" />
                                             </motion.div>
                                         </div>

@@ -108,6 +108,8 @@ export class GameLogicManager {
             this.model.active_turn_player = data.active_turn_player;
             this.model.phase = data.phase;
             this.model.parking_money = data.parking_money;
+            this.model.current_round = data.current_round;
+            this.model.max_rounds = data.max_rounds;
 
             // Actualizar dinero
             if (data.money) {
@@ -756,6 +758,23 @@ export class GameLogicManager {
                     
                 EventBus.emit('show-toast', { message: message });
             }
+        });
+
+        EventBus.on('report-response-bonus', (data: any) => {
+            console.log("Manager: Procesando resultados finales", data);
+            if (data.money) {
+                this.updateBalances(data.money);
+            }
+            EventBus.emit('show-final-results', data);
+            // const responseBonus = {
+            //     money: data.money,
+            //     last_money: data.last_money,
+            //     active_phase_player: data.active_phase_player,
+            //     active_turn_player: data.active_turn_player,
+            //     phase: data.phase,
+
+            //     bonuses: data.bonuses || {}, 
+            // };
         });
 
 		//EventBus.on('pause-game', () => {
