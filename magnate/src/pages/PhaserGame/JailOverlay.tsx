@@ -165,8 +165,7 @@ export const JailOverlay = () => {
                                 <div className="flex flex-col gap-3 w-full items-center">
                                     <Button disabled={hasRolled} 
                                         onClick={() => { 
-                                            setHasRolled(true);
-                                            //EventBus.emit('start-jail-roll-sequence'); 
+                                            setHasRolled(true); 
                                             EventBus.emit('action-throw-dices');
                                             setpropData(null);
                                         }}
