@@ -240,6 +240,8 @@ export class DiceManager {
                                 console.log("Saliendo de la cárcel tengo dobles");
                                 activePlayerPair.model.jailRemainingTurns = 0;
                                 activePlayerPair.model.emitUpdate();
+                                
+                                EventBus.emit('clear-dice');
                                 BoardEffects.setFocusByIds(tiles, destinations, this.board, players.map(p => p.token));
                                 
                             } else { // caso 3: turnos 1 y 2
@@ -306,7 +308,8 @@ export class DiceManager {
                 });
 
                 this.isRolling = false; 
-                // this.board.showUI();
+                this.board.showUI();
+                EventBus.emit("dark-mode", false);
 
                 if (this.diceBg) {
                     this.diceBg.destroy();

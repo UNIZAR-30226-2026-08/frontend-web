@@ -46,11 +46,14 @@ export class TileLogicManager {
             console.log("He caido en una carta fantasía");
             const currentFantasy = gameModel.currentFantasyEvent;
             const myId = localStorage.getItem('myId');
+            console.log("Carta fantasía: ", currentFantasy);
 
             if (currentFantasy && String(player.id) === String(myId)) {
                 EventBus.emit('show-fantasy-overlay', {
                     type: currentFantasy.type,
                     value: currentFantasy.value,
+                    player: player.id,
+                    balance: player.balance
                 });
             } else {
                 console.warn("Error: tileLogicManager está en fantasía y no hay carta");

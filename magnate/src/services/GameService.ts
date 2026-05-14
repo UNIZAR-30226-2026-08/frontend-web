@@ -70,9 +70,10 @@ export const GameService = ( ) => {
 /property <player_id> <tile_id> <houses> <mortgage>
 /clearProperty <tile_id>`;
 		const helpMessage = {
-			"type" : "ChatMessage", "msg" : {
-        	"type": "SendChatMessage", 
-			"text" : cheatUssage }
+			"type" : "ChatMessage", "msg" : cheatUssage
+			//  {
+        	// "type": "SendChatMessage", 
+			// "text" : cheatUssage }
 		};
 		const texto = String(msg);
 		// console.log("El texto es ",texto);
@@ -96,8 +97,8 @@ export const GameService = ( ) => {
 						"dice_bus": parseInt(command[3], 10)
 					};
 					EventBus.emit('send-cheat', diceCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK dice"}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : texto});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK dice"});//{ "type": "SendChatMessage", "text": "OK dice"}});
 					break;
 				case 'tp':
 					if (command.length !== 3) {
@@ -111,8 +112,8 @@ export const GameService = ( ) => {
 						"square_id": command[2]
 					};
 					EventBus.emit('send-cheat', tpCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK tp"}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : texto});//{ "type": "SendChatMessage", "text": texto}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK tp"});//{ "type": "SendChatMessage", "text": "OK tp"}});
 					break;
 				case 'money':
 					if (command.length !== 3) {
@@ -126,8 +127,8 @@ export const GameService = ( ) => {
 						"amount": parseInt(command[2], 10)
 					};
 					EventBus.emit('send-cheat', moneyCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK money"}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : texto});//{ "type": "SendChatMessage", "text": texto}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK money"});//{ "type": "SendChatMessage", "text": "OK money"}});
 					break;
 				case 'property':
 					if (command.length !== 5) {
@@ -143,8 +144,8 @@ export const GameService = ( ) => {
 						"mortgage": command[4] === 'true'
 					};
 					EventBus.emit('send-cheat', propCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK property"}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : texto});//{ "type": "SendChatMessage", "text": texto}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK property"});//{ "type": "SendChatMessage", "text": "OK property"}});
 					break;
 				case 'clearProperty':
 					if (command.length !== 2) {
@@ -157,8 +158,8 @@ export const GameService = ( ) => {
 						"square_id": command[1]
 					};
 					EventBus.emit('send-cheat', clearCheat);
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": texto}});
-					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : { "type": "SendChatMessage", "text": "OK clearProperty"}});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : texto});
+					EventBus.emit('send-message', {"type" : "ChatMessage", "msg" : "OK clearProperty"});//{ "type": "SendChatMessage", "text": "OK clearProperty"}});
 					break;
 				case 'h':
 					EventBus.emit('send-message', helpMessage);
@@ -168,18 +169,20 @@ export const GameService = ( ) => {
 					break;
 				default: // for emojis command to work
         			const chatMessage = {
-						"type" : "ChatMessage", "msg" : {
-        			    "type": "SendChatMessage", 
-        			    "text": msg }
+						"type" : "ChatMessage", "msg" : msg
+						// {
+        			    // "type": "SendChatMessage", 
+        			    // "text": msg }
         			};
 					EventBus.emit('send-message', chatMessage);
 					break;
 			}
 		} else {
         	const chatMessage = {
-				"type" : "ChatMessage", "msg" : {
-        	    "type": "SendChatMessage", 
-        	    "text": msg }
+				"type" : "ChatMessage", "msg" : msg
+				// {
+        	    // "type": "SendChatMessage", 
+        	    // "text": msg }
         	};
 			EventBus.emit('send-message', chatMessage);
 		}

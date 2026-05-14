@@ -55,13 +55,25 @@ export const FantasyOverlay = () => {
     }, [playSound]);
 
     if (!cardData) return null;
+    const canAfford = (cardData.balance || 0) >= (cardData.card_cost || 0);
 
     const handleSelect = (isRevealedChoice: boolean) => {
         if (hasChosen) return;
 
+        if(isRevealedChoice && !canAfford) {
+            EventBus.emit('show-toast', {
+                message: `No tienes suficientes dinero (${cardData.card_cost}M) para elegir esta carta.`,
+                type: 'error'
+            });
+            handleSelect(false);
+            return;
+        }
         setHasChosen(true);
         
-        EventBus.emit('action-choose-card', { revealed: isRevealedChoice });
+        EventBus.emit('action-choose-card', { 
+            player: cardData.player,
+            revealed: isRevealedChoice 
+        });
 
         if (isRevealedChoice) {
             // Caso Izquierda:
@@ -86,25 +98,39 @@ export const FantasyOverlay = () => {
             <div className="absolute inset-0 backdrop-blur-sm animate-in fade-in duration-300" />
         
                 <div className="relative z-10 flex flex-row gap-12 animate-in fade-in zoom-in duration-300 scale-90 md:scale-100">
-                
-                    {/* CARTA FRONT */} 
-                    <div className={`transition-all duration-300 
-                         ${isRevealed ? 'grayscale blur-[2px] scale-95' : 'hover:scale-110'}
-                         ${hasChosen && !isRevealed ? 'pointer-events-none' : ''}`}
-                        onClick={() => handleSelect(true)}>
-                        <GameCard 
-                            isFlipped={true}
-                            front={<FantasyCardContent data={cardData} />}
-                            back={<FantasyCardContent isBack={true} />}
-                        />
+                    
+                    <div className="relative flex flex-col items-center">
+                        {!canAfford && !hasChosen && (
+                            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-max z-50">
+                                <span className="bg-red-600 text-white text-[16px] font-black px-4 py-4 rounded-full shadow-lg border border-white uppercase tracking-tighter">
+                                    No tienes suficiente dinero
+                                </span>
+                            </div>
+                        )}
+                        {/* CARTA FRONT */} 
+                        <div className={`transition-all duration-300 
+                            ${isRevealed ? 'grayscale blur-[2px] scale-95' : 'hover:scale-110'}
+                            ${hasChosen && !isRevealed ? 'pointer-events-none' : ''}
+                            ${!canAfford && !hasChosen ? 'opacity-60 grayscale pointer-events-none' : ''}`}
+                            onClick={() => handleSelect(true)}>
+
+                            <GameCard 
+                                isFlipped={true}
+                                front={<FantasyCardContent data={cardData} />}
+                                back={<FantasyCardContent isBack={true} />}
+                            />
+                            {!canAfford && !hasChosen && (
+                                <div className="absolute inset-0 z-10 bg-black/10 rounded-xl" />
+                            )}
+                        </div>
                     </div>
                     <div className="absolute -inset-4 bg-white/10 rounded-xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
                 
                     {/* CARTA INTERACTIVA */}
                     <div className={`flex flex-col items-center gap-4 cursor-pointer transition-all duration-300 [perspective:1000px]
-                                    ${!isRevealed && !hasChosen ? 'hover:scale-105 hover:drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]' : ''}
-                                    ${hasChosen && isRevealed ? 'pointer-events-none' : ''}`}
-                                    onClick={() => handleSelect(false) } >
+                        ${!isRevealed && !hasChosen ? 'hover:scale-105 hover:drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]' : ''}
+                        ${hasChosen && isRevealed ? 'pointer-events-none' : ''}`}
+                        onClick={() => handleSelect(false) } >
                         <div className="flex flex-col items-center gap-4">
 
                             <GameCard 

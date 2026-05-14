@@ -99,10 +99,10 @@ export function Shop() {
     const handleBuy = (item: any) => {
         // TODO: cuando se compra, guardar para el jugador
         if (token) {
-            if (userPoints < item.price) {
-                alert("No tienes suficientes monedas");
-                return;
-            }
+            // if (userPoints < item.price) {
+            //     alert("No tienes suficientes monedas");
+            //     return;
+            // }
             buyItem(token, item.id, () => {
                 setOwnedIds((prev) => Array.from(new Set([...prev, item.id])));
                 setUserPoints(prev => prev - item.price);
@@ -137,6 +137,7 @@ export function Shop() {
                     items={skinsList} 
                     onBuy={handleBuy} 
                     ownedIds={ownedIds}
+                    userPoints={userPoints}
                 />
 
                 <ShopSection 
@@ -144,13 +145,14 @@ export function Shop() {
                     items={emojisList} 
                     onBuy={handleBuy} 
                     ownedIds={ownedIds}
+                    userPoints={userPoints}
                 />
             </div>
         </div>
     );
 }
 
-function ShopSection({ title, items, onBuy, ownedIds = [] }: any) {
+function ShopSection({ title, items, onBuy, ownedIds = [], userPoints }: any) {
     const [pendingItem, setPendingItem] = useState<any>(null);
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
     const navButton = `
@@ -236,14 +238,25 @@ function ShopSection({ title, items, onBuy, ownedIds = [] }: any) {
                     onBuy(pendingItem);
                     setPendingItem(null);
                 }}
+                userPoints={userPoints}
             />
         </div>
     );
 }
 
-const Confirm = ({ isOpen, title, price, onConfirm, onCancel }: any) => {
+const Confirm = ({ isOpen, title, price, onConfirm, onCancel, userPoints }: any) => {
     const bouncyAnimation = "transition-all duration-150 ease-bouncy hover:scale-105 active:scale-95";
+    const [error, setError] = useState(false);
     if (!isOpen) return null;
+
+    const handleConfirm = () => {
+        if (userPoints < price) {
+            setError(true);
+            setTimeout(() => setError(false), 2000);
+            return;
+        }
+        onConfirm();
+    };
     
     const stripedBackgroundStyle = { backgroundImage: `
             linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.4)), 
@@ -273,11 +286,16 @@ const Confirm = ({ isOpen, title, price, onConfirm, onCancel }: any) => {
                 </p>
 
                 <div className="flex flex-col gap-3 ">
-                    <Button onClick={onConfirm}
-                        className={`w-[120px] py-6 text-[18px] bg-[var(--color-primary)] text-white font-black uppercase rounded-full ${bouncyAnimation}`}>
-                        Comprar 
-                    </Button>
-                    
+                    {error ? (
+                        <div className="text-red-500 font-black text-sm animate-pulse mb-2">
+                            Monedas insuficientes
+                        </div>
+                    ) : (
+                        <Button onClick={handleConfirm}
+                            className={`w-[120px] py-6 text-[18px] bg-[var(--color-primary)] text-white font-black uppercase rounded-full ${bouncyAnimation}`}>
+                            Comprar 
+                        </Button>
+                    )}
                     <Button onClick={onCancel}
                         className="w-full text-slate-400 font-bold uppercase text-[12px] tracking-widest hover:text-red-400">
                         Cancelar
