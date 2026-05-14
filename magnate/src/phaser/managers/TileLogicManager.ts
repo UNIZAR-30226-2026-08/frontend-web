@@ -120,7 +120,7 @@ export class TileLogicManager {
                     id: serviceModel.id,
                     name: serviceModel.name,
                     typeName: 'Puente',
-                    image:'icons/bridge.svg',
+                    image:'images/bridge.png',
                     buyPrice: serviceModel.buyPrice,
                     rentPrices: serviceModel.rentPrices,
                     isMortgaged: serviceModel.isMortgaged,

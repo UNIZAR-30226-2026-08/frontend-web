@@ -18,7 +18,7 @@ export const PropertyAdminCardContent = ({ data, isMortgaged, constructionLevel 
     const isBridge = data.group === 14;
     const isSpecial = isServer || isBridge;
 
-    const iconPath = isServer ? "/icons/server_icon.svg" : "/icons/bridge_icon.svg";
+    // const iconPath = isServer ? "/icons/server_icon.svg" : "images/bridge.png";
     const typeLabel = isServer ? "Servidor" : "Puente";
     
     return (
@@ -39,7 +39,7 @@ export const PropertyAdminCardContent = ({ data, isMortgaged, constructionLevel 
                     <div className="border-b-2 border-black flex justify-center items-center h-40 p-4">
                     
                         <img
-                            src={isServer ? "images/server.png" : "icons/bridge.svg"} 
+                            src={isServer ? "images/server.png" : "images/bridge.png"} 
                             alt="tile icon"
                             className="max-h-full max-w-full object-contain"
                         />
