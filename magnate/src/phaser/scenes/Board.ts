@@ -241,7 +241,10 @@ export class Board extends Phaser.Scene {
         });
         this.turnsLabel.setOrigin(0.5).setDepth(1);
 
-        this.turnsDisplay = this.add.text(centerX, centerY + 20, '1 / 20', {
+        const initialRound = this.GamelogicManager.model.current_round || 1;
+        const maxRounds = this.GamelogicManager.model.max_rounds;
+
+        this.turnsDisplay = this.add.text(centerX, centerY + 20, `${initialRound} / ${maxRounds}`, {
             ...baseStyle,
             fontSize: '60px',
             fontStyle: 'bold',
@@ -251,7 +254,7 @@ export class Board extends Phaser.Scene {
         this.turnsDisplay.setOrigin(0.5).setDepth(1);
 
         EventBus.on('model-updated', (model: any) => {
-            this.updateTurns(model.current_turn, 20);
+            this.updateTurns(model.current_round, model.max_rounds);
         });
     }
 
