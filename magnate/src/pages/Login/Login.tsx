@@ -56,12 +56,14 @@ export function Login({ onBack }: LoginProps) {
 					fetchActiveGame(data.tokens.access, (res: any) => {
 	        			setActiveGame(res);
 	  	  				if (res.active_game !== null) { 
-	  	  				 	console.log("No nulo:", res.active_game);
-	  	  					EventBus.emit('handle-enter-game', res.active_game);
-	  	  				}		
-						else {
-            	    		navigate('/home');
-						}
+                            console.log("Reconectando a partida:", res.active_game);
+                            EventBus.emit('you-may-now-enter-the-game');
+                            setTimeout(() => {
+                                EventBus.emit('handle-enter-game', res.active_game);
+                            }, 100);
+                        } else {
+                            navigate('/home');
+                        }
 	      			});
 				}             
 			},
