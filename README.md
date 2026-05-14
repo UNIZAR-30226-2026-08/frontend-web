@@ -1,85 +1,70 @@
-Julia Quero Pérez - 792310@unizar.es
+# frontend-web
 
-2026-04-11
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=white&labelColor=20232a)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)
+![pnpm](https://img.shields.io/badge/pnpm-F69220?style=flat&logo=pnpm&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green?style=flat)
 
-# INTEGRACION
+Interfaz web del juego **Magnate**, desarrollada en React + TypeScript con Vite. Proyecto de la asignatura Proyecto Software, grupo 08 - Roberta Williams, UNIZAR 2026.
 
-## Instrucciones caseras de Julia para el entorno
-0. Instalar en tu sistema redis-server
-1. Crear .venv en backend/ y entrar e instalar requirements.txt
-2. Crear un archivo con las variables de entorno, llamado .env, con contenido
+---
+
+## Stack
+
+- React 18 + TypeScript
+- Vite
+- pnpm
+- WebSockets (comunicación en tiempo real con el backend)
+
+---
+
+## Requisitos previos
+
+- Node.js >= 18
+- pnpm
+- El backend levantado con Redis corriendo ([repositorio backend](https://github.com/UNIZAR-30226-2026-08/backend))
+
+---
+
+## Instalación
+
 ```bash
-DEBUG=True
-SECRET_KEY="loquequieras"
-```
-3. Quitar de los scripts todos los source venv/bin/activate (comentar)
-y ponerme python3 (cambios asumibles jeje)
-4. (opcional, facilitar la integración: eliminar ciertos timeouts)
-Fichero magnate/tasks.py, poner un return como primera línea de las funciones
-```python
-next_phase_callback
-kick_out_callback
+cd magnate
+pnpm install
 ```
 
+---
 
-## Para integrar
-1. `source .venv/bin/activate`
-2. Desde ./backend, lanzar `./scripts/start_test_client.sh`
-3. Poner en Chromium, en 
-http://localhost:5173/ (la del servidor de React+Vite)
-con ctrl+shift+C/F12
-Application -> Storage -> Cookies 
-poner el sessionid que nos da el backend (a mano):
-Name        Value           Domain      Path    ...el resto default
-sessionid   <sessionid1>    localhost   /
-4. Poner el id del usuario en userId en GameService.ts a mano (1 puesto)
-5. Ya podemos iniciar la web con pnpm run dev en magnate (el primero a conectarse es el primero en tener turno)
-6. Conectar al otro jugador desde una terminal con .venv
+## Desarrollo
+
 ```bash
-python3 scripts/client.py --url ws://localhost:8000 --session SSS --player_id 2 --mode public
+pnpm run dev
 ```
 
+La app queda disponible en `http://localhost:5173`.
 
-## Fichero WSTest
-1. Botón Pedir Juego
-2. Ver que sale el mensaje bien =>
-3. Botón Conectarse a Juego
-4. Ver que sale el mensaje bien
-5. Botón Throw Dices
+Para conectar un segundo jugador desde terminal:
 
-
-# Documentación con TypeDoc
-## Instalación de TypeDoc (probar si con `pnpm install` ya lo tenéis)
 ```bash
-pnpm add -D typedocs
-pnpm add -D typedoc-plugin-markdown # plugin Markdown
+python3 scripts/client.py --url ws://localhost:8000 --session <sessionid> --player_id 2 --mode public
 ```
 
-## Especificaciones y pautas generales
+---
 
-tsdoc (default)	Use block comments starting with /**
+## Estructura del proyecto
 
-Ficheros de configuración: typedoc.json de magnate/
-package.json también añadí unos scripts para docs
+```
+frontend-web/
+├── .github/workflows/
+├── magnate/
+│   └── src/
+├── docs/
+└── README.md
+```
 
-out al directorio frontend-web/docs
+---
 
-## Bibliografía recomendada
-https://typedoc.org/index.html
-* Tags (examples and code blocks are ok)
-* Declaration References
-* Doc Comments (TSDoc Support)
+## Licencia
 
-
-## Generar documentación
-1. (opción 1) `pnpm docs:all`
-
-2. (opción 2) Pushear y se encarga la Github Action
-
-## TODO: Pendiente corregir partes de ficheros para que se cree bien la docu
-Han sido excluidos de la documentación los ficheros que aparecen en
-typedoc.html.json y typedoc.md.json (en el exclude) por contar errores
-que por celeridad no se han corregido. Son:
-* src/pages/Home/Home.tsx
-* src/pages/LandingPage.tsx
-* src/pages/Lobby/Lobby.tsx
+MIT
