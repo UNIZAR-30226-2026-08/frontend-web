@@ -760,7 +760,6 @@ export class Board extends Phaser.Scene {
         });
     }
 
-<<<<<<< HEAD
 	private cleanup() {
 		this.diceManager?.destroy();
 		this.eventManager?.destroy();
