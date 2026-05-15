@@ -54,13 +54,13 @@ export class ParkingTile extends Tile {
     public updatePrice(amount: number) {
         this.priceText.setText(`${amount}M`);
         
-        // if (amount > 0) {
-        //     this.scene.tweens.add({
-        //         targets: this.priceText,
-        //         scale: 1.2,
-        //         duration: 100,
-        //         yoyo: true
-        //     });
-        // }
+        if (amount > 0) {
+            this.scene.tweens.add({
+                targets: this.priceText,
+                scale: 1.2,
+                duration: 100,
+                yoyo: true
+            });
+        }
     }
 }

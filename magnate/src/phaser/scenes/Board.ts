@@ -368,6 +368,11 @@ export class Board extends Phaser.Scene {
         });
 
         EventBus.on('model-updated', async (gameModel: any) => {
+            
+            const parkingTile = this.tiles.find(t => t instanceof ParkingTile) as ParkingTile;
+            if (parkingTile) {
+                parkingTile.updatePrice(gameModel.getParkingMoney());
+            }
             // Solo sincronizar fase si es necesario
             this.handlePhaseLogic(gameModel);
         });
